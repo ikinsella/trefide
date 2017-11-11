@@ -1,6 +1,9 @@
 *~
 *#
-.pyc
-.mat
-.npy
-.swp
+*.pyc
+*.mat
+*.npy
+*.swp
+results/
+data/
+.ipynb_*
