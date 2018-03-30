@@ -1,13 +1,14 @@
 import numpy as np
 import scipy as sp
 
+
 def fft_estimator(signal, freq_range=[0.25, 0.5], max_samples=3072):
     """
     High frequency components of FFT of the input signal
     ________
     Input:
         signals: (len_signal,) np.ndarray
-            Noise contaminated temporal signal 
+            Noise contaminated temporal signal
             (required)
         max_samples: positive integer
             Maximum number of samples which will be used in computing the
@@ -80,7 +81,7 @@ def boot_estimator(signal, num_samples=1000, len_samples=25):
             Noise contaminated temporal signal
             (required)
         num_samples: positive integer
-            Number of bootstrap MSE estimates to average over 
+            Number of bootstrap MSE estimates to average over
             (default: 1000)
         len_samples: positive integer < len_signals
             Length of subsamples used in bootstrap estimates 
@@ -164,16 +165,14 @@ def estimate_noise(signals,
     # Assign function to generate estimates of signal noise variance
     estimator = {
         'fft': lambda x: fft_estimator(x,
-                                        freq_range=freq_range,
-                                        max_samples=max_samples_fft),
+                                       freq_range=freq_range,
+                                       max_samples=max_samples_fft),
         'pwelch': lambda x: pwelch_estimator(x,
-                                              freq_range=freq_range),
+                                             freq_range=freq_range),
         'boot': lambda x: boot_estimator(x,
-                                          num_samples=num_samples_boot,
-                                          len_samples=len_samples_boot)
+                                         num_samples=num_samples_boot,
+                                         len_samples=len_samples_boot)
     }[estimator]
 
     # Compute & return estimate of standard deviations for each signal
     return np.sqrt([summarizer(estimator(signal)) for signal in signals])
-
-
