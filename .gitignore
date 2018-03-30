@@ -7,3 +7,13 @@
 results/
 data/
 .ipynb_*
+*.mp4
+logs.*
+*.jpg
+*.fig
+*.png
+*.avi
+*.pdf
+*.txt
+*.o
+*.dSYM
