@@ -10,7 +10,11 @@ setup(
         [Extension("solvers.pdas",
                    ["solvers/pdas.pyx"],
                    include_dirs=[numpy.get_include()],
-                   libraries=["lapacke", "lapack", "blas"]),
+                   libraries=["m",
+                              "mkl_core",
+                              "mkl_intel_lp64",
+                              "mkl_intel_thread",
+                              "iomp5"]),
          Extension("solvers.ipm", ["solvers/ipm.pyx"],
                    include_dirs=[numpy.get_include()],
                    libraries=["blas", "lapack", "m"]), ]

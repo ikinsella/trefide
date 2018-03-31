@@ -16,4 +16,5 @@ logs.*
 *.pdf
 *.txt
 *.o
+*.so
 *.dSYM

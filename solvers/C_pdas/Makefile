@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -g -Wall -O3
 LDFLAGS =
 PROG = pdas
-LIBS = -llapacke -llapack -lblas
+LIBS = -lm -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 SRCS = pdas_sg2.c main.c
 OBJS = $(patsubst %.c,%.o,$(SRCS))
 
@@ -18,3 +18,25 @@ $(OBJS) : %.o : %.c
 
 clean:
 	rm -f *.o $(PROG)
+
+
+# CC = icc
+# CFLAGS = -mkl
+# LDFLAGS =
+# PROG = pdas
+# LIBS =
+# SRCS = pdas_sg2.c main.c
+# OBJS = $(patsubst %.c,%.o,$(SRCS))
+
+# all: $(PROG)
+
+# $(PROG) : $(OBJS)
+# 	$(CC) $(LDFLAGS) $(CFLAGS) -o $(PROG) $(OBJS) $(LIBS)
+
+# $(OBJS) : %.o : %.c
+# 	$(CC) -c $(CFLAGS) $< -o $@
+
+# .PHONY : clean 
+
+# clean:
+# 	rm -f *.o $(PROG)

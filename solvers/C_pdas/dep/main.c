@@ -121,7 +121,7 @@ int main(int argc, char* argv[]){
     int m = 5;
     double delta_s = 0.9; 
     double delta_e = 1.1;
-    int maxiter = 500;
+    int maxiter = 200;
     int verbose = 1;
     
     /* call main solver */
