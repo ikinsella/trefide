@@ -1,33 +1,22 @@
-/* main.c
- *
- * Copyright (C) 2007 Kwangmoo Koh, Seung-Jean Kim and Stephen Boyd.
- *
- * See the file "COPYING.TXT" for copyright and warranty information.
- *
- * Author: Kwangmoo Koh (deneb1@stanford.edu)
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "l1tf.h"
+#include "pdas_sg2.h"
 
 /*  process command-line arguments and return problem data:
  *      y: time-series data, n: size of y and lambda: regularization parameter
  */
 void process_args(int argc, char *argv[], int *pn, double **py,
-                  double *plambda, double *plambda_max)
+                  double *plambda)
 {
     FILE   *fp;
     char   *ifile_y;
     int    c, n, buf_size;
-    double lambda, lambda_max, val;
+    double lambda, val;
     double *buf_start, *buf_end, *buf_pos;
     int    rflag = 0;
-    const int verbose = 1;
-    const double rescale = 0.5;
-
 
     /* handle command line arguments */
     while ((c = getopt(argc, argv, "r")) != -1)
@@ -79,7 +68,7 @@ void process_args(int argc, char *argv[], int *pn, double **py,
         *buf_pos++ = val;
         if (buf_pos >= buf_end) /* increase buffer when needed */
         {
-            buf_start = realloc(buf_start,sizeof(double)*buf_size*2);
+	  buf_start = realloc(buf_start,sizeof(double)*buf_size*2);
             if (buf_start == NULL) exit(EXIT_FAILURE);
             buf_pos     = buf_start+buf_size;
             buf_size    *= 2;
@@ -88,58 +77,65 @@ void process_args(int argc, char *argv[], int *pn, double **py,
     }
     fclose(fp);
 
-    lambda_max = l1tf_lambdamax(n,buf_start,verbose);
-    if (rflag == 1)
-        lambda = lambda*lambda_max;
-
     /* set return values */
-    *plambda_max = lambda_max;
     *plambda     = lambda;
     *py          = buf_start;
     *pn          = n;
 }
 
-void print_info(const int n, const double lambda, const double lambda_max)
+void print_info(const int n, const double lambda)
 {
 
     fprintf(stderr,"--------------------------------------------\n");
-    fprintf(stderr,"l1 trend filtering via primal-dual algorithm\n");
-    fprintf(stderr,"C version 0.7 Aug 18 2007                   \n");
-    fprintf(stderr,"Kwangmoo Koh, Seung-Jean Kim, Stephen Boyd\n");
+    fprintf(stderr,"First order l1 trend filtering problem      \n");
+    fprintf(stderr,"Solved via primal-dual active set algorithm \n");
+    fprintf(stderr,"Written by: Ian Kinsella   Mar 28 2018      \n");
     fprintf(stderr,"--------------------------------------------\n");
     fprintf(stderr,"data length         = %d\n",n);
-    fprintf(stderr,"lambda (lambda_max) = %e (%e)\n\n",lambda,lambda_max);
+    fprintf(stderr,"lambda              = %e\n\n",lambda);
 }
 
-int main(int argc, char *argv[])
-{
-    int n, iter;
-    double *x, *y, *z;
-    double lambda, lambda_max;
-    const double tol = 1e-4;
-    const int maxiter = 200;
-    const int verbose = 1;
+int main(int argc, char* argv[]){
 
+    /* Initialize Variables */
+    int n, iter;
+    double *w, *x, *y, *z;
+    double lambda;
 
     /* process commendline arguments and read time series y from file */
-    process_args(argc, argv, &n, &y, &lambda, &lambda_max);
+    process_args(argc, argv, &n, &y, &lambda);
 
-    print_info(n, lambda, lambda_max);
+    /* print problem information */
+    print_info(n, lambda);
 
-    x = malloc(sizeof(double)*n);
-    z = malloc(sizeof(double)*(n-2));
-    /* call main solver */
-    l1tf(n, y, lambda, x, z, &iter, tol, maxiter, verbose);
-
-    /* debug */
-    fprintf(stdout, "Number of iterations: %d", iter);
+    /* allocate memory for optimization variables */
+    w = malloc(sizeof(double)*n); // observation weights
+    x = malloc(sizeof(double)*n); // primal variable
+    z = malloc(sizeof(double)*(n-2)); // dual variable
+    int i;    
+    for (i = 0; i < n-2; i++) {
+      z[i] = 0;
+    }
+    for (i = 0; i < n; i++) {
+      w[i] = 1;
+    }
     
-    /* print the result to stdout */
-    print_dvec(n,x);
+    /* Default arguments TODO: take as input */
+    double p = 1; 
+    int m = 5;
+    double delta_s = 0.9; 
+    double delta_e = 1.1;
+    int maxiter = 500;
+    int verbose = 1;
+    
+    /* call main solver */
+    active_set(n, y, lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
 
-    free(x);    
+    /* release allocated memory */
+    free(x);
     free(y);
     free(z);
+    
+    /* report exit status */
     return(EXIT_SUCCESS);
 }
-

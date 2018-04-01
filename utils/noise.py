@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import scipy.signal
 
 
 def fft_estimator(signal, freq_range=[0.25, 0.5], max_samples=3072):
@@ -66,7 +67,7 @@ def pwelch_estimator(signal, freq_range=[0.25, 0.5]):
         PSD[freq_range]: np.ndarray
             Components of PSD corresponding to freq_range
     """
-    ff, Pxx = sp.signal.welch(signal, nperseg=min(256, len(signal)))
+    ff, Pxx = scipy.signal.welch(signal, nperseg=min(256, len(signal)))
     idx = np.logical_and(ff > freq_range[0], ff <= freq_range[1])
     return np.divide(Pxx[idx], 2)
 

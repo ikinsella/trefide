@@ -18,6 +18,7 @@ cdef extern from "C_pdas/pdas_sg2.c":
 				      const double lambda_,
 				      double *x,
 				      double *z,
+				      int *iter_,
 				      double p,
 				      const int m,
 				      const double delta_s,
@@ -61,6 +62,7 @@ def solve(double[::1] y,
     cdef int m = 5
     cdef double delta_s = .9
     cdef double delta_e = 1.1
+    cdef int iter_
     cdef int iter_status
     
     with nogil:
@@ -69,6 +71,7 @@ def solve(double[::1] y,
                                       lambda_,
                                       &x_hat[0],
 				      &z_hat[0],
+                                      &iter_,
 				      p,
 				      m,
 				      delta_s,
@@ -77,9 +80,9 @@ def solve(double[::1] y,
                                       verbose)
 
     if iter_status < 0:
-        raise RuntimeError("Active Set Failed To Converge")
+        raise RuntimeError("PDAS failed to converge in MAXITER iterations.")
 
-    return x_hat, z_hat
+    return x_hat, z_hat, iter_
 
 
 def warm_start(double[::1] y,
@@ -118,6 +121,7 @@ def warm_start(double[::1] y,
     cdef int m = 5
     cdef double delta_s = .9
     cdef double delta_e = 1.1
+    cdef int iter_
     cdef int iter_status
     
     with nogil:
@@ -126,7 +130,8 @@ def warm_start(double[::1] y,
                                       lambda_,
                                       &x_hat[0],
 				      &z_hat[0],
-				      p,
+				      &iter_,
+                                      p,
 				      m,
 				      delta_s,
 				      delta_e,
@@ -136,4 +141,4 @@ def warm_start(double[::1] y,
     if iter_status < 0:
         raise RuntimeError("Active Set Failed To Converge")
 
-    return x_hat, z_hat
+    return x_hat, z_hat, iter_

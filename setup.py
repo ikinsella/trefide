@@ -14,7 +14,9 @@ setup(
                               "mkl_core",
                               "mkl_intel_lp64",
                               "mkl_intel_thread",
-                              "iomp5"]),
+                              "iomp5"],
+                   extra_compile_args=["-O3", "-qopenmp"],
+                   extra_link_args=["-qopenmp"]),
          Extension("solvers.ipm", ["solvers/ipm.pyx"],
                    include_dirs=[numpy.get_include()],
                    libraries=["blas", "lapack", "m"]), ]

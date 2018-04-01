@@ -74,7 +74,8 @@ int cmp(const void *a,
  *******************************************************************************/
 
 int active_set(const int n,           // data length
-	       const double *y,       // target
+	       const double *y,       // observations
+	       const double *w,       // observation weights
 	       const double lambda,   // regularization parameter
 	       double *x,             // primal variable
 	       double *z,             // dual variable

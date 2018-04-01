@@ -18,7 +18,8 @@ extern "C" {
 	   const double *y,
 	   const double lambda,
 	   double *x,
-	   double *z,	   
+	   double *z,
+           int *iter,           
 	   const double tol,
 	   const int maxiter,
 	   const int verbose);

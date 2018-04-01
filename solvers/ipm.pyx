@@ -18,6 +18,7 @@ cdef extern from "C_ipm/l1tf.c":
 			  const double lambda_,
 			  double *x,
 			  double *z,
+                          int *iter_,
 			  const double tol,
 			  const int maxiter,
 			  const int verbose) nogil
@@ -61,6 +62,7 @@ def solve(double[::1] y,
     cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
     cdef np.double_t[::1] z_hat = np.empty(n - 2, dtype=np.double)    
     cdef double lambda_max
+    cdef int iter_
     cdef int iter_status
 
     if max_lambda:
@@ -77,6 +79,7 @@ def solve(double[::1] y,
                                 lambda_,
                                 &x_hat[0],
 				&z_hat[0],
+                                &iter_,
 				tol,
 				maxiter,
                                 verbose)
@@ -84,7 +87,7 @@ def solve(double[::1] y,
     if iter_status < 0:
         raise RuntimeError("Interior Point Method Failed To Converge In MAXITER iterations.")
 	
-    return x_hat, z_hat
+    return x_hat, z_hat, iter_
 	
 
 def l1tf_lambda_max(double[::1] data_,

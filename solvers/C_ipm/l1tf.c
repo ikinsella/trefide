@@ -55,7 +55,8 @@ int l1tf(const int n,
 	 const double *y,
 	 const double lambda,
 	 double *x,
-	 double *z,	 
+	 double *z,
+         int *iter,         
 	 const double tol,
 	 const int maxiter,
 	 const int verbose)
@@ -90,7 +91,7 @@ int l1tf(const int n,
     double step, ratio;
     double *dptr;
 
-    int iters, lsiters;             /* IPM and linesearch iterations */
+    int lsiters;             /* IPM and linesearch iterations */
     int i, info;
     int *IPIV;
     int ddtf_chol;
@@ -181,7 +182,7 @@ int l1tf(const int n,
     /*---------------------------------------------------------------------*
      *                          MAIN LOOP                                  *
      *---------------------------------------------------------------------*/
-    for (iters = 0; iters <= maxiter; iters++)
+    for (*iter = 1; *iter <= maxiter; (*iter)++)
     {
         double zTDDTz;
 
@@ -211,7 +212,7 @@ int l1tf(const int n,
         gap   = pobj - dobj;
 
 	if (verbose){
-	  fprintf(stdout,"%6d %15.4e %13.5e %10.2e\n",iters,pobj,dobj,gap);
+	  fprintf(stdout,"%6d %15.4e %13.5e %10.2e\n",*iter,pobj,dobj,gap);
 	}
         /* STOPPING CRITERION */
 

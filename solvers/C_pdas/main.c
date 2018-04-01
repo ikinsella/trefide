@@ -98,7 +98,7 @@ void print_info(const int n, const double lambda)
 int main(int argc, char* argv[]){
 
     /* Initialize Variables */
-    int n;
+    int n, iter;
     double *x, *y, *z;
     double lambda;
 
@@ -125,8 +125,8 @@ int main(int argc, char* argv[]){
     int verbose = 1;
     
     /* call main solver */
-    active_set(n, y, lambda, x, z, p, m, delta_s, delta_e, maxiter, verbose);
-    
+    active_set(n, y, lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+
     /* release allocated memory */
     free(x);
     free(y);

@@ -4,6 +4,7 @@
 /* main routine for l1 trend filtering */
 int active_set(const int n,
 	       const double *y,
+	       const double *w,	       
 	       const double lambda,
 	       double *x,
 	       double *z,
