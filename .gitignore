@@ -18,3 +18,4 @@ logs.*
 *.o
 *.so
 *.dSYM
+solvers/*.c

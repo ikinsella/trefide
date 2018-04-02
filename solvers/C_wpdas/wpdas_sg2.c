@@ -22,7 +22,6 @@ double *vio_fitness; // made available for sorting use in cmp
 /* y = D*x */
 void   Dx(const int n,
 	  const double *x,
-          const double *wi,
 	  double *y); 
 
 /* y = D'*x */
@@ -138,7 +137,7 @@ int weighted_pdas(const int n,           // data length
       /************************ Subspace Minimization **************************/
       n_active = update_dual(n, y, wi, z, lambda, div_zi, ab, b);
       update_primal(n, x, y, wi, z, lambda);
-      Dx(n, x, wi, diff_x);
+      Dx(n, x, diff_x);
       
       /*************************** Update Partition ****************************/
 
@@ -448,13 +447,11 @@ void reassign_violators(const int n_vio,
  * y = | 0  -1  2  -1  0 |*x
  *     | 0  0  -1  2  -1 |
  */
-void Dx(const int n, const double *x, const double *wi, double *y)
+void Dx(const int n, const double *x, double *y)
 {
     int i;
     for (i = 0; i < n-2; i++, x++, wi++)
-        *y++ = (-*x) + ((*(x+1) + *(x+1))) - (*(x+2)); /* y[0..n-3]*/
-    // for (i = 0; i < n-2; i++, x++, wi++)
-    //    *y++ = (-*x * *wi) + ((*(x+1) + *(x+1)) * *(wi+1)) - (*(x+2) * *(wi+2)); /* y[0..n-3]*/
+        *y++ = -*x + *(x+1) + *(x+1) - *(x+2); /* y[0..n-3]*/
 }
 
 /* Computes y = D^T*x, where x has length n

@@ -19,7 +19,6 @@ int weighted_pdas(const int n,
 /* description */
 void   Dx(const int n,
 	  const double *x,
-          const double *wi,
 	  double *y);
 
 /* another desciption */
