@@ -12,22 +12,25 @@ from cpython cimport bool
 
 np.import_array()
 
-cdef extern from "C_pdas/pdas_sg2.c":
-    int call_pdas "pdas" (const int n,
-            const double *y,
-            const double lambda_,
-            double *x,
-            double *z,
-            int *iter_,
-            double p,
-            const int m,
-            const double delta_s,
-            const double delta_e,
-            const int maxiter,
-            const int verbose) nogil
+
+cdef extern from "C_wpdas/wpdas_sg2.c":
+    int call_wpdas "weighted_pdas" (const int n,
+				    const double *y,
+				    const double *wi,
+				    const double lambda_,
+				    double *x,
+				    double *z,
+				    int *iter_,
+				    double p,
+				    const int m,
+				    const double delta_s,
+				    const double delta_e,
+				    const int maxiter,
+				    const int verbose) nogil
 
 
 def solve(double[::1] y,
+	  double[::1] wi,
           double lambda_,
 	  const int maxiter,
 	  const int verbose):
@@ -67,18 +70,19 @@ def solve(double[::1] y,
     cdef int iter_status
     
     with nogil:
-        iter_status = call_pdas(n,
-                &y[0],
-                lambda_,
-                &x_hat[0],
-                &z_hat[0],
-                &iter_,
-                p,
-                m,
-                delta_s,
-                delta_e,
-                maxiter,
-                verbose)
+        iter_status = call_wpdas(n,
+				 &y[0],
+				 &wi[0],
+				 lambda_,
+				 &x_hat[0],
+				 &z_hat[0],
+				 &iter_,
+				 p,
+				 m,
+				 delta_s,
+				 delta_e,
+				 maxiter,
+				 verbose)
 
     if iter_status < 0:
         raise RuntimeError("PDAS failed to converge in MAXITER iterations.")
@@ -87,6 +91,7 @@ def solve(double[::1] y,
 
 
 def warm_start(double[::1] y,
+	       double[::1] wi,		   
 	       double lambda_,
 	       double[::1] z_hat,
 	       const int maxiter,
@@ -126,18 +131,19 @@ def warm_start(double[::1] y,
     cdef int iter_status
     
     with nogil:
-        iter_status = call_pdas(n,
-                &y[0],
-                lambda_,
-                &x_hat[0],
-                &z_hat[0],
-                &iter_,
-                p,
-                m,
-                delta_s,
-                delta_e,
-                maxiter,
-                verbose)
+        iter_status = call_wpdas(n,
+				 &y[0],
+				 &wi[0],
+				 lambda_,
+				 &x_hat[0],
+				 &z_hat[0],
+				 &iter_,
+				 p,
+				 m,
+				 delta_s,
+				 delta_e,
+				 maxiter,
+				 verbose)
 
     if iter_status < 0:
         raise RuntimeError("Active Set Failed To Converge")

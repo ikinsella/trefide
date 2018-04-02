@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "pdas_sg2.h"
+#include "wpdas_sg2.h"
 
 /*  process command-line arguments and return problem data:
  *      y: time-series data, n: size of y and lambda: regularization parameter
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]){
 
     /* Initialize Variables */
     int n, iter;
-    double *w, *x, *y, *z;
+    double *wi, *x, *y, *z;
     double lambda;
 
     /* process commendline arguments and read time series y from file */
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]){
     print_info(n, lambda);
 
     /* allocate memory for optimization variables */
-    w = malloc(sizeof(double)*n); // observation weights
+    wi = malloc(sizeof(double)*n); // observation weights
     x = malloc(sizeof(double)*n); // primal variable
     z = malloc(sizeof(double)*(n-2)); // dual variable
     int i;    
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]){
       z[i] = 0;
     }
     for (i = 0; i < n; i++) {
-      w[i] = 1;
+      wi[i] = 5;
     }
     
     /* Default arguments TODO: take as input */
@@ -129,9 +129,10 @@ int main(int argc, char* argv[]){
     int verbose = 1;
     
     /* call main solver */
-    active_set(n, y, lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+    weighted_pdas(n, y, wi, lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
 
     /* release allocated memory */
+    free(wi);
     free(x);
     free(y);
     free(z);

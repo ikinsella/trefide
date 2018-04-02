@@ -73,18 +73,18 @@ int cmp(const void *a,
  *                                 Main Solver                                 *
  *******************************************************************************/
 
-int active_set(const int n,           // data length
-	       const double *y,       // target
-	       const double lambda,   // regularization parameter
-	       double *x,             // primal variable
-	       double *z,             // dual variable
-	       int *iter,             // pointer to iter # (so we can return it)
-	       double p,              // proportion of violators to reassign
-	       const int m,           // size of violator hostory queue
-	       const double delta_s,  // proportion by which p is shrunk
-	       const double delta_e,  // proportion by which p is grown
-	       const int maxiter,     // max num outer loop iterations
-	       const int verbose)
+int pdas(const int n,           // data length
+        const double *y,       // target
+        const double lambda,   // regularization parameter
+        double *x,             // primal variable
+        double *z,             // dual variable
+        int *iter,             // pointer to iter # (so we can return it)
+        double p,              // proportion of violators to reassign
+        const int m,           // size of violator hostory queue
+        const double delta_s,  // proportion by which p is shrunk
+        const double delta_e,  // proportion by which p is grown
+        const int maxiter,     // max num outer loop iterations
+        const int verbose)
 {
     /************************** Initialize Variables ***************************/
     double *diff_x;
@@ -115,8 +115,9 @@ int active_set(const int n,           // data length
     queue_index = 0;
     vio_queue[0] = n;
     min_queue = n;
-    min_queue_index = 0;    
-    for (int i = 1; i < m; i++){
+    min_queue_index = 0;
+    int i;
+    for (i = 1; i < m; i++){
       vio_queue[i] = n;
     }
     max_queue = n;
@@ -151,7 +152,8 @@ int active_set(const int n,           // data length
 	// if max val in queue was replaced, compute new max
 	if (queue_index == max_queue_index){
 	  max_queue = 0;
-	  for (int j = 0; j < m; j++) {
+	  int j;
+	  for (j = 0; j < m; j++) {
 	    if (vio_queue[j] > max_queue) {
 	      max_queue = vio_queue[j];
 	      max_queue_index = j;
@@ -169,7 +171,8 @@ int active_set(const int n,           // data length
 	// if max/min val in queue was replaced, compute new max/min
 	if (queue_index == max_queue_index){
 	  max_queue = 0;
-	  for (int j = 0; j < m; j++) {
+	  int j;
+	  for (j = 0; j < m; j++) {
 	    if (vio_queue[j] > max_queue) {
 	      max_queue = vio_queue[j];
 	      max_queue_index = j;
@@ -177,7 +180,8 @@ int active_set(const int n,           // data length
 	  }	  
 	} else if (queue_index == min_queue_index){
 	  min_queue = n;
-	  for (int j = 0; j < m; j++) {
+	  int j;
+	  for (j = 0; j < m; j++) {
 	    if (vio_queue[j] < min_queue) {
 	      min_queue = vio_queue[j];
 	      min_queue_index = j;
@@ -371,7 +375,8 @@ int locate_violators(const int n,
 		     int *vio_sort)
 {
   int n_vio = 0;  // number of violations located
-  for(int i = 0; i < n - 2; i++) {
+  int i;
+  for(i = 0; i < n - 2; i++) {
     if(z[i] == 1) {
       if(diff_x[i] < 0) {
 	vio_index[n_vio] = i;
@@ -408,7 +413,8 @@ void reassign_violators(const int n_vio,
 			const int *vio_index,
 			const int *vio_sort)
 {
-  for(int i = 0; i < n_vio; i++) {
+  int i;
+  for(i = 0; i < n_vio; i++) {
     if(z[vio_index[vio_sort[i]]] == 1) {
       z[vio_index[vio_sort[i]]] = 0;
     } else if(z[vio_index[vio_sort[i]]] == -1) {

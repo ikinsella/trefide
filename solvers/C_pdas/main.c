@@ -125,7 +125,7 @@ int main(int argc, char* argv[]){
     int verbose = 1;
     
     /* call main solver */
-    active_set(n, y, lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+    pdas(n, y, lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
 
     /* release allocated memory */
     free(x);
