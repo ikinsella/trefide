@@ -270,7 +270,7 @@ void update_primal(const int n,
 {
   int i;
   // x[0] = (y[0] + z[0] * lambda) / w[0]
-  *x++ = *y + (*z * lambda * *wi); y++;
+  *x++ = *y + (*z * lambda * *wi); y++, wi++;
   // x[1] = (y[1] - (z[1] - 2*z[0])* lambda) / w[1]  
   *x++ = *y + ((*(z+1) - *z - *z) * lambda * *wi); y++; wi++;
   for (i = 2; i < n-2; i++, y++, wi++, z++){ // i = 2,...,n-3
@@ -450,7 +450,7 @@ void reassign_violators(const int n_vio,
 void Dx(const int n, const double *x, double *y)
 {
     int i;
-    for (i = 0; i < n-2; i++, x++, wi++)
+    for (i = 0; i < n-2; i++, x++)
         *y++ = -*x + *(x+1) + *(x+1) - *(x+2); /* y[0..n-3]*/
 }
 
