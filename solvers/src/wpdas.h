@@ -1,7 +1,7 @@
-#ifndef PDAS_SG2_H
-#define PDAS_SG2_H
+#ifndef WPDAS_H
+#define WPDAS_H
 
-/* main routine for l1 trend filtering */
+/* main routine for pdas l1tf solver */
 int weighted_pdas(const int n,
 	          const double *y,
 	          const double *wi,	       
@@ -16,18 +16,4 @@ int weighted_pdas(const int n,
                   const int maxiter,
                   const int verbose);
 
-/* description */
-void   Dx(const int n,
-	  const double *x,
-	  double *y);
-
-/* another desciption */
-void   DTx(const int n,
-	   const double *x,
-	   double *y);
-
-/* yet another description 8? */
-void print_dvec(const int n,
-		const double *x);
-
-#endif /* PDAS_SG2_H */
+#endif /* WPDAS_H */
