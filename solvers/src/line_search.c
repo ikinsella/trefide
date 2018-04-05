@@ -19,7 +19,7 @@ int line_search(const int n,           // data length
 		const double *y,       // observations
 		const double *wi,      // inverse observation weights
                 const double delta,    // MSE constraint	
-                double tau,            // step size in transformed space
+                const double tau,      // step size in transformed space
                 double *x,             // primal variable
 		double *z,             // initial dual variable
 		double *lambda,        // initial regularization parameter
@@ -55,7 +55,7 @@ int line_search(const int n,           // data length
     
         /* Check to see if we landed in tol band */
         if (err <= tol){
-            return 1
+            return 1;
         }
 
         /* Take a step towards delta in transformed lambda space */

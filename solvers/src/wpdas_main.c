@@ -117,7 +117,7 @@ int main(int argc, char* argv[]){
       z[i] = 0;
     }
     for (i = 0; i < n; i++) {
-      wi[i] = 5;
+      wi[i] = 1;
     }
     
     /* Default arguments TODO: take as input */

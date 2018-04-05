@@ -28,6 +28,7 @@ cdef extern from "src/wpdas.c":
 					    const int maxiter,
 					    const int verbose) nogil
 
+
 cdef extern from "src/ipm.c":
     int call_l1tf "l1tf" (const int n,
 			  const double *y,
@@ -42,63 +43,34 @@ cdef extern from "src/ipm.c":
     double call_l1tf_lambdamax "l1tf_lambdamax"(const int n,
 						double *y,
 						const int verbose) nogil
-    
-    
-
-def wpdas(double[::1] y,
-	  double[::1] wi,
-	  double lambda_,
-	  const int maxiter,
-	  const int verbose):
-    """ Handle to weighed pdas solver using default initialization"""
-    cdef np.intp_t n = y.shape[0]
-    cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
-    cdef np.double_t[::1] z_hat = np.zeros(n - 2, dtype=np.double)
-    cdef double p = 1    
-    cdef int m = 5
-    cdef double delta_s = .9
-    cdef double delta_e = 1.1
-    cdef int iter_
-    cdef int iter_status
-    
-    with nogil:
-        iter_status = call_weighted_pdas(n,
-					 &y[0],
-					 &wi[0],
-					 lambda_,
-					 &x_hat[0],
-					 &z_hat[0],
-					 &iter_,
-					 p,
-					 m,
-					 delta_s,
-					 delta_e,
-					 maxiter,
-					 verbose)
-
-    if iter_status < 0:
-        raise RuntimeError("PDAS failed to converge in MAXITER iterations.")
-
-    return x_hat, z_hat, iter_
-
-
-def wpdas_ws(double[::1] y,
-	     double[::1] wi,		   
-	     double lambda_,
-	     double[::1] z_hat,
-	     const int maxiter,
-	     const int verbose):
+ 
+ 
+cpdef lpdas(double[::1] y,
+            const double lambda_,
+	    double[::1] wi=None,
+	    double[::1] z_hat=None,
+            double p=1,    
+            int m=5,
+            double delta_s=.9,
+            double delta_e=1.1,
+	    int maxiter=2000,
+	    int verbose=0):
     """ Handle to weighted pdas solver allowing warm start intialization"""
-    
+   
+    # Initialize variables
+    cdef int iter_, iter_status
     cdef np.intp_t n = y.shape[0]
     cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
-    cdef double p = 1    
-    cdef int m = 5
-    cdef double delta_s = .9
-    cdef double delta_e = 1.1
-    cdef int iter_
-    cdef int iter_status
+
+    # Default to unweighted loss
+    if wi is None:
+        wi = np.ones(n, dtype=np.double)
     
+    # Default warm start dual variable at 0
+    if z_hat is None:
+        z_hat = np.zeros(n - 2, dtype=np.double)
+
+    # Call weighted pdas C routine 
     with nogil:
         iter_status = call_weighted_pdas(n,
 			        	 &y[0],
@@ -113,95 +85,20 @@ def wpdas_ws(double[::1] y,
 			        	 delta_e,
 			        	 maxiter,
 				         verbose)
-
+    
+    # Check Convergence Status 
     if iter_status < 0:
         raise RuntimeError("Active Set Failed To Converge")
 
     return x_hat, z_hat, iter_
 
 
-def pdas(double[::1] y,
-         double lambda_,
-	 const int maxiter,
-	 const int verbose):
-    """ Handle to unweighted pdas with default intialization"""
-    
-    cdef np.intp_t n = y.shape[0]
-    cdef np.double_t[::1] z_hat = np.zeros(n - 2, dtype=np.double)
-    cdef np.double_t[::1] wi = np.ones(n, dtype=np.double)
-    cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
-    cdef double p = 1    
-    cdef int m = 5
-    cdef double delta_s = .9
-    cdef double delta_e = 1.1
-    cdef int iter_
-    cdef int iter_status
-    
-    with nogil:
-        iter_status = call_weighted_pdas(n,
-					&y[0],
-                                        &wi[0],
-					lambda_,
-					&x_hat[0],
-					&z_hat[0],
-					&iter_,
-					p,
-					m,
-					delta_s,
-					delta_e,
-					maxiter,
-					verbose)
-
-    if iter_status < 0:
-        raise RuntimeError("PDAS failed to converge in MAXITER iterations.")
-
-    return x_hat, z_hat, iter_
-
-
-def pdas_ws(double[::1] y,
-	    double lambda_,
-	    double[::1] z_hat,
-	    const int maxiter,
-	    const int verbose):
-    """ handle to unweighted pdas allowing warm start intialization """
-    
-    cdef np.intp_t n = y.shape[0]
-    cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
-    cdef np.double_t[::1] wi = np.ones(n, dtype=np.double)
-    cdef double p = 1    
-    cdef int m = 5
-    cdef double delta_s = .9
-    cdef double delta_e = 1.1
-    cdef int iter_
-    cdef int iter_status
-    
-    with nogil:
-        iter_status = call_weighted_pdas(n,
-                                        &y[0],
-                                        &wi[0],
-                                        lambda_,
-                                        &x_hat[0],
-                                        &z_hat[0],
-                                        &iter_,
-                                        p,
-                                        m,
-                                        delta_s,
-                                        delta_e,
-                                        maxiter,
-                                        verbose)
-
-    if iter_status < 0:
-        raise RuntimeError("Active Set Failed To Converge")
-
-    return x_hat, z_hat, iter_
-
-
-def ipm(double[::1] y,
-        double lambda_,
-        bool max_lambda,
-	double tol,
-	int maxiter,
-        int verbose):
+cpdef ipm(double[::1] y,
+          double lambda_,
+          bool max_lambda=False,
+          double tol=1e-4,
+	  int maxiter=200,
+          int verbose=0):
     """
     Solve L1 trend filter via primal-dual interior point method
 

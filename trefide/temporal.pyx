@@ -8,13 +8,13 @@ cimport numpy as np
 import numpy as np
 # cimport cython
 # import cython
-import solvers.lagrange.pdas as pdas
-import solvers.lagrange.wpdas as wpdas
-import solvers.constrained as constrained
+from solvers.lagrangian import lpdas
+from solvers.constrained import cpdas 
+from utils.noise import estimate_noise
 
 np.import_array()
 
-cdef class TrendFilter:
+cdef class TrendFilter(object):
     """ """
     cdef int isfit, verbose, maxiter
     cdef public np.intp_t T
@@ -26,37 +26,29 @@ cdef class TrendFilter:
         self.T = T
         self.warm_start = np.zeros(self.T-2, dtype=np.double)
         self.weights = np.ones(self.T, dtype=np.double)
-        self.maxiter=1000
-        self.verbose=1
+        self.maxiter=2000
+        self.verbose=0
 
     cpdef double[::1] fit(self, np.ndarray y):  
         """ """
+        # Estimate Noise
+        self.delta = estimate_noise([y], summarize='mean')[0] ** 2
         # Call constrained solver
-        x_hat, z_hat, lams, _, _, _, delta = constrained.solve(y)
-        # Set Params
-        #self.warm_start = z_hat
-        #self.lambda_ = lams[-1]
-        #self.delta = delta
-        #self.weights = np.ones(self.T)
+        x_hat, self.warm_start, self.lambda_, _ = cpdas(y, self.delta)
         self.isfit = 1
         return x_hat
 
-    cpdef predict(self, double[::1] y):
+    cpdef double[::1] predict(self, double[::1] y):
         """ """
         if self.isfit:
-            x_hat, z_hat, _ = pdas.warm_start(y, 
-                                              self.lambda_, 
-                                              self.weights, 
-                                              self.warm_start,  
-                                              self.maxiter, 
-                                              self.verbose)
+            x_hat, z_hat, _ = lpdas(y, 
+                                    self.lambda_, 
+                                    wi=self.weights, 
+                                    z_hat=self.warm_start,  
+                                    maxiter=self.maxiter, 
+                                    verbose=self.verbose)
             self.warm_start = z_hat
             return x_hat
         else:
             return self.fit(y)
-
-
-
-
-        
-        
+ 
