@@ -27,13 +27,12 @@ or
 
 You currently have 4 options to install the package into your python environment (i.e. make it so your python distribution can import trefide and it's submodules no matter what directory you've cloned them into). These options are listed in decreasing order of preference:
 
-1. Run ```pip install -e /path/to/trefide``` this will create an "editable" installation which will change as you modify code in the repority or pull updates. Pip will also download any Python package dependecies you happen to be missing. The project can be uninstalled at any time by running ```pip uninstall trefide```. 
+1. Run ```pip install -e /path/to/trefide``` this will create an "editable" installation which will change as you modify code in the repository or pull updates. Pip will also download any Python package dependecies you happen to be missing. The project can be uninstalled at any time by running ```pip uninstall trefide```. 
 2. Run ```python setup.py install``` in the top level directory of this project. This will have the same functionality as the above, but it will install missing dependencies using ```easy_install``` (less prefereable than pip). It can be uninstalled at any time by running ```python setup.py develop uninstall```.
 3. Manually install python package dependencies, build project sources as described in the following section, and add ```/absolute/path/to/trefide``` to your systems ```PYTHONPATH``` environment variable.
-4. Last resort: this approach will make a full installation of the package on your system. This is undesirable as the installation will not be updated as you pull changes or modify code. Additionally, there are no nice tools to uninstall if you follow this approach so you will need to manually force another install over the first whenever updates are pushed. Only do this is you NEED a full installation for some reason. Run ```python setup.py install``` in the top level directory. Reinstallation of updates can be forces via ```python setup.py install --force```. 
+4. Last resort: this approach will make a full installation of the package on your system. This is undesirable as the installation will not be updated as you pull changes or modify code. Additionally, there are no nice tools to uninstall, so you will need to force another installation over the first whenever updates are pushed (which will happen frequently since this is still under development). Only do this is you NEED a full installation for some reason. Run ```python setup.py install``` in the top level directory. Reinstallation of updates can be forces via ```python setup.py install --force```. 
 
 ## Building / Re-building Sources:
 
 The source should be built during installation, but if you modify or pull updates to any Cython/C code int he repository, the project can be rebuilt by running ```python setup.py build_ext --inplace``` from the top level directory (where setup.py is located). 
 
-```python setup.py build_ext --inplace```
