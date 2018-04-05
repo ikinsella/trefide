@@ -17,8 +17,10 @@ Alternatively, I encourage (for ease and performance) that you install the [Inte
 
 in these instructions with ```CC=icc``` on MacOS or ```LDSHARED="icc -shared" CC=icc``` on Linux. For example the source can be built/rebuilt (instructions below) with the lines:
 
-```CC=icc python setup.py build_ext --inplace``` on Macos 
+```CC=icc python setup.py build_ext --inplace``` on MacOS 
+
 or 
+
 ```LDSHARED="icc -shared" CC=icc python setup.py build_ext --inplace``` on Linux.
 
 ## Installation:
