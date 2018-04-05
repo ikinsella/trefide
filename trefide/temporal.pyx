@@ -8,9 +8,9 @@ cimport numpy as np
 import numpy as np
 # cimport cython
 # import cython
-from solvers.lagrangian import lpdas
-from solvers.constrained import cpdas 
-from utils.noise import estimate_noise
+from trefide.solvers.lagrangian import lpdas
+from trefide.solvers.constrained import cpdas 
+from trefide.utils.noise import estimate_noise
 
 np.import_array()
 

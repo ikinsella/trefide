@@ -18,4 +18,5 @@ logs.*
 *.o
 *.so
 *.dSYM
-solvers/*.c
+trefide/solvers/*.c
+trefide/*.c
