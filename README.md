@@ -25,7 +25,7 @@ or
 
 ## Installation:
 
-You currently have 4 options to install the package into your python environment (i.e. make it so your python distribution can import trefide and it's submodules no matter what directory you've clones them to). These options are listed in decreasing order of preference:
+You currently have 4 options to install the package into your python environment (i.e. make it so your python distribution can import trefide and it's submodules no matter what directory you've cloned them into). These options are listed in decreasing order of preference:
 
 1. Run ```pip install -e /path/to/trefide``` this will create an "editable" installation which will change as you modify code in the repority or pull updates. Pip will also download any Python package dependecies you happen to be missing. The project can be uninstalled at any time by running ```pip uninstall trefide```. 
 2. Run ```python setup.py install``` in the top level directory of this project. This will have the same functionality as the above, but it will install missing dependencies using ```easy_install``` (less prefereable than pip). It can be uninstalled at any time by running ```python setup.py develop uninstall```.
