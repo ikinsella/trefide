@@ -30,4 +30,5 @@ setup(
     ),
     cmdclass={"build_ext": build_ext},
     packages=find_packages(),
+    install_requires=["numpy", "scipy", "cython", "matplotlib"]
 )
