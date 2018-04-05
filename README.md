@@ -5,7 +5,7 @@
 - Python3
 - Python Packages: Numpy, Scipy, Cython, Matplotlib
 - Intel MKL (see below for instructions)
-- C compiler (only tested for ```gcc``` and ```icc``, see below for instructions)
+- C compiler (only tested for ```gcc``` and ```icc```, see below for instructions)
 
 This package contains C source wrapped by Cython which needs to be built on your system. 
 The easiest (and highest performant) way to ensure you have all the required libraries is to follow the instructions for installing & setting up [Intel MKL](https://software.intel.com/en-us/mkl). 
@@ -17,7 +17,9 @@ Alternatively, I encourage (for ease and performance) that you install the [Inte
 
 in these instructions with ```CC=icc``` on MacOS or ```LDSHARED="icc -shared" CC=icc``` on Linux. For example the source can be built/rebuilt (instructions below) with the lines:
 
-```CC=icc python setup.py build_ext --inplace``` on Macos or ```LDSHARED="icc -shared" CC=icc python setup.py build_ext --inplace``` on Linux.
+```CC=icc python setup.py build_ext --inplace``` on Macos 
+or 
+```LDSHARED="icc -shared" CC=icc python setup.py build_ext --inplace``` on Linux.
 
 ## Installation:
 
