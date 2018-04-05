@@ -1,4 +1,4 @@
-# TreFiDe - Trend Filtering Denoising
+# TreFiDe - Trend Filter Denoising
 
 ## Dependencies:
 - MacOS or Linux (only tested on MacOS High Sierra and Ubuntu 16.04))
