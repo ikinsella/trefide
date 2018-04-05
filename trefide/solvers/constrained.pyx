@@ -43,13 +43,19 @@ cpdef cpdas(const double[::1] y,    # Observations
     """
     
     cdef np.intp_t n = y.shape[0]
-    cdef double tau, int_width, scale = 0
+    cdef double tau, int_width, delta_w, scale = 0
     cdef int i, iter_status, iters = 0
     cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
 
     # Default to unweighted l1tf
     if wi is None:
         wi = np.ones(n, dtype=np.double)
+        delta_w = 1
+    else: 
+        delta_w = 0
+        for i in range(n):
+            delta_w += 1 / wi[i]
+        delta_w /= n
 
     # Default to initializing dual var at 0
     if z_hat is None:
@@ -72,7 +78,7 @@ cpdef cpdas(const double[::1] y,    # Observations
         iter_status = call_line_search(n,
 				       &y[0],
 				       &wi[0],
-				       delta,
+				       delta*delta_w,
                                        tau,
 				       &x_hat[0],
 				       &z_hat[0],

@@ -1,4 +1,4 @@
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 from Cython.Distutils import build_ext
 
@@ -29,5 +29,5 @@ setup(
                    include_dirs=[numpy.get_include()])]
     ),
     cmdclass={"build_ext": build_ext},
-    packages=["trefide", ],
+    packages=find_packages(),
 )
