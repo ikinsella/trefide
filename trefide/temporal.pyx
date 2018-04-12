@@ -12,14 +12,14 @@ from trefide.utils.noise import estimate_noise
 
 np.import_array()
 
-cdef class TrendFilter(object):
+cdef class TrendFilter:
     """ """
-    cdef int notfit, verbose, maxiter
-    cdef public np.intp_t T
-    cdef public np.double_t[::1] warm_start, weights
-    cdef public double lambda_, delta
+    #cdef int notfit, verbose, maxiter
+    #cdef public np.intp_t T
+    #cdef public np.double_t[::1] warm_start, weights
+    #cdef public double lambda_, delta
 
-    def __init__(self, int T, int maxiter=2000, int verbose=0):
+    def __cinit__(self, int T, int maxiter=2000, int verbose=0):
         """ Initialze filter for signal of length T"""
         self.notfit = 1
         self.T = T

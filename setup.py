@@ -26,7 +26,8 @@ setup(
                    extra_compile_args=["-O3"]),
          Extension("trefide.temporal",
                    [os.path.join("trefide", "temporal.pyx")],
-                   include_dirs=[numpy.get_include()])]
+                   include_dirs=[numpy.get_include()],
+                   package_data={"temporal":"*.pxd"})]
     ),
     cmdclass={"build_ext": build_ext},
     packages=find_packages(),
