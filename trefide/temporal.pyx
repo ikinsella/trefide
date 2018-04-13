@@ -14,12 +14,9 @@ np.import_array()
 
 cdef class TrendFilter:
     """ """
-    #cdef int notfit, verbose, maxiter
-    #cdef public np.intp_t T
-    #cdef public np.double_t[::1] warm_start, weights
-    #cdef public double lambda_, delta
-
-    def __cinit__(self, int T, int maxiter=2000, int verbose=0):
+    
+    
+    def __cinit__(self, np.intp_t T, np.intp_t maxiter=2000, int verbose=0):
         """ Initialze filter for signal of length T"""
         self.notfit = 1
         self.T = T
@@ -28,7 +25,8 @@ cdef class TrendFilter:
         self.maxiter=maxiter
         self.verbose=verbose
 
-    cpdef double[::1] _fit(self, double[::1] y):  
+
+    cpdef np.double_t[::1] _fit(self, np.double_t[::1] y):  
         """ Fit model parameters by solving constrained l1tf"""
         # Estimate Noise
         self.delta = estimate_noise([y], summarize='mean')[0] ** 2
@@ -42,7 +40,7 @@ cdef class TrendFilter:
         self.notfit = 0
         return x_hat
 
-    cpdef double[::1] denoise(self, double[::1] y, int refit=1):
+    cpdef np.double_t[::1] denoise(self, np.double_t[::1] y, int refit=1):
         """ Denoise an input signal, default to constrained l1tf"""
         if refit or self.notfit:
             return self._fit(y)
