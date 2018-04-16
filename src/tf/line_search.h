@@ -1,6 +1,10 @@
 #ifndef LINE_SEARCH_H
 #define LINE_SEARCH_H
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 int line_search(const int n,           // data length
 		const double *y,       // observations
 		const double *wi,      // inverse observation weights
@@ -14,4 +18,7 @@ int line_search(const int n,           // data length
 		const double tol,      // max num outer loop iterations
 		const int verbose);
 
+#ifdef  __cplusplus
+}
+#endif
 #endif /* LINE_SEARCH_H */

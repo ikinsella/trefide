@@ -3,7 +3,7 @@
 #include "wpdas.h"
 
 
-int sign(double val) {
+short sign(double val) {
     return (0 < val) - (val < 0);
 }
 

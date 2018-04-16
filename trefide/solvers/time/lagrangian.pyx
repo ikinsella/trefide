@@ -59,16 +59,16 @@ cpdef lpdas(double[::1] y,
    
     # Initialize variables
     cdef int iter_, iter_status
-    cdef np.intp_t n = y.shape[0]
-    cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
+    cdef size_t n = y.shape[0]
+    cdef double[::1] x_hat = np.empty(n, dtype=np.float64)
 
     # Default to unweighted loss
     if wi is None:
-        wi = np.ones(n, dtype=np.double)
+        wi = np.ones(n, dtype=np.float64)
     
     # Default warm start dual variable at 0
     if z_hat is None:
-        z_hat = np.zeros(n - 2, dtype=np.double)
+        z_hat = np.zeros(n - 2, dtype=np.float64)
 
     # Call weighted pdas C routine 
     with nogil:
@@ -124,9 +124,9 @@ cpdef ipm(double[::1] y,
                 data sequence
     """
     
-    cdef np.intp_t n = y.shape[0]
-    cdef np.double_t[::1] x_hat = np.empty(n, dtype=np.double)
-    cdef np.double_t[::1] z_hat = np.empty(n - 2, dtype=np.double)    
+    cdef size_t n = y.shape[0]
+    cdef double[::1] x_hat = np.empty(n, dtype=np.float64)
+    cdef double[::1] z_hat = np.empty(n - 2, dtype=np.float64)    
     cdef double lambda_max
     cdef int iter_
     cdef int iter_status
@@ -174,7 +174,7 @@ def l1tf_lambda_max(double[::1] data_,
                 lambda upper bound
     """
 
-    cdef np.intp_t data_length = data_.shape[0]
+    cdef size_t data_length = data_.shape[0]
     cdef double lambda_max
 
     lambda_max = call_l1tf_lambdamax(data_length,

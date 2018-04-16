@@ -18,8 +18,6 @@ logs.*
 *.o
 *.so
 *.dSYM
-trefide/solvers/*.c
-trefide/*.c
 build
 dist
 trefide.egg*

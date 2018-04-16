@@ -1,6 +1,10 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 /* y = D*x */
 void   Dx(const int n,
 	  const double *x,
@@ -15,4 +19,7 @@ void   DTx(const int n,
 void print_dvec(const int n,
 		const double *x);
 
+#ifdef  __cplusplus
+}
+#endif
 #endif /* UTILS_H */

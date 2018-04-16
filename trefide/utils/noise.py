@@ -43,7 +43,7 @@ def fft_estimator(signal, freq_range=[0.25, 0.5], max_samples=3072):
     idx = np.logical_and(ff > freq_range[0], ff <= freq_range[1])
 
     # we compute the mean of the noise spectral density s
-    xdft = np.fliplr(np.fft.rfft(signal))
+    xdft = np.flip(np.fft.rfft(signal),-1)
     psdx = (np.divide(1., len_signal)) * (xdft**2)
     psdx[1:] *= 2
     return np.divide(psdx[idx[:psdx.shape[0]]], 2)
