@@ -13,36 +13,36 @@ from cpython cimport bool
 np.import_array()
 
 
-cdef extern from "src/wpdas.c":
-    int call_weighted_pdas "weighted_pdas" (const int n,
-					    const double *y,
-					    const double *wi,
-					    const double lambda_,
-					    double *x,
-					    double *z,
-					    int *iter_,
-					    double p,
-					    const int m,
-					    const double delta_s,
-					    const double delta_e,
-					    const int maxiter,
-					    const int verbose) nogil
+cdef extern from "trefide.h":
+    int weighted_pdas (const int n,
+                       const double *y,
+                       const double *wi,
+                       const double lambda_,
+                       double *x,
+                       double *z,
+                       int *iter_,
+                       double p,
+                       const int m,
+                       const double delta_s,
+                       const double delta_e,
+                       const int maxiter,
+                       const int verbose) nogil
 
 
-cdef extern from "src/ipm.c":
-    int call_l1tf "l1tf" (const int n,
-			  const double *y,
-			  const double lambda_,
-			  double *x,
-			  double *z,
-                          int *iter_,
-			  const double tol,
-			  const int maxiter,
-			  const int verbose) nogil
+cdef extern from "trefide.h":
+    int l1tf (const int n,
+              const double *y,
+              const double lambda_,
+              double *x,
+              double *z,
+              int *iter_,
+              const double tol,
+              const int maxiter,
+              const int verbose) nogil
 
-    double call_l1tf_lambdamax "l1tf_lambdamax"(const int n,
-						double *y,
-						const int verbose) nogil
+    double l1tf_lambdamax (const int n,
+			   double *y,
+			   const int verbose) nogil
  
  
 cpdef lpdas(double[::1] y,
@@ -72,19 +72,19 @@ cpdef lpdas(double[::1] y,
 
     # Call weighted pdas C routine 
     with nogil:
-        iter_status = call_weighted_pdas(n,
-			        	 &y[0],
-			        	 &wi[0],
-			        	 lambda_,
-			        	 &x_hat[0],
-			        	 &z_hat[0],
-			        	 &iter_,
-			        	 p,
-			        	 m,
-			        	 delta_s,
-			        	 delta_e,
-			        	 maxiter,
-				         verbose)
+        iter_status = weighted_pdas(n,
+                                    &y[0],
+                                    &wi[0],
+                                    lambda_,
+                                    &x_hat[0],
+                                    &z_hat[0],
+                                    &iter_,
+                                    p,
+                                    m,
+                                    delta_s,
+                                    delta_e,
+                                    maxiter,
+                                    verbose)
     
     # Check Convergence Status 
     if iter_status < 0:
@@ -132,23 +132,23 @@ cpdef ipm(double[::1] y,
     cdef int iter_status
 
     if max_lambda:
-        lambda_max = call_l1tf_lambdamax(n,
-                                         &y[0],
-                                         verbose)
+        lambda_max = l1tf_lambdamax(n,
+                                    &y[0],
+                                    verbose)
         if lambda_max < 0:
             raise RuntimeError("Lambda < 0")
         lambda_ *= lambda_max
 
     with nogil:
-        iter_status = call_l1tf(n,
-                                &y[0],
-                                lambda_,
-                                &x_hat[0],
-				&z_hat[0],
-                                &iter_,
-				tol,
-				maxiter,
-                                verbose)
+        iter_status = l1tf(n,
+                           &y[0],
+                           lambda_,
+                           &x_hat[0],
+                           &z_hat[0],
+                           &iter_,
+                           tol,
+                           maxiter,
+                           verbose)
 
     if iter_status < 0:
         raise RuntimeError("Interior Point Method Failed To Converge In MAXITER iterations.")
@@ -177,9 +177,9 @@ def l1tf_lambda_max(double[::1] data_,
     cdef size_t data_length = data_.shape[0]
     cdef double lambda_max
 
-    lambda_max = call_l1tf_lambdamax(data_length,
-                                     &data_[0],
-                                     verbose)
+    lambda_max = l1tf_lambdamax(data_length,
+                                &data_[0],
+                                verbose)
 
     if lambda_max < 0:
         raise RuntimeError("Lambda < 0")

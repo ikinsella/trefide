@@ -86,16 +86,19 @@ int line_search(const int n,           // data length
         *iters += iter;
         mse_prev = mse;
         evaluate_search_point(n, y, wi, delta, x, &mse, &err);
+        if (fabs(mse - mse_prev) < 1e-3){
+            break;
+        }
         
     }
     
     /************************** Refine Estimate **************************/
 
     /* Interpolate to delta in transformed lambda space to refine estimate */
-    tau_interp = tau * direction * (delta - mse) / (mse - mse_prev);
-    *lambda = exp(log(*lambda + 1) + tau_interp) - 1;
-    weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
-    *iters += iter;
+    //tau_interp = tau * direction * (delta - mse) / (mse - mse_prev);
+    //*lambda = exp(log(*lambda + 1) + tau_interp) - 1;
+    //weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+    //*iters += iter;
     return 1;
 }
 

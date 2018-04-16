@@ -9,7 +9,6 @@ cimport numpy as np
 cimport cython
 from libc.stdlib cimport malloc, free
 
-
 np.import_array()
 
 
@@ -20,19 +19,19 @@ cdef extern from "math.h":
     double pow(double m, int n) nogil
 
 
-cdef extern from "src/line_search.c":
-    int call_line_search "line_search" (const int n,
-				        const double *y,
-					const double *wi,
-					const double delta,
-                                        const double tau,
-					double *x,
-					double *z,
-                                        double *lambda_,
-					int *iters,
-                                        const int max_interp,
-					const double tol,
-					const int verbose) nogil
+cdef extern from "trefide.h":
+    int line_search (const int n,
+                     const double *y,
+                     const double *wi,
+                     const double delta,
+                     const double tau,
+                     double *x,
+                     double *z,
+                     double *lambda_,
+                     int *iters,
+                     const int max_interp,
+                     const double tol,
+                     const int verbose) nogil
 
 
 cpdef cpdas(const double[::1] y,        # Observations
@@ -79,18 +78,18 @@ cpdef cpdas(const double[::1] y,        # Observations
     
     # Call Solver
     with nogil:
-        iter_status = call_line_search(t,
-                                       &y[0],
-                                       &wi[0],
-                                       delta*delta_w,
-                                       tau,
-                                       &x_hat[0],
-                                       &z_hat[0],
-                                       &lambda_,
-                                       &iters,
-                                       max_interp,
-                                       tol,
-                                       verbose)
+        iter_status = line_search(t,
+                                  &y[0],
+                                  &wi[0],
+                                  delta*delta_w,
+                                  tau,
+                                  &x_hat[0],
+                                  &z_hat[0],
+                                  &lambda_,
+                                  &iters,
+                                  max_interp,
+                                  tol,
+                                  verbose)
 
     # Check Convergence 
     if iter_status < 0:
@@ -100,7 +99,7 @@ cpdef cpdas(const double[::1] y,        # Observations
 
 
 cdef void cpdas_lite(const size_t t,
-                     const double delta,       # MSE constraint
+                     double delta,       # MSE constraint
                      const double *wi,               # Observation weights
                      double *x,                # Noisey Observations Denoise In Place
                      double *z,                # Dual variable warm start
@@ -127,18 +126,18 @@ cdef void cpdas_lite(const size_t t,
 
     # Call Solver
     with nogil:
-        iter_status = call_line_search(t,
-				       y,
-				       wi,
-				       delta,
-                                       tau,
-				       x,
-				       z,
-				       lambda_,
-                                       &iters,
-                                       0,
-                                       1e-3,
-				       verbose)
+        iter_status = line_search(t,
+                                  y,
+                                  wi,
+                                  delta,
+                                  tau,
+                                  x,
+                                  z,
+                                  lambda_,
+                                  &iters,
+                                  1,
+                                  1e-3,
+                                  verbose)
     # Release Allocated Memory
     free(y)
 
@@ -150,10 +149,13 @@ cdef double compute_scale(const size_t t,
 
     # Declare Internal Variables
     cdef size_t i
-    cdef double var_y
+    cdef double var_y = 0
 
     # Initialize step size as target interval width / step_partition
     for i in range(t):
         var_y += pow(y[i], 2)  # y assumed detrended and centered
     var_y /= t
-    return delta / sqrt(var_y - delta)
+    if var_y < delta:
+        return sqrt(var_y) / sqrt(.1)
+    else:
+        return delta / sqrt(var_y - delta)

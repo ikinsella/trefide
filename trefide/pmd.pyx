@@ -11,8 +11,10 @@ import numpy as np
 cimport numpy as np
 
 from libc.stdlib cimport malloc, free
+from libc.stdio cimport fprintf, stderr
 from trefide.solvers.time.constrained cimport cpdas_lite, compute_scale
 #from trefide.utils.welch cimport psd_noise_estimate
+#from trefide.solvers.space.lagrangian import ldr2_tv
 
 # -----------------------------------------------------------------------------#
 # --------------------------- Generic Helper Funcs ----------------------------#
@@ -41,9 +43,9 @@ cdef extern from "proxtv.h":
                double* info) nogil
 
 
-cdef extern from "utils/src/welch.c":
-    double _psd_noise_estimate "psd_noise_estimate" (const size_t n,
-                                                     const double *x) nogil
+cdef extern from "trefide.h":
+    double psd_noise_estimate (const size_t n,
+                               const double *x) nogil
 
 
 cdef double arr_distance(const size_t n, 
@@ -198,7 +200,7 @@ cdef void denoise_temporal(const size_t t,
     """Denoises and normalizes the temporal component v_k using the 
     instantiated trefide TrendFilter object"""
 
-    cdef double delta = _psd_noise_estimate(t, &v_k[0])
+    cdef double delta = psd_noise_estimate(t, &v_k[0])
     # Denoise updated temporal component 
     cpdas_lite(t, delta, wi_k, &v_k[0], z_k, lambda_tf, 1)
 
@@ -275,7 +277,7 @@ cdef double initialize_components(const size_t d1,
     
     # Declare Internal Variables
     cdef size_t i
-    cdef double scale, lambda_tf
+    cdef double scale, lambda_tf, delta
 
     # Initialize Spatial To Constant Vector
     u_k[:] = 1 / sqrt(d1 * d2)
@@ -291,9 +293,12 @@ cdef double initialize_components(const size_t d1,
     wi_k[t-1] = 1
 
     # Compute Initial Guess Of Lambda
-    scale = compute_scale(t, &v_k[0], 1)
+    delta = psd_noise_estimate(t, &v_k[0])
+    fprintf(stderr, "delta: %1.2e", delta)
+    scale = compute_scale(t, &v_k[0], delta)
+    fprintf(stderr, "scale: %1.2e", scale)
     lambda_tf = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1
-
+    fprintf(stderr, "lambda: %1.2e", lambda_tf)
     # Denoise intialized temporal component 
     denoise_temporal(t, wi_k, v_k, z_k, &lambda_tf)
 

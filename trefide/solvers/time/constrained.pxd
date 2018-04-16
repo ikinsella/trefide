@@ -15,19 +15,19 @@ cdef extern from "math.h":
     double pow(double m, int n) nogil
 
 
-cdef extern from "src/line_search.c":
-    int call_line_search "line_search" (const int n,
-				        const double *y,
-					const double *wi,
-					const double delta,
-                                        const double tau,
-					double *x,
-					double *z,
-                                        double *lambda_,
-					int *iters,
-                                        const int max_interp,
-					const double tol,
-					const int verbose) nogil
+cdef extern from "trefide.h":
+    int line_search (const int n,
+		     const double *y,
+		     const double *wi,
+                     const double delta,
+                     const double tau,
+                     double *x,
+                     double *z,
+                     double *lambda_,
+                     int *iters,
+                     const int max_interp,
+                     const double tol,
+                     const int verbose) nogil
 
 
 cpdef cpdas(const double[::1] y,        # Observations
