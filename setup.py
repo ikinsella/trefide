@@ -88,3 +88,12 @@ setup(
     packages=find_packages(),
     install_requires=["numpy", "scipy", "cython", "matplotlib"]
 )
+
+
+#         Extension("trefide.pmd",
+#                   [os.path.join("trefide", "pmd.pyx")],
+#                   include_dirs=[numpy.get_include()],
+#                   language="c++",
+#                   libraries=CPP_LIBRARIES,
+#                   extra_compile_args=CPP_COMPILE_ARGS,
+#                   extra_link_args=CPP_LINK_ARGS)

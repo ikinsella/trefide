@@ -8,7 +8,7 @@
 #endif
 
 
-double* inplace_rfft(const size_t L, double* yft){
+void inplace_rfft(const MKL_LONG L, double* yft){
     
     // Declare Local Variables
     DFTI_DESCRIPTOR_HANDLE desc_handle;
@@ -24,11 +24,10 @@ double* inplace_rfft(const size_t L, double* yft){
     /* Check Status & Warn */
     if (status != 0) fprintf(stderr, "MKL_FFT: %ld\n", status);
 
-    return yft;
 }
 
 
-void hanning_window(const size_t L, double* win){
+void hanning_window(const MKL_LONG L, double* win){
    
    // Declare Internal Vars 
    size_t l;
@@ -42,11 +41,17 @@ void hanning_window(const size_t L, double* win){
 }
 
 
-double* welch(const size_t N, const size_t L, const size_t R, const size_t fs, const double*x){
+void welch(const size_t N, 
+           const MKL_LONG L, 
+           const MKL_LONG R, 
+           const double fs, 
+           const double* x, 
+           double* psd){
     
     /* Declare Local Variables */
-    size_t k, l, K, S, P;
-    double *yft, *win, *psd;
+    size_t k, l;
+    MKL_LONG K, S, P;
+    double *yft, *win;
     double scale;
 
     /* Initialize & Allocate Mem For Local Variables */
@@ -55,7 +60,6 @@ double* welch(const size_t N, const size_t L, const size_t R, const size_t fs, c
     P = floor(L / 2) + 1;  // Number of Periodogram Coef
     win = (double *)malloc(L*sizeof(double));  // Window
     yft = (double *)malloc(L*sizeof(double));  // Windowed Signal Segment & DFT Coef
-    psd = (double *)malloc(P*sizeof(double));  // Averaged Periodogram Output 
 
     /* Construct Window & Compute DFT Coef Scaling Factor */
     hanning_window(L, win);
@@ -89,8 +93,6 @@ double* welch(const size_t N, const size_t L, const size_t R, const size_t fs, c
     // Free Allocated Memory
     free(yft);
     free(win);
-
-    return psd; 
 }
 
 
@@ -98,14 +100,19 @@ double psd_noise_estimate(const size_t N, const double* x){
 
     /* Declare Internal Vars */
     double *psd;
-    double var;
+    double var=0;
     size_t p;
 
     /* Call Pwelch PSD Estimator with  Reasonable Defaults */
-    size_t L = 256; // Segment Length
-    size_t R = 128; // Segment Overlap
-    size_t fs = 1;  // Sampling Freq Of Signal
-    psd = welch(N, L, R, fs, x);
+    MKL_LONG L = 256; // Segment Length
+    MKL_LONG R = 128; // Segment Overlap
+    double fs = 1;  // Sampling Freq Of Signal
+    MKL_LONG P = floor(L / 2) + 1;  // Number of Periodogram Coef
+    psd = (double *) malloc(P*sizeof(double)); 
+    for (p=0; p < P; p++){
+        psd[p] = 0.0;
+    }
+    welch(N, L, R, fs, x, psd);
     
     /* Average Over High Frequency Components */
     for (p=floor(L / 4) + 1; p < floor(L / 2) + 1; p++){

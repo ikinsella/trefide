@@ -60,7 +60,7 @@ void normalize(const MKL_INT n, double* x)
 /* Intializes len n constant vector */
 void initvec(const MKL_INT n, double* x, const double val)
 {
-    size_t i;
+    MKL_INT i;
     for(i = 0; i < n; i++)
         x[i]= val;
 }
@@ -171,30 +171,62 @@ void regress_temporal(const MKL_INT d,
 }
 
 
+/* Computes Scaling Factor For 2nd Order TF Line Search
+ */
+double compute_scale(const MKL_INT t, 
+                     const double *y, 
+                     const double delta)
+{
+    /* Compute power of signal: under assuming detrended and centered */
+    double var_y = cblas_dnrm2(t, y, 1);
+    var_y *= var_y;
+    var_y /= t;
+    
+    /* Return scaling factor sigma_eps / sqrt(SNR) */
+    if (var_y <= delta) 
+        return sqrt(var_y) / sqrt(.1); // protect against faulty noise estimates
+    return delta / sqrt(var_y - delta);
+}
+
+
 /* Denoises and normalizes the len t spatial component v_k using the 
  * constrained PDAS implementation of 2nd order L1TF denoising.
  */
 void denoise_temporal(const MKL_INT t,
                       double* v_k,
-                      double *z_k,
-                      double *lambda_tf)
+                      double* z_k,
+                      double* lambda_tf)
 {
+    /* Declare & Allocate Local Variables */
+    int iters;
+    double scale, tau, delta;
+    double* wi = (double *) malloc(t * sizeof(double));
+    double *v = (double *) malloc(t * sizeof(double));
 
-    /* Declare, Allocate, & Intialize Local Vars */
-    double* wi_k = (double *) malloc(t * sizeof(double));
-    initvec(t, wi_k, 1.0);  // Constant Weight For Now
+    /* Initialize Local Variables */
+    iters = 0;
+    initvec(t, wi, 1.0);  // Constant Weight For Now
+    copy(t, v_k, v); // target for tf
 
-    /* Estimate Noise Level Via Welch PSD Estimate */
-    double delta = psd_noise_estimate(t, &v_k[0]);
+    /* Estimate Noise Level Via Welch PSD Estimate & Compute Ideal Step Size */
+    delta = psd_noise_estimate(t, v_k);
+    scale = compute_scale(t, v_k, delta);
+    tau = (log(20 + (1 / scale)) - log(3 + (1 / scale))) / 60;
 
-    /* v_k <- argmin_v ||v||_TF s.t. ||v_k - v||_2^2 <= T * delta */
-    cpdas_lite(t, delta, wi_k, v_k, z_k, lambda_tf, 1);
+    /* If Uninitialized Compute Starting Point For Search */
+    if (*lambda_tf <= 0){
+        *lambda_tf = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
+    }
+
+    /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
+    line_search(t, v, wi, delta, tau, v_k, z_k, lambda_tf, &iters, 1, 1e-3, 1);
 
     /* v_k /= ||v_k||_2 */
     normalize(t, v_k);
 
     /* Free Allocated Memory */
-    free(wi_k);
+    free(v);
+    free(wi);
 }
 
 
@@ -246,7 +278,7 @@ double spatial_test_statistic(const MKL_INT d1,
 {
     
     /* Declare & Initialize Internal Variables */
-    size_t j, j1, j2;
+    int j, j1, j2;
     double norm_tv = 0;
     double norm_l1 = u_k[d1*d2-1];  // Bottom, Right Corner
 
@@ -295,25 +327,18 @@ double initialize_components(const MKL_INT d,
                              double* z_k){
     
     /* Declare Internal Variables */
-    double scale, lambda_tf, delta;
+    double lambda_tf = 0;
 
     /* Initialize Spatial To Constant Vector & Warm Start To 0 */
-    initvec(d, u_k, sqrt(d));
+    initvec(d, u_k, 1 / sqrt(d));
     initvec(t-2, z_k, 0.0);
 
     /* v_k <- R_k' u_k */
     regress_temporal(d, t, R_k, u_k, v_k);
-
-    /* Compute Initial Guess Of Lambda */
-    delta = psd_noise_estimate(t, v_k);
-    fprintf(stderr, "delta: %1.2e", delta);
-    scale = compute_scale(t, v_k, delta);
-    fprintf(stderr, "scale: %1.2e", scale);
-    lambda_tf = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
-    fprintf(stderr, "lambda: %1.2e", lambda_tf);
-    
+ 
     /* v_k <- argmin_v ||v||_TF s.t. ||v_k - v||_2^2 <= delta * T */
     denoise_temporal(t, v_k, z_k, &lambda_tf);
+
     return lambda_tf;
 }
 
