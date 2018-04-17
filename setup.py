@@ -20,8 +20,8 @@ CPP_LIBRARIES = C_LIBRARIES + ["proxtv"]
 
 # icc optimizations & location of trefide headers
 C_COMPILE_ARGS = ["-O3",
-                  "-qopenmp",
                   "-mkl=parallel",
+                  "-qopenmp",
                   "-I/home/ian/devel/trefide/src"]
 
 # location of proxtv headers and ignore mexing for MATLAB
@@ -29,7 +29,7 @@ CPP_COMPILE_ARGS = C_COMPILE_ARGS + ["-I/home/ian/devel/trefide/proxTV/src",
                                      "-D NOMATLAB=1"]
 
 # Location of libtrefide.so
-C_LINK_ARGS = ["-L/home/ian/devel/trefide/src"]
+C_LINK_ARGS = ["-mkl=parallel", "-qopenmp", "-L/home/ian/devel/trefide/src"]
 
 # Location of libproxtv.so
 CPP_LINK_ARGS = C_LINK_ARGS + ["-L/home/ian/devel/trefide/proxTV/src"]

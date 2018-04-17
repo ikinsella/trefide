@@ -219,7 +219,7 @@ void denoise_temporal(const MKL_INT t,
     }
 
     /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
-    line_search(t, v, wi, delta, tau, v_k, z_k, lambda_tf, &iters, 1, 1e-3, 1);
+    line_search(t, v, wi, delta, tau, v_k, z_k, lambda_tf, &iters, 1, 1e-3, 0);
 
     /* v_k /= ||v_k||_2 */
     normalize(t, v_k);

@@ -9,11 +9,13 @@
         ],
         "extra_compile_args": [
             "-O3",
-            "-qopenmp",
             "-mkl=parallel",
+            "-qopenmp",
             "-I/home/ian/devel/trefide/src"
         ],
         "extra_link_args": [
+            "-mkl=parallel",
+            "-qopenmp",
             "-L/home/ian/devel/trefide/src"
         ],
         "include_dirs": [
