@@ -1,10 +1,12 @@
 CC = icc
-CFLAGS = -mkl=parallel -qopenmp -O3 -fPIC
-LDFLAGS = -shared -fPIC
+CFLAGS = -mkl=sequential -O3 -fPIC #-mkl=parallel -qopenmp
+CXX = icpc
+CXXFLAGS = -mkl=sequential -O3 -fPIC #-mkl=parallel -qopenmp
+LDFLAGS = -shared
 TARGET_LIB = libtrefide.so
-LIBS = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm
-SRCS = noise/welch.c tf/wpdas.c tf/line_search.c tf/utils.c tf/ipm.c
-OBJS = $(patsubst %.c,%.o,$(SRCS))
+LIBS = -lmkl_intel_lp64 -lmkl_core -lm  #-lmkl_intel_thread -liomp5
+SRCS = noise/welch.cpp tf/wpdas.cpp tf/line_search.cpp tf/utils.cpp tf/ipm.cpp
+OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 .PHONY: all
 all: $(TARGET_LIB)
@@ -12,9 +14,9 @@ all: $(TARGET_LIB)
 $(TARGET_LIB): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-$(SRCS:.c=.d) : %.d : %.c
+$(SRCS:.cpp=.d) : %.d : %.cpp
 	$(CC) $(CFLAGS) -o $@ $^
 
 .PHONY : clean 
 clean:
-	rm -f $(TARGET_LIB) $(OBJS) $(SRCS:.c=.d)
+	rm -f $(TARGET_LIB) $(OBJS) $(SRCS:.cpp=.d)

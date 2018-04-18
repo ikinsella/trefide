@@ -3,7 +3,8 @@
 #include <math.h>
 #include <mkl.h>
 #include "trefide.h"
-#include "proxtv.h"
+//#include "proxtv.h"
+
 
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic Helper Funcs ---------------------------*
@@ -102,7 +103,7 @@ void denoise_spatial(const MKL_INT d1,
     copy(d1*d2, u_k, target);
 
     /* u_k <- argmin_u ||u_k - u|| + 2*lambda_tv ||u||TV */
-    DR2_TV(d1, d2, target, lambda_tv, lambda_tv, 1, 1, u_k, 1, 1, info);
+    //DR2_TV(d1, d2, target, lambda_tv, lambda_tv, 1, 1, u_k, 1, 1, info);
 
     /* u_k /= ||u_k|| */
     normalize(d1*d2, u_k);
@@ -306,7 +307,8 @@ double spatial_test_statistic(const MKL_INT d1,
         norm_l1 += fabs(u_k[j]);
         j += d1;
     }
-
+    
+    //return norm_tv / (d1 * (d2 - 1) + d2 * (d1- 1));
     /* Return Test Statistic */
     if (norm_tv > 0){
         return norm_l1 / norm_tv;

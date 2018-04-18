@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include <mkl.h>
+#include <algorithm>
+#include <cstdlib>
 #include "utils.h"
+
+using namespace std;
 
 /*******************************************************************************
  *                                   Globals                                   *
@@ -13,8 +16,27 @@
 #define  max(x,y)       ((x)>(y)?(x):(y))
 #define  min(x,y)       ((x)<(y)?(x):(y))
 
-/* Global Vars */
-double *vio_fitness; // made available for sorting use in cmp
+/******************************************************************************
+ *                         Custom Data Structures                             *
+ ******************************************************************************/
+
+
+/* Comparator passed to c++ sort function in order to sort violator indices 
+ * in descending order of violator fitness.
+ */
+struct FitnessComparator
+{
+    const double* fitness_arr;
+
+    FitnessComparator(const double* vio_fitness):
+        fitness_arr(vio_fitness) {}
+
+    bool operator()(int i1, int i2)
+    {
+        return fitness_arr[i1] > fitness_arr[i2];
+    }
+};
+
 
 /*******************************************************************************
  *                            Function Declaration                             *
@@ -54,9 +76,6 @@ void reassign_violators(const int n_vio,
 			const int *vio_index,
 			const int *vio_sort);
 
-/* comparator to sort violators by fitness */
-int cmp(const void *a,
-	const void *b);
 
 /*******************************************************************************
  *                                 Main Solver                                 *
@@ -79,6 +98,7 @@ int weighted_pdas(const int n,           // data length
     /************************** Initialize Variables ***************************/
     double *diff_x;
     double *div_zi;
+    double *vio_fitness;
     int *vio_index;
     int *vio_queue;
     int *vio_sort;    
@@ -93,14 +113,14 @@ int weighted_pdas(const int n,           // data length
     int n_active;
     
     /***************************** Allocate Memory *****************************/
-    diff_x = malloc(sizeof(double)*(n-2));
-    div_zi = malloc(sizeof(double)*n);
-    vio_fitness = malloc(sizeof(double)*(n-2));
-    vio_index = malloc(sizeof(int)*(n-2));
-    vio_sort = malloc(sizeof(int)*(n-2));    
-    vio_queue = malloc(sizeof(int)*m);
-    ab = malloc(sizeof(double)*n*3);
-    b = malloc(sizeof(double)*n);
+    diff_x = (double *) malloc(sizeof(double)*(n-2));
+    div_zi = (double *) malloc(sizeof(double)*n);
+    vio_fitness = (double *) malloc(sizeof(double)*(n-2));
+    vio_index = (int *) malloc(sizeof(int)*(n-2));
+    vio_sort = (int *) malloc(sizeof(int)*(n-2));    
+    vio_queue = (int *) malloc(sizeof(int)*m);
+    ab = (double *) malloc(sizeof(double)*n*3);
+    b = (double *) malloc(sizeof(double)*n);
     /************************ Prepare Queue Variables **************************/
     queue_index = 0;
     vio_queue[0] = n;
@@ -211,7 +231,7 @@ int weighted_pdas(const int n,           // data length
       }
 
       // Sort violator indices by fitness value
-      qsort(vio_sort, n_vio, sizeof(int), cmp);
+      sort(vio_sort, vio_sort + n_vio, FitnessComparator(vio_fitness));
 
       // Reassign first p * n_vio violators
       n_vio = max((int)round(p * (double)n_vio), 1);
@@ -422,19 +442,5 @@ void reassign_violators(const int n_vio,
       }
     }
   }
-}
-
-/******************************************************************************
- *                            Utility Functions                               *
- ******************************************************************************/
-
-/* Comparator used in qsort to sort violator indices 
- * in descending order of violator fitness. vio_fitness
- * has been made available as global variable.
- */
-int cmp(const void *a, const void *b){
-  int ia = *(int *)a;
-  int ib = *(int *)b;
-  return vio_fitness[ia] > vio_fitness[ib] ? -1 : vio_fitness[ia] < vio_fitness[ib];
 }
 

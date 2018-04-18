@@ -1,9 +1,9 @@
 #ifndef WPDAS_H
 #define WPDAS_H
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+//#ifdef  __cplusplus
+//extern "C" {
+//#endif
 
 /* main routine for pdas l1tf solver */
 int weighted_pdas(const int n,
@@ -20,7 +20,7 @@ int weighted_pdas(const int n,
                   const int maxiter,
                   const int verbose);
 
-#ifdef  __cplusplus
-}
-#endif
+//#ifdef  __cplusplus
+//}
+//#endif
 #endif /* WPDAS_H */

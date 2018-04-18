@@ -9,8 +9,6 @@ import numpy as np
 from trefide.solvers.time.lagrangian import lpdas
 from trefide.solvers.time.constrained import cpdas 
 from trefide.utils.noise import estimate_noise
-from libc.stdlib cimport malloc, free
-from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 
 np.import_array()

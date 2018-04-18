@@ -95,27 +95,27 @@ int l1tf(const int n,
     int ddtf_chol;
 
     /* memory allocation */
-    S       = malloc(sizeof(double)*m*3);
-    DDTF    = malloc(sizeof(double)*m*7);
+    S       = (double *) malloc(sizeof(double)*m*3);
+    DDTF    = (double *) malloc(sizeof(double)*m*7);
 
-    DTz     = malloc(sizeof(double)*n);
-    Dy      = malloc(sizeof(double)*m);
-    DDTz    = malloc(sizeof(double)*m);
+    DTz     = (double *) malloc(sizeof(double)*n);
+    Dy      = (double *) malloc(sizeof(double)*m);
+    DDTz    = (double *) malloc(sizeof(double)*m);
 
     //z       = malloc(sizeof(double)*m);
-    mu1     = malloc(sizeof(double)*m);
-    mu2     = malloc(sizeof(double)*m);
-    f1      = malloc(sizeof(double)*m);
-    f2      = malloc(sizeof(double)*m);
-    dz      = malloc(sizeof(double)*m);
-    dmu1    = malloc(sizeof(double)*m);
-    dmu2    = malloc(sizeof(double)*m);
-    w       = malloc(sizeof(double)*m);
-    rz      = malloc(sizeof(double)*m);
-    tmp_m1  = malloc(sizeof(double)*m);
-    tmp_m2  = malloc(sizeof(double)*m);
+    mu1     = (double *) malloc(sizeof(double)*m);
+    mu2     = (double *) malloc(sizeof(double)*m);
+    f1      = (double *) malloc(sizeof(double)*m);
+    f2      = (double *) malloc(sizeof(double)*m);
+    dz      = (double *) malloc(sizeof(double)*m);
+    dmu1    = (double *) malloc(sizeof(double)*m);
+    dmu2    = (double *) malloc(sizeof(double)*m);
+    w       = (double *) malloc(sizeof(double)*m);
+    rz      = (double *) malloc(sizeof(double)*m);
+    tmp_m1  = (double *) malloc(sizeof(double)*m);
+    tmp_m2  = (double *) malloc(sizeof(double)*m);
 
-    IPIV    = malloc(sizeof(int)*m);
+    IPIV    = (int *) malloc(sizeof(int)*m);
 
     /* INITIALIZATION */
 
@@ -375,9 +375,9 @@ double l1tf_lambdamax(const int n, double *y, const int verbose)
     int *piv;
 
     m = n-2;
-    vec = malloc(sizeof(double)*m);
-    mat = malloc(sizeof(double)*7*m);
-    piv = malloc(sizeof(int)*m);
+    vec = (double *) malloc(sizeof(double)*m);
+    mat = (double *) malloc(sizeof(double)*7*m);
+    piv = (int *)  malloc(sizeof(int)*m);
 
     Dx(n,y,vec);
     dptr = mat;

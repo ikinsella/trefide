@@ -1,6 +1,8 @@
 #ifndef PMD_H
 #define PMD_H
 
+#include <mkl.h>
+
 double distance_inplace(const MKL_INT n, 
                         const double* x,
                         double* y);
