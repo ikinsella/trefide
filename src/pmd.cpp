@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <mkl.h>
-#include "trefide.h"
+#include "line_search.h"
+#include "welch.h"
 //#include "proxtv.h"
 
 
