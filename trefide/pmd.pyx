@@ -83,11 +83,11 @@ cpdef serial_batch_pmd(const int d1,
                        double[:, :, ::1] Y, 
                        const int bheight,
                        const int bwidth,
-                       double lambda_tv=.0025,
-                       double spatial_thresh=-1,
-                       size_t max_components=50,
-                       size_t max_iters=50,
-                       double tol=5e-3):
+                       const double lambda_tv,
+                       const double spatial_thresh,
+                       const size_t max_components,
+                       const size_t max_iters,
+                       const double tol):
     """ Wrapper around single_patch_pmd to faciliate batch processing of
     videos is series"""
     
@@ -99,8 +99,6 @@ cpdef serial_batch_pmd(const int d1,
     cdef int num_blocks = nbi * nbj
 
     # Compute block-start indices and spatial cutoff
-    if spatial_thresh < 0:
-        spatial_thresh = (bheight*bwidth / ((bheight*(bwidth-1) + bwidth*(bheight-1))))
     indices = np.transpose([np.tile(range(nbi), nbj),
                             np.repeat(range(nbj), nbi)])
 
@@ -138,11 +136,11 @@ cpdef parallel_batch_pmd(const int d1,
                          double[:, :, ::1] Y, 
                          const int bheight,
                          const int bwidth,
-                         double lambda_tv=.0025,
-                         double spatial_thresh=-1,
-                         size_t max_components=50,
-                         size_t max_iters=50,
-                         double tol=5e-3):
+                         const double lambda_tv,
+                         const double spatial_thresh,
+                         const size_t max_components,
+                         const size_t max_iters,
+                         const double tol):
     """ Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
      factor_patch with OpenMP directives to parallelize batch processing."""
 
@@ -154,8 +152,6 @@ cpdef parallel_batch_pmd(const int d1,
     cdef int num_blocks = nbi * nbj
 
     # Compute block-start indices and spatial cutoff
-    if spatial_thresh < 0:
-        spatial_thresh = (bheight*bwidth / ((bheight*(bwidth-1) + bwidth*(bheight-1))))
     indices = np.transpose([np.tile(range(nbi), nbj),
                             np.repeat(range(nbj), nbi)])
 

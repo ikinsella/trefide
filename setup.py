@@ -1,45 +1,51 @@
+import os
+import numpy
+
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 from Cython.Distutils import build_ext
 
-import os
-import numpy
 
-# ---------------------- COMPILER ARGS, LIBS, & LOCS -------------------------#
+# -------------------- DEPS, COMPILER ARGS, LIBS, & LOCS ---------------------#
 
-# Using Intel MKL Libs For Lapack, Lapacke, Blas, Vector Math & FFT
-LIBRARIES = ["mkl_core",
-             "mkl_intel_lp64",
-             "trefide",
-             "proxtv",
-             "iomp5",
-             "m"]
-            #"iomp5",
-            #"mkl_intel_thread",
+# Additional  (Optional) Packages May Be Needed To MAke Videos In Demos
+DEPENDENCIES = ["numpy", "scipy", "cython", "matplotlib"]
 
-# Compiled ProxTV CPP Libs From Submodule
+TREFIDE = os.getcwd()
 
-# icc optimizations & location of trefide headers
-COMPILE_ARGS = ["-O3",
-                "-mkl=sequential",
-                "-qopenmp",
-                "-I/home/ian/devel/trefide/src",
-                "-I/home/ian/devel/trefide/proxTV/src",
-                "-D NOMATLAB=1"]
-                  #"-mkl=parallel",
-                  #"-qopenmp",
+# We compile against intel mkl will need an intel MKL Disto:
+LIBRARIES = ["mkl_core",          # Used for FFT, Vector Math, CBLAS, Lapacke, ect...
+             "mkl_intel_lp64",    # Intel MKL LP64 libs
+             "trefide",           # Our cpp sourcecode which we compile to libtrefide.so
+             "proxtv",            # ProxTV's cpp sourcecode which we compile to libproxtv.so
+             "iomp5",             # Intel mkl OpenMPi runtime
+             "m"                  # <math.h>
+            ]
 
-# location of proxtv headers and ignore mexing for MATLAB
+# Defaults Set Here Are For using Intel icc/icpc Compilers
+COMPILE_ARGS = ["-O3",              # Max compiler optimizations
+                "-mkl=sequential",  # Use if processing blocks in parallel (single core/block)
+                # "-mkl=parallel",  # Use if processing blocks sequentially (multiple cores/block)
+                                    # Remove -mkl args entirely if not using icc/icpc to compile
+                "-qopenmp",         # Tell icc/icpc to have OpenMP use OMP_NUM_THREADS when it encounters directives
+                # "-fopenmp"        # Tell gcc/g++ to have OpenMP use OMP_NUM_THREADS when it encounters directives
+                "-I" + os.path.join(TREFIDE, "src"),              # Location of trefide.h
+                "-I" + os.path.join(TREFIDE, "src", "proxtv"),    # Location Of proxtv.h
+                "-D NOMATLAB=1"                                   # Ignore ProXTV's attempt to mex
+               ]
 
-# Location of libtrefide.so
-LINK_ARGS = ["-mkl=sequential",
-             "-qopenmp",
-             "-L/home/ian/devel/trefide/src",
-             "-L/home/ian/devel/trefide/proxTV/src"]
-            # "-mkl=parallel", "-qopenmp", 
+# See Above
+LINK_ARGS = ["-mkl=sequential",     # See Above
+             # "-mkl=parallel",     # See Above
+                                    # See Above
+             "-qopenmp",            # See Above
+             # "-fopenmp",          # See Above
+             "-L" + os.path.join(TREFIDE, "src"),           # Location of libtrefide.so (Add to $LD_LIBRARY_PATH)
+             "-L" + os.path.join(TREFIDE, "src", "proxtv")  # Location of libproxtv.so  (Add to $LD_LIBRARY_PATH)
+            ]
 
+# ---------------------------- Build Cythonized Modules ---------------------------------#
 
-# ---------------------------- SETUP MODULES ---------------------------------#
 
 setup(
     name="trefide",
@@ -93,14 +99,5 @@ setup(
     ),
     cmdclass={"build_ext": build_ext},
     packages=find_packages(),
-    install_requires=["numpy", "scipy", "cython", "matplotlib"]
+    install_requires=DEPENDENCIES
 )
-
-
-#         Extension("trefide.pmd",
-#                   [os.path.join("trefide", "pmd.pyx")],
-#                   include_dirs=[numpy.get_include()],
-#                   language="c++",
-#                   libraries=CPP_LIBRARIES,
-#                   extra_compile_args=CPP_COMPILE_ARGS,
-#                   extra_link_args=CPP_LINK_ARGS)

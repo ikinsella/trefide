@@ -20,5 +20,5 @@ logs.*
 *.dSYM
 build
 dist
-deprecated
+deprecated/
 trefide.egg*
