@@ -4,7 +4,7 @@
 #include <mkl.h>
 #include "line_search.h"
 #include "welch.h"
-//#include "proxtv.h"
+#include <proxtv.h>
 
 
 /*----------------------------------------------------------------------------*
@@ -104,7 +104,7 @@ void denoise_spatial(const MKL_INT d1,
     copy(d1*d2, u_k, target);
 
     /* u_k <- argmin_u ||u_k - u|| + 2*lambda_tv ||u||TV */
-    //DR2_TV(d1, d2, target, lambda_tv, lambda_tv, 1, 1, u_k, 1, 1, info);
+    DR2_TV(d1, d2, target, lambda_tv, lambda_tv, 1, 1, u_k, 1, 1, info);
 
     /* u_k /= ||u_k|| */
     normalize(d1*d2, u_k);

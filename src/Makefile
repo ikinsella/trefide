@@ -1,7 +1,7 @@
 CC = icc
 CFLAGS = -mkl=sequential -O3 -fPIC #-mkl=parallel -qopenmp
 CXX = icpc
-CXXFLAGS = -mkl=sequential -O3 -fPIC #-mkl=parallel -qopenmp
+CXXFLAGS = -mkl=sequential -O3 -fPIC -I/home/ian/devel/trefide/proxTV/src -D NOMATLAB=1#-mkl=parallel -qopenmp
 LDFLAGS = -shared
 TARGET_LIB = libtrefide.so
 LIBS = -lmkl_intel_lp64 -lmkl_core -lm  #-lmkl_intel_thread -liomp5
@@ -12,10 +12,10 @@ OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 all: $(TARGET_LIB)
 
 $(TARGET_LIB): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 $(SRCS:.cpp=.d) : %.d : %.cpp
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CXXFLAGS) -o $@ $^
 
 .PHONY : clean 
 clean:

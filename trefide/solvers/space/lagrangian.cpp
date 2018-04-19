@@ -9,13 +9,15 @@
         ],
         "extra_compile_args": [
             "-O3",
+            "-mkl=sequential",
             "-qopenmp",
-            "-mkl=parallel",
             "-I/home/ian/devel/trefide/src",
             "-I/home/ian/devel/trefide/proxTV/src",
             "-D NOMATLAB=1"
         ],
         "extra_link_args": [
+            "-mkl=sequential",
+            "-qopenmp",
             "-L/home/ian/devel/trefide/src",
             "-L/home/ian/devel/trefide/proxTV/src"
         ],
@@ -26,11 +28,10 @@
         "libraries": [
             "mkl_core",
             "mkl_intel_lp64",
-            "mkl_intel_thread",
-            "iomp5",
             "trefide",
-            "m",
-            "proxtv"
+            "proxtv",
+            "iomp5",
+            "m"
         ],
         "name": "trefide.solvers.space.lagrangian",
         "sources": [

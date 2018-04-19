@@ -10,11 +10,16 @@
         "extra_compile_args": [
             "-O3",
             "-mkl=sequential",
-            "-I/home/ian/devel/trefide/src"
+            "-qopenmp",
+            "-I/home/ian/devel/trefide/src",
+            "-I/home/ian/devel/trefide/proxTV/src",
+            "-D NOMATLAB=1"
         ],
         "extra_link_args": [
             "-mkl=sequential",
-            "-L/home/ian/devel/trefide/src"
+            "-qopenmp",
+            "-L/home/ian/devel/trefide/src",
+            "-L/home/ian/devel/trefide/proxTV/src"
         ],
         "include_dirs": [
             "/home/ian/miniconda3/envs/idp3/lib/python3.6/site-packages/numpy/core/include"
@@ -24,6 +29,8 @@
             "mkl_core",
             "mkl_intel_lp64",
             "trefide",
+            "proxtv",
+            "iomp5",
             "m"
         ],
         "name": "trefide.temporal",
