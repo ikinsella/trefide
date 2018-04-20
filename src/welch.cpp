@@ -9,7 +9,7 @@
 
 
 void inplace_rfft(const MKL_LONG L, double* yft){
-    
+   
     // Declare Local Variables
     DFTI_DESCRIPTOR_HANDLE desc_handle;
     MKL_LONG status;
@@ -22,15 +22,29 @@ void inplace_rfft(const MKL_LONG L, double* yft){
     status = DftiFreeDescriptor( &desc_handle );
  
     /* Check Status & Warn */
-    if (status != 0) fprintf(stderr, "MKL_FFT: %ld\n", status);
-
+    if (status != 0) 
+        fprintf(stderr, "Error in MKL_FFT: %ld\n", status);
 }
 
 
-void hanning_window(const MKL_LONG L, double* win){
+void threadsafe_inplace_rfft(const MKL_LONG L, double* yft, 
+                             DFTI_DESCRIPTOR_HANDLE *FFT){
+       
+    // Declare Local Variables
+    MKL_LONG status;
+
+    /* result is x_out[0], ..., x_out[31]*/
+    status = DftiComputeForward( *FFT, yft );
+ 
+    /* Check Status & Warn */
+    if (status != 0) fprintf(stderr, "Error Using MKL_FFT Handle: %ld\n", status);
+}
+
+
+void hanning_window(const MKL_INT L, double* win){
    
    // Declare Internal Vars 
-   size_t l;
+   int l;
    double rad_inc;
 
    // Fill Vector With Window Val
@@ -42,15 +56,16 @@ void hanning_window(const MKL_LONG L, double* win){
 
 
 void welch(const size_t N, 
-           const MKL_LONG L, 
-           const MKL_LONG R, 
+           const MKL_INT L, 
+           const MKL_INT R, 
            const double fs, 
            const double* x, 
-           double* psd){
+           double* psd,
+           DFTI_DESCRIPTOR_HANDLE *FFT){
     
     /* Declare Local Variables */
-    size_t k, l;
-    MKL_LONG K, S, P;
+    int k, l;
+    MKL_INT K, S, P;
     double *yft, *win;
     double scale;
 
@@ -73,7 +88,11 @@ void welch(const size_t N,
         vdMul(L, x + S * k, win, yft);
         
         // Transform Windowed Signal Segment Into Squared DFT Coef. Inplace
-        inplace_rfft(L, yft);
+        if (!FFT){ /* Void FFT handle indicates operating in serial mode */
+            inplace_rfft(L, yft);
+        } else { /* Passing an FFT handle means it is being shared among threads */
+            threadsafe_inplace_rfft(L, yft, FFT);
+        }
         vdSqr(L, yft, yft);
 
         // Increment Estimate Of PSD
@@ -96,23 +115,23 @@ void welch(const size_t N,
 }
 
 
-double psd_noise_estimate(const size_t N, const double* x){
+double psd_noise_estimate(const size_t N, const double* x, DFTI_DESCRIPTOR_HANDLE *FFT){
 
     /* Declare Internal Vars */
     double *psd;
     double var=0;
-    size_t p;
+    int p;
 
     /* Call Pwelch PSD Estimator with  Reasonable Defaults */
-    MKL_LONG L = 256; // Segment Length
-    MKL_LONG R = 128; // Segment Overlap
+    MKL_INT L = 256; // Segment Length
+    MKL_INT R = 128; // Segment Overlap
     double fs = 1;  // Sampling Freq Of Signal
-    MKL_LONG P = floor(L / 2) + 1;  // Number of Periodogram Coef
+    MKL_INT P = floor(L / 2) + 1;  // Number of Periodogram Coef
     psd = (double *) malloc(P*sizeof(double)); 
     for (p=0; p < P; p++){
         psd[p] = 0.0;
     }
-    welch(N, L, R, fs, x, psd);
+    welch(N, L, R, fs, x, psd, FFT);
     
     /* Average Over High Frequency Components */
     for (p=floor(L / 4) + 1; p < floor(L / 2) + 1; p++){

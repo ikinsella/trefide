@@ -1,5 +1,5 @@
 import numpy as np
-from trefide.pmd import blockwise_pmd, parallel_pmd
+from trefide.pmd import serial_batch_pmd, parallel_batch_pmd
 
 if __name__ == "__main__":
     X = np.load("/home/ian/devel/trefide/data/prepared_sampleMovie.npy")
@@ -9,9 +9,9 @@ if __name__ == "__main__":
     maxiter = 50
     tol = 5e-3
     bheight = 40
-    bwidth = 200
+    bwidth = 100
     spatial_cutoff = (bheight*bwidth / ((bheight*(bwidth-1) + bwidth*(bheight-1))))
     w = .0025
     
-    #U, V, K, indices = blockwise_pmd(d1, d2, T, X, bheight, bwidth, w, spatial_cutoff, K, maxiter, tol)
-    U, V, K, indices = parallel_pmd(d1, d2, T, X, bheight, bwidth, w, spatial_cutoff, K, maxiter, tol)
+    # U, V, K, indices = serial_batch_pmd(d1, d2, T, X, bheight, bwidth, w, spatial_cutoff, K, maxiter, tol)
+    U, V, K, indices = parallel_batch_pmd(d1, d2, T, X, bheight, bwidth, w, spatial_cutoff, K, maxiter, tol)

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <mkl.h>
+#include <mkl_dfti.h>
 #include "line_search.h"
 #include "welch.h"
 #include <proxtv.h>
@@ -197,7 +198,8 @@ double compute_scale(const MKL_INT t,
 void denoise_temporal(const MKL_INT t,
                       double* v_k,
                       double* z_k,
-                      double* lambda_tf)
+                      double* lambda_tf,
+                      DFTI_DESCRIPTOR_HANDLE *FFT)
 {
     /* Declare & Allocate Local Variables */
     int iters;
@@ -211,7 +213,7 @@ void denoise_temporal(const MKL_INT t,
     copy(t, v_k, v); // target for tf
 
     /* Estimate Noise Level Via Welch PSD Estimate & Compute Ideal Step Size */
-    delta = psd_noise_estimate(t, v_k);
+    delta = psd_noise_estimate(t, v_k, FFT);
     scale = compute_scale(t, v_k, delta);
     tau = (log(20 + (1 / scale)) - log(3 + (1 / scale))) / 60;
 
@@ -243,7 +245,8 @@ double update_temporal(const MKL_INT d,
                        const double* u_k,
                        double* v_k,
                        double* z_k,
-                       double* lambda_tf)
+                       double* lambda_tf,
+                       DFTI_DESCRIPTOR_HANDLE *FFT)
 {
     /* Declare & Allocate For Internal Vars */
     double delta_v;
@@ -256,7 +259,7 @@ double update_temporal(const MKL_INT d,
     regress_temporal(d, t, R_k, u_k, v_k);
 
     /* v_{k+1} <- argmin_v ||v||_TF s.t. ||v_{k+1} - v||_2^2 <= T * delta */
-    denoise_temporal(t, v_k, z_k, lambda_tf);
+    denoise_temporal(t, v_k, z_k, lambda_tf, FFT);
 
     /* return ||v_{k+1} - v_{k}||_2 */
     delta_v = distance_inplace(t, v_k, v__);
@@ -327,7 +330,8 @@ double initialize_components(const MKL_INT d,
                              const double* R_k,
                              double* u_k,
                              double* v_k,
-                             double* z_k){
+                             double* z_k,
+                             DFTI_DESCRIPTOR_HANDLE *FFT){
     
     /* Declare Internal Variables */
     double lambda_tf = 0;
@@ -340,7 +344,7 @@ double initialize_components(const MKL_INT d,
     regress_temporal(d, t, R_k, u_k, v_k);
  
     /* v_k <- argmin_v ||v||_TF s.t. ||v_k - v||_2^2 <= delta * T */
-    denoise_temporal(t, v_k, z_k, &lambda_tf);
+    denoise_temporal(t, v_k, z_k, &lambda_tf, FFT);
 
     return lambda_tf;
 }
@@ -362,7 +366,8 @@ int rank_one_decomposition(const MKL_INT d1,
                            const double lambda_tv,
                            const double spatial_thresh,
                            const MKL_INT max_iters,
-                           const double tol)
+                           const double tol,
+                           DFTI_DESCRIPTOR_HANDLE *FFT)
 {
  
     /* Declare & Allocate Mem For Internal Vars */
@@ -372,14 +377,14 @@ int rank_one_decomposition(const MKL_INT d1,
 
     /* Initialize Internal Variables */
     d = d1 * d2;
-    lambda_tf = initialize_components(d, t, R_k, u_k, v_k, z_k);
+    lambda_tf = initialize_components(d, t, R_k, u_k, v_k, z_k, FFT);
 
     /* Loop Until Convergence Of Spatial & Temporal Components */
     for (iters = 0; iters < max_iters; iters++){
         
         /* Update Components */
         delta_u = update_spatial(d1, d2, t, R_k, u_k, v_k, lambda_tv);
-        delta_v = update_temporal(d, t, R_k, u_k, v_k, z_k, &lambda_tf);
+        delta_v = update_temporal(d, t, R_k, u_k, v_k, z_k, &lambda_tf, FFT);
 
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol){    
@@ -437,7 +442,53 @@ size_t factor_patch(const MKL_INT d1,
          *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
          */
         keep_flag = rank_one_decomposition(d1, d2, t, R, U + k*d, V + k*t, 
-                                   lambda_tv, spatial_thresh, max_iters, tol);
+                                   lambda_tv, spatial_thresh, max_iters, tol, NULL);
+
+        /* Check Component Quality: Terminate if we're fitting noise */
+        if (keep_flag < 0) return k; 
+        
+        /* Debias Temporal Temporal Component: V[k,:]' <- R_k' U[:,k] */
+        regress_temporal(d, t, R, U + k*d, V + k*t);
+
+        /* Update Residual: R_k <- R_k - U[:,k] V[k,:] */
+        cblas_dger(CblasColMajor, d, t, -1.0, U + k*d, 1, V + k*t, 1, R, d);
+    }
+
+    /* MAXCOMPONENTS EXCEEDED: Terminate Early */
+    return k; 
+}
+
+
+/* Iteratively factor a (d1*d2)xT patch R into spatial and temporal 
+ * components with a TV/TF penalized matrix decomposition. R will 
+ * be updated inplace to the residual of the decomposition.
+ */
+size_t threadsafe_factor_patch(const MKL_INT d1, 
+                               const MKL_INT d2, 
+                               const MKL_INT t,
+                               double* R, 
+                               double* U,
+                               double* V,
+                               const double lambda_tv,
+                               const double spatial_thresh,
+                               const size_t max_components,
+                               const size_t max_iters,
+                               const double tol,
+                               DFTI_DESCRIPTOR_HANDLE *FFT)
+{
+    /* Declare & Intialize Internal Vars */
+    int keep_flag;
+    size_t k;
+    MKL_INT d = d1 * d2;
+
+    /* Sequentially Extract Rank 1 Updates Until We Are Fitting Noise */
+    for (k = 0; k < max_components; k++) {
+        
+        /* U[:,k] <- u_k, V[k,:] <- v_k' : 
+         *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
+         */
+        keep_flag = rank_one_decomposition(d1, d2, t, R, U + k*d, V + k*t, 
+                                   lambda_tv, spatial_thresh, max_iters, tol, FFT);
 
         /* Check Component Quality: Terminate if we're fitting noise */
         if (keep_flag < 0) return k; 

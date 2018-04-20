@@ -1,6 +1,6 @@
 CC = icc
 CXX = icpc
-CXXFLAGS = -mkl=sequential -O3 -fPIC -I/home/ian/devel/trefide/proxTV/src -D NOMATLAB=1 #-mkl=parallel -qopenmp
+CXXFLAGS = -mkl=sequential -O3 -fPIC -I/home/ian/devel/trefide/src/proxtv -D NOMATLAB=1 #-mkl=parallel -qopenmp
 LDFLAGS = -shared
 DEP_DIR = proxtv
 DEP_LIB = $(DEP_DIR)/libproxtv.so

@@ -25,7 +25,7 @@ LIBRARIES = ["mkl_core",          # Used for FFT, Vector Math, CBLAS, Lapacke, e
 # Defaults Set Here Are For using Intel icc/icpc Compilers
 COMPILE_ARGS = ["-O3",              # Max compiler optimizations
                 "-mkl=sequential",  # Use if processing blocks in parallel (single core/block)
-                # "-mkl=parallel",  # Use if processing blocks sequentially (multiple cores/block)
+                #"-mkl=parallel",  # Use if processing blocks sequentially (multiple cores/block)
                                     # Remove -mkl args entirely if not using icc/icpc to compile
                 "-qopenmp",         # Tell icc/icpc to have OpenMP use OMP_NUM_THREADS when it encounters directives
                 # "-fopenmp"        # Tell gcc/g++ to have OpenMP use OMP_NUM_THREADS when it encounters directives
@@ -36,7 +36,7 @@ COMPILE_ARGS = ["-O3",              # Max compiler optimizations
 
 # See Above
 LINK_ARGS = ["-mkl=sequential",     # See Above
-             # "-mkl=parallel",     # See Above
+             #"-mkl=parallel",     # See Above
                                     # See Above
              "-qopenmp",            # See Above
              # "-fopenmp",          # See Above
