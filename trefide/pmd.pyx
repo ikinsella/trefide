@@ -32,7 +32,7 @@ cdef extern from "trefide.h":
                         const double tol) nogil
 
     
-cdef extern from "/home/ian/devel/trefide/src/pmd/parallel_pmd.cpp":
+cdef extern from "../src/pmd/parallel_pmd.cpp":
     void parrallel_factor_patch(const int bheight, 
                                 const int bwidth, 
                                 const int t,
