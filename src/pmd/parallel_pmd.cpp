@@ -32,7 +32,7 @@ void parrallel_factor_patch(const MKL_INT bheight,
 
     // Loop Over All Patches In Parallel
     int m;
-    #pragma omp parallel for shared(FFT) schedule(guided)
+    #pragma omp parallel for shared(FFT) schedule(static)
     for (m = 0; m < b; m++){
         //Use dummy vars for decomposition  
         Kpt[m] = threadsafe_factor_patch(bheight, 

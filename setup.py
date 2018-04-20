@@ -16,9 +16,10 @@ TREFIDE = os.getcwd()
 # We compile against intel mkl will need an intel MKL Disto:
 LIBRARIES = ["mkl_core",          # Used for FFT, Vector Math, CBLAS, Lapacke, ect...
              "mkl_intel_lp64",    # Intel MKL LP64 libs
+             "mkl_intel_thread",  # Intel MKL Threading Runtime
              "trefide",           # Our cpp sourcecode which we compile to libtrefide.so
              "proxtv",            # ProxTV's cpp sourcecode which we compile to libproxtv.so
-             "iomp5",             # Intel mkl OpenMPi runtime
+             "iomp5",             # Intel mkl OpenMP runtime
              "m"                  # <math.h>
             ]
 
