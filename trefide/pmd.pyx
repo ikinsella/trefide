@@ -32,7 +32,7 @@ cdef extern from "trefide.h":
                         const double tol) nogil
 
     
-cdef extern from "/home/ian/devel/trefide/src/pmd/parallel_pmd.cpp":
+cdef extern from "../src/pmd/parallel_pmd.cpp":
     void parrallel_factor_patch(const int bheight, 
                                 const int bwidth, 
                                 const int t,
@@ -214,17 +214,13 @@ cpdef double[:,:,::1] reconstruct_movie(double[:, :, :, :] U,
     # Get Block Size Info From Spatial
     cdef size_t num_blocks = U.shape[0]
     cdef size_t bheight = U.shape[1]
-    print(bheight)
     cdef size_t bwidth = U.shape[2]
-    print(bwidth)
     cdef size_t t = V.shape[2]
 
     # Get Mvie Size Infro From Indices
     cdef size_t nbi, nbj
-    nbi = np.max(indices[:,0])
-    print(nbi)
-    nbj = np.max(indices[:,1])
-    print(nbj)
+    nbi = np.max(indices[:,0]) + 1
+    nbj = np.max(indices[:,1]) + 1
     cdef size_t d1 = nbi * bheight
     cdef size_t d2 = nbj * bwidth
 
@@ -233,12 +229,13 @@ cpdef double[:,:,::1] reconstruct_movie(double[:, :, :, :] U,
 
     # Loop Over Blocks
     cdef size_t bdx, idx, jdx, kdx
-    for bdx in range(K[bdx]):
-        for kdx in range(K[bdx]):
-            idx = indices[bdx,0] * bheight
-            jdx = indices[bdx,1] * bwidth
-            Yd[idx:idx+bheight, jdx:jdx+bwidth,:] += np.reshape(np.dot(U[bdx,:,:,kdx][:,:,None],
-                                                                       V[bdx,kdx,:][None,:]),
-                                                                (bheight,bwidth,t), order='F')
+    for bdx in range(nbi*nbj):
+        idx = indices[bdx,0] * bheight
+        jdx = indices[bdx,1] * bwidth
+        Yd[idx:idx+bheight, jdx:jdx+bwidth,:] += np.reshape(
+                np.dot(U[bdx,:,:,:K[bdx]],
+                       V[bdx,:K[bdx],:]),
+                (bheight,bwidth,t),
+                order='F')
     # Rank One updates
     return Yd

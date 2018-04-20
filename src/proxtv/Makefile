@@ -1,4 +1,4 @@
-CXX = icc
+CXX = icpc
 CXXFLAGS = -mkl=sequential -O3 -fPIC -D NOMATLAB=1 #-qopenmp
 LDFLAGS = -shared
 TARGET_LIB = libproxtv.so

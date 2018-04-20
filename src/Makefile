@@ -1,4 +1,3 @@
-CC = icc
 CXX = icpc
 CXXFLAGS = -mkl=sequential -O3 -fPIC -I$(shell pwd)/proxtv -D NOMATLAB=1 #-mkl=parallel -qopenmp
 LDFLAGS = -shared
