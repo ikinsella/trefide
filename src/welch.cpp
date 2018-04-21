@@ -8,36 +8,37 @@
 #endif
 
 
-void inplace_rfft(const MKL_LONG L, double* yft){
-   
-    // Declare Local Variables
-    DFTI_DESCRIPTOR_HANDLE desc_handle;
-    MKL_LONG status;
-
-    /* result is x_out[0], ..., x_out[31]*/
-    status = DftiCreateDescriptor( &desc_handle, DFTI_DOUBLE, DFTI_REAL, 1, L );
-    status = DftiSetValue( desc_handle, DFTI_PACKED_FORMAT, DFTI_PACK_FORMAT);
-    status = DftiCommitDescriptor( desc_handle );
-    status = DftiComputeForward( desc_handle, yft );
-    status = DftiFreeDescriptor( &desc_handle );
- 
-    /* Check Status & Warn */
-    if (status != 0) 
-        fprintf(stderr, "Error in MKL_FFT: %ld\n", status);
-}
-
-
-void threadsafe_inplace_rfft(const MKL_LONG L, double* yft, 
-                             DFTI_DESCRIPTOR_HANDLE *FFT){
-       
+void inplace_rfft(const MKL_LONG L, double* yft, DFTI_DESCRIPTOR_HANDLE *FFT=NULL)
+{  
     // Declare Local Variables
     MKL_LONG status;
+    DFTI_DESCRIPTOR_HANDLE fft;
+    bool destroy_handle = false; 
 
-    /* result is x_out[0], ..., x_out[31]*/
-    status = DftiComputeForward( *FFT, yft );
- 
-    /* Check Status & Warn */
-    if (status != 0) fprintf(stderr, "Error Using MKL_FFT Handle: %ld\n", status);
+    // Assign or Create FFT Handle Depending On Context
+    if (FFT){
+        /* Void FFT handle indicates operating in serial mode */
+        fft = *FFT;
+    } else{
+        status = DftiCreateDescriptor( &fft, DFTI_DOUBLE, DFTI_REAL, 1, L );
+        if (status != 0) 
+            fprintf(stderr, "Error Creating FFT Handle: %ld\n", status); 
+        destroy_handle = true;
+        status = DftiSetValue( fft, DFTI_PACKED_FORMAT, DFTI_PACK_FORMAT);
+        status = DftiCommitDescriptor( fft );
+    }
+
+    // Compute Forward FFT Modifying Input Inplace
+    status = DftiComputeForward( fft, yft );
+    if (status != 0)
+        fprintf(stderr, "Error Computing Forward FFT: %ld\n", status);
+
+    // Destroy FFT Handle If Created Internally
+    if (destroy_handle){
+        status = DftiFreeDescriptor( &fft );
+        if (status != 0)
+            fprintf(stderr, "Error Destroying FFT Hanlde: %ld\n", status);
+    } 
 }
 
 
@@ -55,14 +56,10 @@ void hanning_window(const MKL_INT L, double* win){
 }
 
 
-void welch(const size_t N, 
-           const MKL_INT L, 
-           const MKL_INT R, 
-           const double fs, 
-           const double* x, 
-           double* psd,
-           DFTI_DESCRIPTOR_HANDLE *FFT){
-    
+void welch(const size_t N, const MKL_INT L, const MKL_INT R, 
+           const double fs, const double* x, double* psd,
+           DFTI_DESCRIPTOR_HANDLE *FFT=NULL)
+{    
     /* Declare Local Variables */
     int k, l;
     MKL_INT K, S, P;
@@ -71,7 +68,7 @@ void welch(const size_t N,
 
     /* Initialize & Allocate Mem For Local Variables */
     S = L - R;  // Segment Increment 
-    K = floor((N - L) / S);  // Number Of Segments
+    K = floor((N - L) / S) + 1;  // Number Of Segments
     P = floor(L / 2) + 1;  // Number of Periodogram Coef
     win = (double *)malloc(L*sizeof(double));  // Window
     yft = (double *)malloc(L*sizeof(double));  // Windowed Signal Segment & DFT Coef
@@ -88,11 +85,7 @@ void welch(const size_t N,
         vdMul(L, x + S * k, win, yft);
         
         // Transform Windowed Signal Segment Into Squared DFT Coef. Inplace
-        if (!FFT){ /* Void FFT handle indicates operating in serial mode */
-            inplace_rfft(L, yft);
-        } else { /* Passing an FFT handle means it is being shared among threads */
-            threadsafe_inplace_rfft(L, yft, FFT);
-        }
+        inplace_rfft(L, yft, FFT);
         vdSqr(L, yft, yft);
 
         // Increment Estimate Of PSD
@@ -115,7 +108,8 @@ void welch(const size_t N,
 }
 
 
-double psd_noise_estimate(const size_t N, const double* x, DFTI_DESCRIPTOR_HANDLE *FFT){
+double psd_noise_estimate(const size_t N, const double* x,
+                          DFTI_DESCRIPTOR_HANDLE *FFT=NULL){
 
     /* Declare Internal Vars */
     double *psd;

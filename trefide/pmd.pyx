@@ -19,33 +19,31 @@ from libc.stdlib cimport abort, calloc, malloc, free
 
 
 cdef extern from "trefide.h":
-    size_t factor_patch(const int d1, 
-                        const int d2, 
-                        const int t,
-                        double* R, 
-                        double* U,
-                        double* V,
-                        const double lambda_tv,
-                        const double spatial_thresh,
-                        const size_t max_components,
-                        const size_t max_iters,
-                        const double tol) nogil
+    size_t pmd(const int d1, 
+               const int d2, 
+               const int t,
+               double* R, 
+               double* U,
+               double* V,
+               const double lambda_tv,
+               const double spatial_thresh,
+               const size_t max_components,
+               const size_t max_iters,
+               const double tol) nogil
 
-    
-cdef extern from "../src/pmd/parallel_pmd.cpp":
-    void parrallel_factor_patch(const int bheight, 
-                                const int bwidth, 
-                                const int t,
-                                const int b,
-                                double** Rpt, 
-                                double** Upt,
-                                double** Vpt,
-                                size_t* Kpt,
-                                const double lambda_tv,
-                                const double spatial_thresh,
-                                const size_t max_components,
-                                const size_t max_iters,
-                                const double tol) nogil
+    void batch_pmd(const int bheight, 
+                   const int bwidth, 
+                   const int t,
+                   const int b,
+                   double** Rpt, 
+                   double** Upt,
+                   double** Vpt,
+                   size_t* Kpt,
+                   const double lambda_tv,
+                   const double spatial_thresh,
+                   const size_t max_components,
+                   const size_t max_iters,
+                   const double tol) nogil
 
 
 # -----------------------------------------------------------------------------#
@@ -53,23 +51,23 @@ cdef extern from "../src/pmd/parallel_pmd.cpp":
 # -----------------------------------------------------------------------------#
 
 
-cpdef size_t single_patch_pmd(const int d1, 
-                              const int d2, 
-                              const int t,
-                              double[::1] Y, 
-                              double[::1] U,
-                              double[::1] V,
-                              const double lambda_tv,
-                              const double spatial_thresh,
-                              const size_t max_components,
-                              const size_t max_iters,
-                              const double tol) nogil:
+cpdef size_t decompose(const int d1, 
+                       const int d2, 
+                       const int t,
+                       double[::1] Y, 
+                       double[::1] U,
+                       double[::1] V,
+                       const double lambda_tv,
+                       const double spatial_thresh,
+                       const size_t max_components,
+                       const size_t max_iters,
+                       const double tol) nogil:
     """ Wrap the single patch cpp PMD functions """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
     with nogil:
-        return factor_patch(d1, d2, t, &Y[0], &U[0], &V[0], lambda_tv, 
-                            spatial_thresh, max_components, max_iters, tol)
+        return pmd(d1, d2, t, &Y[0], &U[0], &V[0], lambda_tv, 
+                   spatial_thresh, max_components, max_iters, tol)
 
 
 # -----------------------------------------------------------------------------#
@@ -77,70 +75,17 @@ cpdef size_t single_patch_pmd(const int d1,
 # -----------------------------------------------------------------------------#
 
 
-cpdef serial_batch_pmd(const int d1, 
-                       const int d2, 
-                       const int t,
-                       double[:, :, ::1] Y, 
-                       const int bheight,
-                       const int bwidth,
-                       const double lambda_tv,
-                       const double spatial_thresh,
-                       const size_t max_components,
-                       const size_t max_iters,
-                       const double tol):
-    """ Wrapper around single_patch_pmd to faciliate batch processing of
-    videos is series"""
-    
-    # Initialize Counters
-    cdef size_t iu, ku
-    cdef int i, j, k, b, bi, bj
-    cdef int nbi = int(d1/bheight)
-    cdef int nbj = int(d2/bwidth)
-    cdef int num_blocks = nbi * nbj
-
-    # Compute block-start indices and spatial cutoff
-    indices = np.transpose([np.tile(range(nbi), nbj),
-                            np.repeat(range(nbj), nbi)])
-
-    # Preallocate Space For Residuals & Outputs
-    cdef double[:,::1] R = np.empty((num_blocks, bheight * bwidth * t), dtype=np.float64)
-    cdef double[:,::1] U = np.empty((num_blocks, bheight * bwidth * max_components), dtype=np.float64)
-    cdef double[:,::1] V = np.empty((num_blocks, t * max_components), dtype=np.float64)
-    cdef size_t[::1] K = np.empty((num_blocks,), dtype=np.uint64)
- 
-    # Copy Contents Of Raw Blocks Into Block Residuals Fortran Order
-    for bj in range(nbj):
-        for bi in range(nbi):
-            for k in range(t):
-                for j in range(bwidth):
-                    for i in range(bheight):
-                        R[bi + (bj * nbi), i + (j * bheight) + (k * bheight * bwidth)] =\
-                                Y[(bi * bheight) + i, (bj * bwidth) + j, k]
-
-    # Factor Blocks Sequentially
-    for b in range(num_blocks):
-        K[b] = single_patch_pmd(bheight, bwidth, t, 
-                                R[b,:], U[b,:], V[b,:],
-                                lambda_tv, spatial_thresh, 
-                                max_components, max_iters,tol)
-            
-    # Format Components & Return To Numpy Array
-    return (np.asarray(U).reshape((num_blocks, bheight, bwidth, max_components), order='F'), 
-            np.asarray(V).reshape((num_blocks, max_components, t), order='C'), 
-            np.asarray(K), indices.astype(np.uint64))
-
-
-cpdef parallel_batch_pmd(const int d1, 
-                         const int d2, 
-                         const int t,
-                         double[:, :, ::1] Y, 
-                         const int bheight,
-                         const int bwidth,
-                         const double lambda_tv,
-                         const double spatial_thresh,
-                         const size_t max_components,
-                         const size_t max_iters,
-                         const double tol):
+cpdef batch_decompose(const int d1, 
+                      const int d2, 
+                      const int t,
+                      double[:, :, ::1] Y, 
+                      const int bheight,
+                      const int bwidth,
+                      const double lambda_tv,
+                      const double spatial_thresh,
+                      const size_t max_components,
+                      const size_t max_iters,
+                      const double tol):
     """ Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
      factor_patch with OpenMP directives to parallelize batch processing."""
 
@@ -152,8 +97,7 @@ cpdef parallel_batch_pmd(const int d1,
     cdef int num_blocks = nbi * nbj
 
     # Compute block-start indices and spatial cutoff
-    indices = np.transpose([np.tile(range(nbi), nbj),
-                            np.repeat(range(nbj), nbi)])
+    indices = np.transpose([np.tile(range(nbi), nbj), np.repeat(range(nbj), nbi)])
 
     # Preallocate Space For Outputs
     cdef double[:,::1] U = np.zeros((num_blocks, bheight * bwidth * max_components), dtype=np.float64)
@@ -184,8 +128,8 @@ cpdef parallel_batch_pmd(const int d1,
                                     Y[(bi * bheight) + i, (bj * bwidth) + j, k]
 
         # Factor Blocks In Parallel
-        parrallel_factor_patch(bheight, bwidth, t, num_blocks, Rp, Up, Vp, &K[0],
-                               lambda_tv, spatial_thresh, max_components, max_iters,tol)
+        batch_pmd(bheight, bwidth, t, num_blocks, Rp, Up, Vp, &K[0],
+                  lambda_tv, spatial_thresh, max_components, max_iters,tol)
 
         # Free Allocated Memory
         for b in range(num_blocks):
@@ -200,15 +144,10 @@ cpdef parallel_batch_pmd(const int d1,
             np.asarray(K), indices.astype(np.uint64))
 
 
-# -----------------------------------------------------------------------------#
-# ------------------------------- PMD Utilities -------------------------------#
-# -----------------------------------------------------------------------------#
-
-
-cpdef double[:,:,::1] reconstruct_movie(double[:, :, :, :] U, 
-                                        double[:,:,::1] V, 
-                                        size_t[::1] K, 
-                                        size_t[:,:] indices):
+cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U, 
+                                      double[:,:,::1] V, 
+                                      size_t[::1] K, 
+                                      size_t[:,:] indices):
     """ Reconstruct A Denoised Movie """
 
     # Get Block Size Info From Spatial

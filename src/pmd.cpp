@@ -413,68 +413,21 @@ int rank_one_decomposition(const MKL_INT d1,
 }
 
 
-
-/* Iteratively factor a (d1*d2)xT patch R into spatial and temporal 
- * components with a TV/TF penalized matrix decomposition. R will 
- * be updated inplace to the residual of the decomposition.
+/* Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a (d1*d2)xT
+ * column major formatted video into sptial and temporal components.
  */
-size_t factor_patch(const MKL_INT d1, 
-                    const MKL_INT d2, 
-                    const MKL_INT t,
-                    double* R, 
-                    double* U,
-                    double* V,
-                    const double lambda_tv,
-                    const double spatial_thresh,
-                    const size_t max_components,
-                    const size_t max_iters,
-                    const double tol)
-{
-    /* Declare & Intialize Internal Vars */
-    int keep_flag;
-    size_t k;
-    MKL_INT d = d1 * d2;
-
-    /* Sequentially Extract Rank 1 Updates Until We Are Fitting Noise */
-    for (k = 0; k < max_components; k++) {
-        
-        /* U[:,k] <- u_k, V[k,:] <- v_k' : 
-         *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
-         */
-        keep_flag = rank_one_decomposition(d1, d2, t, R, U + k*d, V + k*t, 
-                                   lambda_tv, spatial_thresh, max_iters, tol, NULL);
-
-        /* Check Component Quality: Terminate if we're fitting noise */
-        if (keep_flag < 0) return k; 
-        
-        /* Debias Temporal Temporal Component: V[k,:]' <- R_k' U[:,k] */
-        regress_temporal(d, t, R, U + k*d, V + k*t);
-
-        /* Update Residual: R_k <- R_k - U[:,k] V[k,:] */
-        cblas_dger(CblasColMajor, d, t, -1.0, U + k*d, 1, V + k*t, 1, R, d);
-    }
-
-    /* MAXCOMPONENTS EXCEEDED: Terminate Early */
-    return k; 
-}
-
-
-/* Iteratively factor a (d1*d2)xT patch R into spatial and temporal 
- * components with a TV/TF penalized matrix decomposition. R will 
- * be updated inplace to the residual of the decomposition.
- */
-size_t threadsafe_factor_patch(const MKL_INT d1, 
-                               const MKL_INT d2, 
-                               const MKL_INT t,
-                               double* R, 
-                               double* U,
-                               double* V,
-                               const double lambda_tv,
-                               const double spatial_thresh,
-                               const size_t max_components,
-                               const size_t max_iters,
-                               const double tol,
-                               DFTI_DESCRIPTOR_HANDLE *FFT)
+size_t pmd(const MKL_INT d1, 
+           const MKL_INT d2, 
+           const MKL_INT t,
+           double* R, 
+           double* U,
+           double* V,
+           const double lambda_tv,
+           const double spatial_thresh,
+           const size_t max_components,
+           const size_t max_iters,
+           const double tol,
+           DFTI_DESCRIPTOR_HANDLE *FFT = NULL)  /* Handle Provided For Threadsafe FFT */
 {
     /* Declare & Intialize Internal Vars */
     int keep_flag;
@@ -502,4 +455,47 @@ size_t threadsafe_factor_patch(const MKL_INT d1,
 
     /* MAXCOMPONENTS EXCEEDED: Terminate Early */
     return k; 
+}
+
+
+/* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable parallel, 
+ * block-wiseprocessing of large datasets in shared memory.
+ */
+void batch_pmd(const MKL_INT bheight, 
+               const MKL_INT bwidth, 
+               const MKL_INT t,
+               const MKL_INT b,
+               double** Rpt, 
+               double** Upt,
+               double** Vpt,
+               size_t* Kpt,
+               const double lambda_tv,
+               const double spatial_thresh,
+               const size_t max_components,
+               const size_t max_iters,
+               const double tol)
+{
+    // Create FFT Handle So It can Be Shared Aross Threads
+    DFTI_DESCRIPTOR_HANDLE FFT;
+    MKL_LONG status;
+    MKL_LONG L = 256;  /* Size Of Subsamples in welch estimator */
+    status = DftiCreateDescriptor( &FFT, DFTI_DOUBLE, DFTI_REAL, 1, L );
+    status = DftiSetValue( FFT, DFTI_PACKED_FORMAT, DFTI_PACK_FORMAT);
+    status = DftiCommitDescriptor( FFT );
+    if (status != 0) 
+        fprintf(stderr, "Error while creating MKL_FFT Handle: %ld\n", status);
+
+    // Loop Over All Patches In Parallel
+    int m;
+    #pragma omp parallel for shared(FFT) schedule(static)
+    for (m = 0; m < b; m++){
+        //Use dummy vars for decomposition  
+        Kpt[m] = pmd(bheight, bwidth, t, Rpt[m], Upt[m], Vpt[m], lambda_tv, 
+                     spatial_thresh, max_components, max_iters, tol, &FFT);
+    }
+
+    // Free MKL FFT Handle
+    status = DftiFreeDescriptor( &FFT ); 
+    if (status != 0)
+        fprintf(stderr, "Error while deallocating MKL_FFT Handle: %ld\n", status);
 }
