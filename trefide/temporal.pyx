@@ -8,7 +8,7 @@ cimport numpy as np
 import numpy as np
 from trefide.solvers.time.lagrangian import lpdas
 from trefide.solvers.time.constrained import cpdas 
-from trefide.utils.noise import estimate_noise
+from trefide.utils import estimate_noise
 
 
 np.import_array()

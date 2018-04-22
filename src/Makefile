@@ -5,7 +5,7 @@ DEP_DIR = proxtv
 DEP_LIB = $(DEP_DIR)/libproxtv.so
 TARGET_LIB = libtrefide.so
 LIBS = -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
-SRCS = welch.cpp wpdas.cpp line_search.cpp utils.cpp l1tf/ipm.cpp pmd.cpp
+SRCS = utils/welch.cpp proxtf/wpdas.cpp proxtf/line_search.cpp proxtf/utils.cpp proxtf/l1tf/ipm.cpp pmd/pmd.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 .PHONY: all

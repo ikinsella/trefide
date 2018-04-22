@@ -1,9 +1,75 @@
-import numpy as np
-import scipy as sp
+# cython: cdivision=True
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: initializedcheck=False
+# cython: nonecheck=False
+
 import scipy.signal
 
+import numpy as np
+import scipy as sp
 
-def fft_estimator(signal, freq_range=[0.25, 0.5], max_samples=3072):
+# --------------------------------------------------------------------------- #
+# -------------------- Temporal Signal Noise Estimation --------------------- #
+# --------------------------------------------------------------------------- #
+
+cdef extern from "math.h":
+    double floor(double) nogil
+
+cdef extern from "trefide.h":
+    double psd_noise_estimate (const size_t n, 
+                               const double *x) nogil
+
+    void welch(const size_t N, 
+               const int L, 
+               const int R, 
+               const double fs, 
+               const double* x, 
+               double* psd,
+               void* FFT) nogil
+
+cpdef double[::1] welch_psd_estimate(double[::1] signal, 
+                                     int nsamp_seg=256, 
+                                     int nsamp_overlap=128,
+                                     double fs=1):
+    """ Wrapper to cpp implementation of welch's PSD estimate"""
+
+    # Declare & Init Local Variables
+    cdef size_t nsamp_signal = signal.shape[0]
+    cdef size_t nsamp_pxx = <size_t> floor(nsamp_seg / 2) + 1
+
+    # Allocate & Init PSD Coefs (IMPORTANT: Pxx must be init'd to 0)
+    cdef double[::1] pxx = np.zeros(nsamp_pxx, dtype=np.int64)
+
+    # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
+    welch(nsamp_signal, nsamp_seg, nsamp_overlap, fs, &signal[0], &pxx[0], NULL) 
+    return pxx
+
+
+def pwelch_estimator(signal, freq_range=[0.25, 0.5]):
+    """
+    High frequency components of Welch's PSD estimate of the input signal
+    ________
+    Input:
+        signals: (len_signal,) np.ndarray
+            Noise contaminated temporal signal
+            (required)
+        freq_range: (2,) np.ndarray or len 2 list of increasing elements
+                    between 0 and 0.5
+            Range of frequencies compared to Nyquist rate over which the power
+            spectrum is averaged in the 'pwelch' and 'fft' noise estimators
+            (default: [0.25,0.5])
+    ________
+    Output:
+        PSD[freq_range]: np.ndarray
+            Components of PSD corresponding to freq_range
+    """
+    ff, Pxx = scipy.signal.welch(signal, nperseg=min(256, len(signal)))
+    idx = np.logical_and(ff > freq_range[0], ff <= freq_range[1])
+    return np.divide(Pxx[idx], 2)
+
+
+def fft_psd_estimate(signal, freq_range=[0.25, 0.5], max_samples=3072):
     """
     High frequency components of FFT of the input signal
     ________
@@ -47,29 +113,6 @@ def fft_estimator(signal, freq_range=[0.25, 0.5], max_samples=3072):
     psdx = (np.divide(1., len_signal)) * (xdft**2)
     psdx[1:] *= 2
     return np.divide(psdx[idx[:psdx.shape[0]]], 2)
-
-
-def pwelch_estimator(signal, freq_range=[0.25, 0.5]):
-    """
-    High frequency components of Welch's PSD estimate of the input signal
-    ________
-    Input:
-        signals: (len_signal,) np.ndarray
-            Noise contaminated temporal signal
-            (required)
-        freq_range: (2,) np.ndarray or len 2 list of increasing elements
-                    between 0 and 0.5
-            Range of frequencies compared to Nyquist rate over which the power
-            spectrum is averaged in the 'pwelch' and 'fft' noise estimators
-            (default: [0.25,0.5])
-    ________
-    Output:
-        PSD[freq_range]: np.ndarray
-            Components of PSD corresponding to freq_range
-    """
-    ff, Pxx = scipy.signal.welch(signal, nperseg=min(256, len(signal)))
-    idx = np.logical_and(ff > freq_range[0], ff <= freq_range[1])
-    return np.divide(Pxx[idx], 2)
 
 
 def boot_estimator(signal, num_samples=1000, len_samples=25):
@@ -165,9 +208,9 @@ def estimate_noise(signals,
 
     # Assign function to generate estimates of signal noise variance
     estimator = {
-        'fft': lambda x: fft_estimator(x,
-                                       freq_range=freq_range,
-                                       max_samples=max_samples_fft),
+        'fft': lambda x: fft_psd_estimate(x, 
+                                          freq_range=freq_range,
+                                          max_samples=max_samples_fft),
         'pwelch': lambda x: pwelch_estimator(x,
                                              freq_range=freq_range),
         'boot': lambda x: boot_estimator(x,
@@ -177,3 +220,10 @@ def estimate_noise(signals,
 
     # Compute & return estimate of standard deviations for each signal
     return np.sqrt([summarizer(estimator(signal)) for signal in signals])
+
+
+
+
+
+
+
