@@ -17,8 +17,9 @@ cdef extern from "math.h":
     double floor(double) nogil
 
 cdef extern from "trefide.h":
-    double psd_noise_estimate (const size_t n, 
-                               const double *x) nogil
+    double psd_noise_estimate(const size_t N, 
+                              const double *x, 
+                              void* FFT) nogil
 
     void welch(const size_t N, 
                const int L, 
@@ -28,6 +29,7 @@ cdef extern from "trefide.h":
                double* psd,
                void* FFT) nogil
 
+
 cpdef double[::1] welch_psd_estimate(double[::1] signal, 
                                      int nsamp_seg=256, 
                                      int nsamp_overlap=128,
@@ -36,13 +38,14 @@ cpdef double[::1] welch_psd_estimate(double[::1] signal,
 
     # Declare & Init Local Variables
     cdef size_t nsamp_signal = signal.shape[0]
-    cdef size_t nsamp_pxx = <size_t> floor(nsamp_seg / 2) + 1
+    cdef int nsamp_pxx = <size_t> floor(nsamp_seg / 2) + 1
 
     # Allocate & Init PSD Coefs (IMPORTANT: Pxx must be init'd to 0)
     cdef double[::1] pxx = np.zeros(nsamp_pxx, dtype=np.int64)
 
     # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
-    welch(nsamp_signal, nsamp_seg, nsamp_overlap, fs, &signal[0], &pxx[0], NULL) 
+    with nogil:
+        welch(nsamp_signal, nsamp_seg, nsamp_overlap, fs, &signal[0], &pxx[0], NULL) 
     return pxx
 
 

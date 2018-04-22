@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <mkl.h>
-#include <mkl_dfti.h>
-#include "line_search.h"
-#include "welch.h"
+#include "../proxtf/line_search.h"
+#include "../utils/welch.h"
 #include <proxtv.h>
 
 
@@ -199,7 +198,7 @@ void denoise_temporal(const MKL_INT t,
                       double* v_k,
                       double* z_k,
                       double* lambda_tf,
-                      DFTI_DESCRIPTOR_HANDLE *FFT)
+                      void* FFT=NULL)
 {
     /* Declare & Allocate Local Variables */
     int iters;
@@ -246,7 +245,7 @@ double update_temporal(const MKL_INT d,
                        double* v_k,
                        double* z_k,
                        double* lambda_tf,
-                       DFTI_DESCRIPTOR_HANDLE *FFT)
+                       void* FFT=NULL)
 {
     /* Declare & Allocate For Internal Vars */
     double delta_v;
@@ -331,7 +330,7 @@ double initialize_components(const MKL_INT d,
                              double* u_k,
                              double* v_k,
                              double* z_k,
-                             DFTI_DESCRIPTOR_HANDLE *FFT){
+                             void* FFT=NULL){
     
     /* Declare Internal Variables */
     double lambda_tf = 0;
@@ -367,7 +366,7 @@ int rank_one_decomposition(const MKL_INT d1,
                            const double spatial_thresh,
                            const MKL_INT max_iters,
                            const double tol,
-                           DFTI_DESCRIPTOR_HANDLE *FFT)
+                           void* FFT=NULL)
 {
  
     /* Declare & Allocate Mem For Internal Vars */
@@ -427,7 +426,7 @@ size_t pmd(const MKL_INT d1,
            const size_t max_components,
            const size_t max_iters,
            const double tol,
-           DFTI_DESCRIPTOR_HANDLE *FFT = NULL)  /* Handle Provided For Threadsafe FFT */
+           void* FFT=NULL)  /* Handle Provided For Threadsafe FFT */
 {
     /* Declare & Intialize Internal Vars */
     int keep_flag;

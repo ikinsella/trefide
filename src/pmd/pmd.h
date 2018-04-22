@@ -49,7 +49,7 @@ void denoise_temporal(const MKL_INT t,
                       double* v_k,
                       double* z_k,
                       double* lambda_tf,
-                      DFTI_DESCRIPTOR_HANDLE *FFT);
+                      void* FFT=NULL);
 
 double update_temporal(const MKL_INT d,
                        const MKL_INT t,
@@ -58,7 +58,7 @@ double update_temporal(const MKL_INT d,
                        double* v_k,
                        double* z_k,
                        double* lambda_tf,
-                       DFTI_DESCRIPTOR_HANDLE *FFT);
+                       void* FFT=NULL);
 
 double spatial_test_statistic(const MKL_INT d1,
                               const MKL_INT d2,
@@ -70,7 +70,7 @@ double initialize_components(const MKL_INT d,
                              double* u_k,
                              double* v_k,
                              double* z_k,
-                             DFTI_DESCRIPTOR_HANDLE *FFT);
+                             void* FFT=NULL);
 
 int rank_one_decomposition(const MKL_INT d1, 
                            const MKL_INT d2, 
@@ -82,7 +82,7 @@ int rank_one_decomposition(const MKL_INT d1,
                            const double spatial_thresh,
                            const MKL_INT max_iters,
                            const double tol,
-                           DFTI_DESCRIPTOR_HANDLE *FFT);
+                           void* FFT=NULL);
 
 size_t pmd(const MKL_INT d1, 
            const MKL_INT d2, 
@@ -95,7 +95,7 @@ size_t pmd(const MKL_INT d1,
            const size_t max_components,
            const size_t max_iters,
            const double tol,
-           DFTI_DESCRIPTOR_HANDLE *FFT=NULL);
+           void* FFT=NULL);
 
 void batch_pmd(const MKL_INT bheight, 
                const MKL_INT bwidth, 

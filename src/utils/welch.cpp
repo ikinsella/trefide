@@ -8,17 +8,19 @@
 #endif
 
 
-void inplace_rfft(const MKL_LONG L, double* yft, DFTI_DESCRIPTOR_HANDLE *FFT=NULL)
+void inplace_rfft(const MKL_LONG L, double* yft, void* FFT=NULL)
 {  
     // Declare Local Variables
     MKL_LONG status;
+    DFTI_DESCRIPTOR_HANDLE* fft_pt;
     DFTI_DESCRIPTOR_HANDLE fft;
     bool destroy_handle = false; 
 
     // Assign or Create FFT Handle Depending On Context
     if (FFT){
         /* Void FFT handle indicates operating in serial mode */
-        fft = *FFT;
+        fft_pt = (DFTI_DESCRIPTOR_HANDLE*) FFT;
+        fft = *fft_pt;
     } else{
         status = DftiCreateDescriptor( &fft, DFTI_DOUBLE, DFTI_REAL, 1, L );
         if (status != 0) 
@@ -57,8 +59,7 @@ void hanning_window(const MKL_INT L, double* win){
 
 
 void welch(const size_t N, const MKL_INT L, const MKL_INT R, 
-           const double fs, const double* x, double* psd,
-           DFTI_DESCRIPTOR_HANDLE *FFT=NULL)
+           const double fs, const double* x, double* psd, void* FFT=NULL)
 {    
     /* Declare Local Variables */
     int k, l;
@@ -108,8 +109,7 @@ void welch(const size_t N, const MKL_INT L, const MKL_INT R,
 }
 
 
-double psd_noise_estimate(const size_t N, const double* x,
-                          DFTI_DESCRIPTOR_HANDLE *FFT=NULL){
+double psd_noise_estimate(const size_t N, const double* x, void* FFT=NULL){
 
     /* Declare Internal Vars */
     double *psd;

@@ -13,7 +13,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "utils.h"
+#include "../utils.h"
 #include "blas.h"
 #include "lapack.h"
 
