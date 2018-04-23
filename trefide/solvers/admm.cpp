@@ -13,8 +13,8 @@
             "-qopenmp",
             "-I/home/ian/devel/trefide/src",
             "-I/home/ian/devel/trefide/src/proxtv",
-            "-D NOMATLAB=1",
-            "-I/home/ian/devel/trefide/src/glmgen/include"
+            "-I/home/ian/devel/trefide/src/glmgen/include",
+            "-D NOMATLAB=1"
         ],
         "extra_link_args": [
             "-mkl=sequential",
@@ -26,9 +26,16 @@
         "include_dirs": [
             "/home/ian/miniconda3/envs/idp3/lib/python3.6/site-packages/numpy/core/include"
         ],
-        "language": "c",
+        "language": "c++",
         "libraries": [
-            "glmgen"
+            "mkl_core",
+            "mkl_intel_lp64",
+            "mkl_intel_thread",
+            "trefide",
+            "proxtv",
+            "glmgen",
+            "iomp5",
+            "m"
         ],
         "name": "trefide.solvers.admm",
         "sources": [
@@ -510,19 +517,33 @@ END: Cython Metadata */
   #endif
 #endif
 
+#ifndef __cplusplus
+  #error "Cython files generated with the C++ option must be compiled with a C++ compiler."
+#endif
 #ifndef CYTHON_INLINE
   #if defined(__clang__)
     #define CYTHON_INLINE __inline__ __attribute__ ((__unused__))
-  #elif defined(__GNUC__)
-    #define CYTHON_INLINE __inline__
-  #elif defined(_MSC_VER)
-    #define CYTHON_INLINE __inline
-  #elif defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-    #define CYTHON_INLINE inline
   #else
-    #define CYTHON_INLINE
+    #define CYTHON_INLINE inline
   #endif
 #endif
+template<typename T>
+void __Pyx_call_destructor(T& x) {
+    x.~T();
+}
+template<typename T>
+class __Pyx_FakeReference {
+  public:
+    __Pyx_FakeReference() : ptr(NULL) { }
+    __Pyx_FakeReference(const T& ref) : ptr(const_cast<T*>(&ref)) { }
+    T *operator->() { return ptr; }
+    T *operator&() { return ptr; }
+    operator T&() { return *ptr; }
+    template<typename U> bool operator ==(U other) { return *ptr == other; }
+    template<typename U> bool operator !=(U other) { return *ptr != other; }
+  private:
+    T *ptr;
+};
 
 #if defined(WIN32) || defined(MS_WINDOWS)
   #define _USE_MATH_DEFINES

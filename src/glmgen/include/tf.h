@@ -29,6 +29,10 @@
 #ifndef TF_H
 #define TF_H
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -93,4 +97,7 @@ double tf_obj_gauss(double *x, double *y, double *w, int n, int k, double lambda
 double tf_obj_glm(double *x, double *y, double *w, int n, int k, double lambda,
 		  func_RtoR b, double *beta, double *buf);
 
+#ifdef  __cplusplus
+}
+#endif
 #endif

@@ -19,6 +19,7 @@ LIBRARIES = ["mkl_core",          # Used for FFT, Vector Math, CBLAS, Lapacke, e
              "mkl_intel_thread",  # Intel MKL Threading Runtime
              "trefide",           # Our cpp sourcecode which we compile to libtrefide.so
              "proxtv",            # ProxTV's cpp sourcecode which we compile to libproxtv.so
+             "glmgen",            # glmgen's c sourcecode which we compile to libglmgen.so
              "iomp5",             # Intel mkl OpenMP runtime
              "m"                  # <math.h>
             ]
@@ -32,7 +33,9 @@ COMPILE_ARGS = ["-O3",              # Max compiler optimizations
                 # "-fopenmp"        # Tell gcc/g++ to have OpenMP use OMP_NUM_THREADS when it encounters directives
                 "-I" + os.path.join(TREFIDE, "src"),              # Location of trefide.h
                 "-I" + os.path.join(TREFIDE, "src", "proxtv"),    # Location Of proxtv.h
+                "-I"+os.path.join(TREFIDE, "src", "glmgen", "include"), # Location of glmgen.h 
                 "-D NOMATLAB=1"                                   # Ignore ProXTV's attempt to mex
+                  # Location Of glmgen.h
                ]
 
 # See Above
@@ -41,8 +44,9 @@ LINK_ARGS = ["-mkl=sequential",     # See Above
                                     # See Above
              "-qopenmp",            # See Above
              # "-fopenmp",          # See Above
-             "-L" + os.path.join(TREFIDE, "src"),           # Location of libtrefide.so (Add to $LD_LIBRARY_PATH)
-             "-L" + os.path.join(TREFIDE, "src", "proxtv")  # Location of libproxtv.so  (Add to $LD_LIBRARY_PATH)
+             "-L" + os.path.join(TREFIDE, "src"),            # Location of libtrefide.so (Add to $LD_LIBRARY_PATH)
+             "-L" + os.path.join(TREFIDE, "src", "proxtv"),  # Location of libproxtv.so  (Add to $LD_LIBRARY_PATH)
+             "-L"+os.path.join(TREFIDE, "src", "glmgen", "lib")  # Location of libglmgen.so (Add to $LD_LIBRARY_PATH)
             ]
 
 # ---------------------------- Build Cythonized Modules ---------------------------------#
@@ -57,20 +61,19 @@ setup(
                                  "temporal.pyx")],
                    include_dirs=[numpy.get_include()],
                    language="c++",
-                   libraries=LIBRARIES,
+                   libraries=LIBRARIES+["glmgen"],
                    package_data={"trefide/solvers/temporal": "*.pxd"},
                    extra_compile_args=COMPILE_ARGS,
                    extra_link_args=LINK_ARGS),
-        Extension("trefide.solvers.admm",
+         Extension("trefide.solvers.admm",
                    [os.path.join("trefide",
                                  "solvers",
                                  "admm.pyx")],
                    include_dirs=[numpy.get_include()],
-                   language="c",
-                   libraries=["glmgen"],
-                   extra_compile_args=COMPILE_ARGS+["-I" + os.path.join(TREFIDE, "src", "glmgen", "include")],
-                   extra_link_args=LINK_ARGS+["-L" + os.path.join(TREFIDE, "src", "glmgen", "lib")]),
-
+                   language="c++",
+                   libraries=LIBRARIES,
+                   extra_compile_args=COMPILE_ARGS,
+                   extra_link_args=LINK_ARGS),
          Extension("trefide.utils",
                    [os.path.join("trefide", "utils.pyx")],
                    include_dirs=[numpy.get_include()],

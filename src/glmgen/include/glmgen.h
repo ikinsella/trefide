@@ -26,8 +26,12 @@
  * Here.
  */
 
-#ifndef GLMGEN_API_H
-#define GLMGEN_API_H
+#ifndef GLMGEN_H
+#define GLMGEN_H
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
 #include "cs.h"
 #include "tf.h"
@@ -59,4 +63,7 @@ void do_lattice(double *y, double *w, int n, int m, int p, int max_iter,
 		cs *E, double *c, int d,
 		double *buff, double *abuff, int lattice_type);
 
+#ifdef  __cplusplus
+}
+#endif
 #endif
