@@ -81,19 +81,19 @@ void reassign_violators(const int n_vio,
  *                                 Main Solver                                 *
  *******************************************************************************/
 
-int weighted_pdas(const int n,           // data length
-	          const double *y,       // observations
-	          const double *wi,      // inverse observation weights
-	          const double lambda,   // regularization parameter
-	          double *x,             // primal variable
-	          double *z,             // dual variable
-	          int *iter,             // pointer to iter # (so we can return it)
-	          double p,              // proportion of violators to reassign
-	          const int m,           // size of violator hostory queue
-	          const double delta_s,  // proportion by which p is shrunk
-	          const double delta_e,  // proportion by which p is grown
-	          const int maxiter,     // max num outer loop iterations
-	          const int verbose)
+short weighted_pdas(const int n,           // data length
+                    const double *y,       // observations
+                    const double *wi,      // inverse observation weights
+                    const double lambda,   // regularization parameter
+                    double *x,             // primal variable
+                    double *z,             // dual variable
+                    int *iter,             // pointer to iter # (so we can return it)
+                    double p,              // proportion of violators to reassign
+                    const int m,           // size of violator hostory queue
+                    const double delta_s,  // proportion by which p is shrunk
+                    const double delta_e,  // proportion by which p is grown
+                    const int maxiter,     // max num outer loop iterations
+                    const int verbose)
 {
     /************************** Initialize Variables ***************************/
     double *diff_x;
@@ -110,6 +110,7 @@ int weighted_pdas(const int n,           // data length
     double *ab;
     double *b;
     int n_vio;
+    int n_reloc_prev = 0;
     int n_active;
     
     /***************************** Allocate Memory *****************************/
@@ -143,6 +144,23 @@ int weighted_pdas(const int n,           // data length
 
       /************************ Subspace Minimization **************************/
       n_active = update_dual(n, y, wi, z, lambda, div_zi, ab, b);
+      if (n_active < 0) {
+          /* Something has gone very wrong (probably Nan input) */
+          
+          // Free Allocated Memory
+          free(diff_x);
+          free(div_zi);
+          free(ab);
+          free(b);
+          free(vio_fitness);
+          free(vio_index);
+          free(vio_sort);    
+          free(vio_queue);
+
+          // Return Failure Code
+          return(-1);
+
+      }
       update_primal(n, x, y, wi, z, lambda);
       Dx(n, x, diff_x);
       
@@ -227,7 +245,7 @@ int weighted_pdas(const int n,           // data length
 	free(vio_queue);
 
 	// Return Success Code
-	return(0);
+	return(1);
       }
 
       // Sort violator indices by fitness value
@@ -236,6 +254,10 @@ int weighted_pdas(const int n,           // data length
       // Reassign first p * n_vio violators
       n_vio = max((int)round(p * (double)n_vio), 1);
       reassign_violators(n_vio, z, vio_index, vio_sort);
+      //if (n_vio < 3 && n_reloc_prev < 3){
+      //  p = 1; // reset proportion
+      //}
+      //n_reloc_prev = n_vio;
     }
     
     /******************** Algorithm Failed To Converge *************************/
@@ -255,8 +277,8 @@ int weighted_pdas(const int n,           // data length
     free(vio_sort);    
     free(vio_queue);
 
-    // Return Failure Code
-    return(-1);
+    // Return Failure To Converge Code
+    return(0);
 }
 
 /******************************************************************************
@@ -366,7 +388,12 @@ int update_dual(const int n,
 
     // compute matrix solve
     int result = LAPACKE_dpbsv(LAPACK_ROW_MAJOR, 'U', k, 2, 1, ab, k, b, 1);
-    if(result != 0) fprintf(stderr,"LAPACKE: %d\n", result);
+    if(result != 0){
+        fprintf(stderr,"LAPACKE: %d\n", result);
+        if (result < 0){
+            return (-1); // Invalid input: abort 
+        }
+    }
 
     // update zA
     ik = 0;
@@ -377,7 +404,7 @@ int update_dual(const int n,
         } 
     }   
 
-    return k;
+    return(k);
 }
 
 /* locate, count and eval fitness of violators */

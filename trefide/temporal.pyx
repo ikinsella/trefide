@@ -6,8 +6,7 @@
 
 cimport numpy as np
 import numpy as np
-from trefide.solvers.time.lagrangian import lpdas
-from trefide.solvers.time.constrained import cpdas 
+from trefide.solvers.temporal import cpdas, lpdas
 from trefide.utils import psd_noise_estimate
 
 

@@ -1,11 +1,15 @@
 #include <stdlib.h>
 #include <math.h>
+#include <mkl.h>
 #include "wpdas.h"
 
+int STEP_PARTITION = 60;
 
-short sign(double val) {
-    return (0 < val) - (val < 0);
-}
+/******************************************************************************
+ **************************** Function Declarations ***************************
+ ******************************************************************************/
+
+short sign(double val);
 
 void evaluate_search_point(const int n,
                            const double *y, 
@@ -15,22 +19,79 @@ void evaluate_search_point(const int n,
                            double *mse, 
                            double *err);
 
-int line_search(const int n,           // data length
-		const double *y,       // observations
-		const double *wi,      // inverse observation weights
-                const double delta,    // MSE constraint	
-                const double tau,      // step size in transformed space
-                double *x,             // primal variable
-		double *z,             // initial dual variable
-		double *lambda,        // initial regularization parameter
-		int *iters,            // pointer to iter # (so we can return it)
-                const int max_interp,  // number of times to try interpolating
-		const double tol,      // max num outer loop iterations
-		const int verbose)
+double compute_scale(const int t, 
+                     const double *y, 
+                     const double delta);
+
+short line_search(const int n,           // data length
+      		  const double *y,       // observations
+		  const double *wi,      // inverse observation weights
+                  const double delta,    // MSE constraint	
+                  const double tau,      // step size in transformed space
+                  double *x,             // primal variable
+		  double *z,             // initial dual variable
+		  double *lambda,        // initial regularization parameter
+		  int *iters,            // pointer to iter # (so we can return it)
+                  const int max_interp,  // number of times to try interpolating
+		  const double tol,      // max num outer loop iterations
+		  const int verbose);
+
+
+/******************************************************************************
+ ***************************** Constrained Solver *****************************
+ ******************************************************************************/
+
+
+short constrained_wpdas(const int n,             // data length
+                        const double *y,         // observations
+                        const double *wi,        // inverse observation weights
+                        const double delta,      // MSE constraint	
+                        double *x,               // primal variable
+                        double *z,               // initial dual variable
+                        double *lambda,          // initial regularization parameter
+                        int *iters,            // pointer to iter # (so we can return it)
+                        const int max_interp=1,  // number of times to try interpolating
+                        const double tol=1e-3,   // max num outer loop iterations
+                        const int verbose=0)
+{
+    /* Declare & Initialize Local Variables */
+    short status;
+    double scale, tau;
+    
+    /* Compute Step Size wrt Transformed Lambda Space*/
+    scale = compute_scale(n, y, delta);
+    tau = (log(20 + (1 / scale)) - log(3 + (1 / scale))) / 60;
+
+    /* If Uninitialized Compute Starting Point For Search */
+    if (*lambda <= 0){
+        *lambda = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
+    }
+
+    /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
+    status = line_search(n, y, wi, delta, tau, x, z, lambda,
+                         iters, max_interp, tol, verbose);
+
+    return status;
+}
+
+
+short line_search(const int n,           // data length
+                  const double *y,       // observations
+                  const double *wi,      // inverse observation weights
+                  const double delta,    // MSE constraint	
+                  const double tau,      // step size in transformed space
+                  double *x,             // primal variable
+                  double *z,             // initial dual variable
+                  double *lambda,        // initial regularization parameter
+                  int *iters,            // pointer to iter # (so we can return it)
+                  const int max_interp,  // number of times to try interpolating
+                  const double tol,      // max num outer loop iterations
+                  const int verbose)
 {
   /************************** Initialize Variables ***************************/
     /* Line search internals */
-    int iter, interp, direction;
+    int iter, interp;
+    short direction, status;
     double mse, mse_prev, err, tau_interp;
     
     /* pdas defaults */
@@ -43,7 +104,9 @@ int line_search(const int n,           // data length
     /************************* Main Search Algorithm *************************/
 
     /* Evaluate Initialed Lambda */
-    weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+    status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, 
+                           delta_s, delta_e, maxiter, verbose);
+    // TODO check status
     *iters += iter;
     evaluate_search_point(n, y, wi, delta, x, &mse, &err);
     direction = sign(delta - mse);
@@ -55,12 +118,14 @@ int line_search(const int n,           // data length
     
         /* Check to see if we landed in tol band */
         if (err <= tol){
-            return 1;
+            return 1; // successful solve
         }
 
         /* Take a step towards delta in transformed lambda space */
         *lambda = exp(log(*lambda + 1) + direction * tau) - 1;
-        weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+        status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, 
+                               delta_s, delta_e, maxiter, verbose);
+        // TODO check status
         *iters += iter;
         mse_prev = mse;
         evaluate_search_point(n, y, wi, delta, x, &mse, &err);
@@ -68,7 +133,9 @@ int line_search(const int n,           // data length
         /* Interpolate to next search point in transformed lambda space */
         tau_interp = tau * direction * (delta - mse) / (mse - mse_prev);
         *lambda = exp(log(*lambda + 1) + tau_interp) - 1;
-        weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+        status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m,
+                               delta_s, delta_e, maxiter, verbose);
+        // TODO check status
         *iters += iter;
         evaluate_search_point(n, y, wi, delta, x, &mse, &err);
         direction = sign(delta - mse);
@@ -82,12 +149,14 @@ int line_search(const int n,           // data length
         
         /* Take a step towards delta in transformed lambda space */
         *lambda = exp(log(*lambda + 1) + direction * tau) - 1;
-        weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
+        status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, 
+                               delta_s, delta_e, maxiter, verbose);
+        // TODO check status
         *iters += iter;
         mse_prev = mse;
         evaluate_search_point(n, y, wi, delta, x, &mse, &err);
         if (fabs(mse - mse_prev) < 1e-3){
-            break;
+            return 0; // Line search stalled, but wpdas didn't blow up
         }
         
     }
@@ -95,11 +164,36 @@ int line_search(const int n,           // data length
     /************************** Refine Estimate **************************/
 
     /* Interpolate to delta in transformed lambda space to refine estimate */
-    //tau_interp = tau * direction * (delta - mse) / (mse - mse_prev);
-    //*lambda = exp(log(*lambda + 1) + tau_interp) - 1;
-    //weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, delta_s, delta_e, maxiter, verbose);
-    //*iters += iter;
-    return 1;
+    // TODO ensure that interp leaves you between last two search points
+    tau_interp = tau * direction * (delta - mse) / (mse - mse_prev);
+    *lambda = exp(log(*lambda + 1) + tau_interp) - 1;
+    status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m, 
+                           delta_s, delta_e, maxiter, verbose);
+    // TODO check status
+    *iters += iter;
+    return 1; // Successful Solve 
+}
+
+
+/******************************************************************************
+ ***************************** Utility Functions ******************************
+ ******************************************************************************/
+
+
+/* Computes Scaling Factor For 2nd Order TF Line Search */
+double compute_scale(const int t, 
+                     const double *y, 
+                     const double delta)
+{
+    /* Compute power of signal: under assuming detrended and centered */
+    double var_y = cblas_dnrm2(t, y, 1);
+    var_y *= var_y;
+    var_y /= t;
+    
+    /* Return scaling factor sigma_eps / sqrt(SNR) */
+    if (var_y <= delta) 
+        return sqrt(var_y) / sqrt(.1); // protect against faulty noise estimates
+    return delta / sqrt(var_y - delta);
 }
 
 
@@ -122,4 +216,9 @@ void evaluate_search_point(const int n,
     /* compute % error */
     *err = fabs(delta - *mse) / delta;
 
+}
+
+
+short sign(double val) {
+    return (0 < val) - (val < 0);
 }

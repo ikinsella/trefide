@@ -173,24 +173,6 @@ void regress_temporal(const MKL_INT d,
 }
 
 
-/* Computes Scaling Factor For 2nd Order TF Line Search
- */
-double compute_scale(const MKL_INT t, 
-                     const double *y, 
-                     const double delta)
-{
-    /* Compute power of signal: under assuming detrended and centered */
-    double var_y = cblas_dnrm2(t, y, 1);
-    var_y *= var_y;
-    var_y /= t;
-    
-    /* Return scaling factor sigma_eps / sqrt(SNR) */
-    if (var_y <= delta) 
-        return sqrt(var_y) / sqrt(.1); // protect against faulty noise estimates
-    return delta / sqrt(var_y - delta);
-}
-
-
 /* Denoises and normalizes the len t spatial component v_k using the 
  * constrained PDAS implementation of 2nd order L1TF denoising.
  */
