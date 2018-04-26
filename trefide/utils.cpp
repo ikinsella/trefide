@@ -10,13 +10,15 @@
             "-qopenmp",
             "-I/home/ian/devel/trefide/src",
             "-I/home/ian/devel/trefide/src/proxtv",
+            "-I/home/ian/devel/trefide/src/glmgen/include",
             "-D NOMATLAB=1"
         ],
         "extra_link_args": [
             "-mkl=sequential",
             "-qopenmp",
             "-L/home/ian/devel/trefide/src",
-            "-L/home/ian/devel/trefide/src/proxtv"
+            "-L/home/ian/devel/trefide/src/proxtv",
+            "-L/home/ian/devel/trefide/src/glmgen/lib"
         ],
         "include_dirs": [
             "/home/ian/miniconda3/envs/idp3/lib/python3.6/site-packages/numpy/core/include"
@@ -28,6 +30,7 @@
             "mkl_intel_thread",
             "trefide",
             "proxtv",
+            "glmgen",
             "iomp5",
             "m"
         ],

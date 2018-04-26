@@ -93,6 +93,7 @@ size_t pmd(const MKL_INT d1,
            const double lambda_tv,
            const double spatial_thresh,
            const size_t max_components,
+           const size_t consec_failures,
            const size_t max_iters,
            const double tol,
            void* FFT=NULL);
@@ -108,6 +109,7 @@ void batch_pmd(const MKL_INT bheight,
                const double lambda_tv,
                const double spatial_thresh,
                const size_t max_components,
+               const size_t consec_failures,
                const size_t max_iters,
                const double tol);
 

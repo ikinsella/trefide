@@ -22,6 +22,17 @@ short line_search(const int n,           // data length
 		  const double tol,      // max num outer loop iterations
 		  const int verbose);
 
+short line_search(const int n,           // data length
+      		  const double *y,       // observations
+		  const double *wi,      // inverse observation weights
+                  const double delta,    // MSE constraint	
+                  double *x,             // primal variable
+		  double *z,             // initial dual variable
+		  double *lambda,        // initial regularization parameter
+		  int *iters,            // pointer to iter # (so we can return it)
+		  const double tol,      // max num outer loop iterations
+		  const int verbose);
+
 short constrained_wpdas(const int n,             // data length
                         const double *y,         // observations
                         const double *wi,        // inverse observation weights
@@ -34,6 +45,16 @@ short constrained_wpdas(const int n,             // data length
                         const double tol=1e-3,   // max num outer loop iterations
                         const int verbose=0);
 
+short cps_wpdas(const int n,             // data length
+                const double *y,         // observations
+                const double *wi,        // inverse observation weights
+                const double delta,      // MSE constraint	
+                double *x,               // primal variable
+                double *z,               // initial dual variable
+                double *lambda,          // initial regularization parameter
+                int *iters,            // pointer to iter # (so we can return it)
+                const double tol=1e-3,   // max num outer loop iterations
+                const int verbose=0);
 //#ifdef  __cplusplus
 //}
 //#endif

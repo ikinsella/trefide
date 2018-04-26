@@ -41,6 +41,17 @@ cdef extern from "trefide.h":
                             const double tol,
                             const int verbose) nogil
 
+    short cps_wpdas(const int n,
+                    const double *y,
+                    const double *wi,
+                    const double delta,
+                    double *x,
+                    double *z,
+                    double *lambda_,
+                    int *iters,
+                    const double tol,
+                    const int verbose) nogil
+
     short weighted_pdas (const int n,
                          const double *y,
                          const double *wi,
@@ -88,7 +99,7 @@ cpdef cpdas(const double[::1] y,        # Observations
     """
     
     # Declare & Intialize Local Variables
-    cdef int iters;
+    cdef int iters = 0;
     cdef short status;
     cdef size_t t = y.shape[0]
 
@@ -105,18 +116,59 @@ cpdef cpdas(const double[::1] y,        # Observations
  
     # Call Solver
     with nogil:
-        iters = constrained_wpdas(t, &y[0], &wi[0], delta, &x_hat[0], &z_hat[0],
+        status = constrained_wpdas(t, &y[0], &wi[0], delta, &x_hat[0], &z_hat[0],
                                   &lambda_, &iters, max_interp, tol, verbose)
 
     # Check For Failures 
-    if iters < 0:
-        raise RuntimeError("CPDAS Solver Failed.")
-    elif iters == 0:
+    if status < 0:
+        raise RuntimeError("WPDAS Failed Within Line Search.")
+    elif status == 0:
         warnings.warn("CPDAS line search stalled. Returning best solution found.")
  
     return x_hat, z_hat, lambda_, iters
 
+
+cpdef cps_cpdas(const double[::1] y,        # Observations
+                const double delta,         # MSE constraint
+                double[::1] wi=None,        # Observation weights
+                double[::1] z_hat=None,     # Dual variable warm start
+                double lambda_=-1,          # Lagrange multiplier warm start
+                double tol=1e-3,            # Constraint tolerance
+                int verbose=0):
+    """ 
+    Shallow wrapper to call libtrefide solver 
+    """
+    
+    # Declare & Intialize Local Variables
+    cdef int iters = 0;
+    cdef short status;
+    cdef size_t t = y.shape[0]
+
+    # Allocate Space For Output
+    cdef double[::1] x_hat = np.empty(t, dtype=np.float64)
+
+    # Default to unweighted l1tf
+    if wi is None:
+        wi = np.ones(t, dtype=np.float64)
+
+    # Default to initializing dual var at 0
+    if z_hat is None:
+        z_hat = np.zeros(t - 2, dtype=np.float64)
  
+    # Call Solver
+    with nogil:
+        status = cps_wpdas(t, &y[0], &wi[0], delta, &x_hat[0], &z_hat[0],
+                           &lambda_, &iters, tol, verbose)
+
+    # Check For Failures 
+    if status < 0:
+        raise RuntimeError("WPDAS failed within CPS line search Solver.")
+    elif status == 0:
+        warnings.warn("CPS line search stalled. Returning best solution found.")
+ 
+    return x_hat, z_hat, lambda_, iters
+ 
+
 cpdef lpdas(double[::1] y,
             const double lambda_,
 	    double[::1] wi=None,

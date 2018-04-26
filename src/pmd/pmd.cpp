@@ -5,7 +5,7 @@
 #include "../proxtf/line_search.h"
 #include "../utils/welch.h"
 #include <proxtv.h>
-
+#include <algorithm>
 
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic Helper Funcs ---------------------------*
@@ -406,36 +406,58 @@ size_t pmd(const MKL_INT d1,
            const double lambda_tv,
            const double spatial_thresh,
            const size_t max_components,
+           const size_t consec_failures,
            const size_t max_iters,
            const double tol,
            void* FFT=NULL)  /* Handle Provided For Threadsafe FFT */
 {
     /* Declare & Intialize Internal Vars */
+    //int* keep_flag = (int *) malloc(consec_failures*sizeof(int));
     int keep_flag;
-    size_t k;
+    size_t k, good = 0;
     MKL_INT d = d1 * d2;
 
+    /* Fill Keep Flags */
+    //for (k = 0; k < consec_failures; k++) keep_flag[k] = 1;
+
     /* Sequentially Extract Rank 1 Updates Until We Are Fitting Noise */
-    for (k = 0; k < max_components; k++) {
+    for (k = 0; k < max_components; k++, good++) {
         
         /* U[:,k] <- u_k, V[k,:] <- v_k' : 
          *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
          */
-        keep_flag = rank_one_decomposition(d1, d2, t, R, U + k*d, V + k*t, 
-                                   lambda_tv, spatial_thresh, max_iters, tol, FFT);
+        //keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, t, R, 
+        keep_flag = rank_one_decomposition(d1, d2, t, R, 
+                                                                U + good*d, 
+                                                                V + good*t, 
+                                                                lambda_tv, 
+                                                                spatial_thresh, 
+                                                                max_iters, 
+                                                                tol, FFT);
 
         /* Check Component Quality: Terminate if we're fitting noise */
-        if (keep_flag < 0) return k; 
+        if (keep_flag < 0) return k;
+        /*if (keep_flag[k % consec_failures] < 0){
+            if (std::max_element(keep_flag, keep_flag + consec_failures) < 0){
+                free(keep_flag);
+                return good; // terminate
+            }
+        }*/
         
         /* Debias Temporal Temporal Component: V[k,:]' <- R_k' U[:,k] */
-        regress_temporal(d, t, R, U + k*d, V + k*t);
+        regress_temporal(d, t, R, U + good*d, V + good*t);
 
         /* Update Residual: R_k <- R_k - U[:,k] V[k,:] */
-        cblas_dger(CblasColMajor, d, t, -1.0, U + k*d, 1, V + k*t, 1, R, d);
+        cblas_dger(CblasColMajor, d, t, -1.0, U + good*d, 1, V + good*t, 1, R, d);
+
+        /* Make Sure We Overwrite Failed Components */
+        //if (keep_flag[k % consec_failures] < 0) good--;
     }
 
     /* MAXCOMPONENTS EXCEEDED: Terminate Early */
-    return k; 
+    //free(keep_flag);
+    //return good; 
+    return k;
 }
 
 
@@ -453,6 +475,7 @@ void batch_pmd(const MKL_INT bheight,
                const double lambda_tv,
                const double spatial_thresh,
                const size_t max_components,
+               const size_t consec_failures,
                const size_t max_iters,
                const double tol)
 {
@@ -468,11 +491,12 @@ void batch_pmd(const MKL_INT bheight,
 
     // Loop Over All Patches In Parallel
     int m;
-    #pragma omp parallel for shared(FFT) schedule(static)
+    #pragma omp parallel for shared(FFT) schedule(guided)
     for (m = 0; m < b; m++){
         //Use dummy vars for decomposition  
         Kpt[m] = pmd(bheight, bwidth, t, Rpt[m], Upt[m], Vpt[m], lambda_tv, 
-                     spatial_thresh, max_components, max_iters, tol, &FFT);
+                     spatial_thresh, max_components, consec_failures, max_iters, 
+                     tol, &FFT);
     }
 
     // Free MKL FFT Handle

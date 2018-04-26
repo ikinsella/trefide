@@ -86,6 +86,15 @@ cdef cpdas(const double[::1] y,        # Observations
             int verbose=?)
 
 
+cdef cps_cpdas(const double[::1] y,        # Observations
+                const double delta,         # MSE constraint
+                double[::1] wi=?,           # Observation weights
+                double[::1] z_hat=?,        # Dual variable warm start
+                double lambda_=?,           # Lagrange multiplier warm start
+                double tol=?,               # Constraint tolerance
+                int verbose=?)
+
+
 cdef lpdas(double[::1] y,
             const double lambda_,
             double[::1] wi=?,
