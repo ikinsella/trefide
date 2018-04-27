@@ -208,6 +208,8 @@ short line_search(const int n,           // data length
         return status;  // error within lagrangian solver
     }
     *iters += iter;
+    evaluate_search_point(n, y, wi, delta, x, &mse, &err);
+    direction = sign(delta - mse);
 
     /************************** Interpolation Phase **************************/
     
