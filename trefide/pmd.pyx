@@ -190,17 +190,16 @@ cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U,
     return np.asarray(Yd)
 
 
-
 # -----------------------------------------------------------------------------#
 # --------------------------- Overlapping Wrappers ----------------------------#
 # -----------------------------------------------------------------------------#
 
 
-cpdef double[:,:,::1] weighted_batch_recompose(double[:, :, :, :] U, 
-                                               double[:,:,:] V, 
-                                               size_t[:] K, 
-                                               size_t[:,:] indices,
-                                               double[:,:] W):
+cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U, 
+                                         double[:,:,:] V, 
+                                         size_t[:] K, 
+                                         size_t[:,:] indices,
+                                         double[:,:] W):
     """ Reconstruct A Denoised Movie """
 
     # Get Block Size Info From Spatial
@@ -234,18 +233,18 @@ cpdef double[:,:,::1] weighted_batch_recompose(double[:, :, :, :] U,
     return np.asarray(Yd)
 
 
-cpdef overlapping_batch_denoise(const int d1, 
-                                const int d2, 
-                                const int t,
-                                double[:, :, ::1] Y, 
-                                const int bheight,
-                                const int bwidth,
-                                const double lambda_tv,
-                                const double spatial_thresh,
-                                const size_t max_components,
-                                const size_t consec_failures,
-                                const size_t max_iters,
-                                const double tol):
+cpdef overlapping_batch_decompose(const int d1, 
+                                  const int d2, 
+                                  const int t,
+                                  double[:, :, ::1] Y, 
+                                  const int bheight,
+                                  const int bwidth,
+                                  const double lambda_tv,
+                                  const double spatial_thresh,
+                                  const size_t max_components,
+                                  const size_t consec_failures,
+                                  const size_t max_iters,
+                                  const double tol):
     """ 4x batch denoiser """
 
     # Assert Even Blockdims
@@ -288,92 +287,259 @@ cpdef overlapping_batch_denoise(const int d1,
                                     np.vstack([np.fliplr(ul_weights), 
                                                np.fliplr(np.flipud(ul_weights))])]) 
 
-    # ---------------- Handle Blocks Overlays One At A Time --------------#
-    Yd = np.zeros((d1,d2,t), dtype=np.float64)
-
-    # ----------- Original Overlay
-    # Only Need To Process Full-Size Blocks
-    U, V, K, I = batch_decompose(d1, d2, t, Y, bheight, bwidth, lambda_tv,
-                                 spatial_thresh, max_components, 
-                                 consec_failures, max_iters, tol)
-    Yd += weighted_batch_recompose(U, V, K, I, W)
- 
-    # ---------- Add Vertical Skew Block Overlay To Reconstruction
-    # Full Blocks
-    U, V, K, I = batch_decompose(d1 - bheight, d2, t, 
-                                Y[hbheight:d1-hbheight,:,:], 
-                                bheight, bwidth, 
-                                lambda_tv, spatial_thresh, max_components, 
-                                consec_failures, max_iters, tol)
-    Yd[hbheight:d1-hbheight,:,:] += weighted_batch_recompose(U, V, K, I, W)
-
-    # wide half blocks
-    U, V, K, I = batch_decompose(bheight, d2, t, 
-                                 np.vstack([Y[:hbheight,:,:], Y[d1-hbheight:,:,:]]),
-                                 hbheight, bwidth, 
-                                 lambda_tv, spatial_thresh, max_components, 
-                                 consec_failures, max_iters, tol)
-    Yd[:hbheight,:,:] += weighted_batch_recompose(U[::2], V[::2], K[::2], I[::2],  W[hbheight:, :])
-    Yd[d1-hbheight:,:,:] += weighted_batch_recompose(U[1::2], V[1::2], K[1::2], I[1::2], W[:hbheight, :])
+    # Initialize Outputs
+    cdef dict U = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
+    cdef dict V = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
+    cdef dict K = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
+    cdef dict I = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
     
-    # --------------Horizontal Skew
+    # ---------------- Handle Blocks Overlays One At A Time --------------#
+
+    # ----------- Original Overlay -----------
+    # Only Need To Process Full-Size Blocks
+    U['no_skew']['full'],\
+    V['no_skew']['full'],\
+    K['no_skew']['full'],\
+    I['no_skew']['full'] = batch_decompose(d1, d2, t, Y, bheight, bwidth, lambda_tv,
+                                           spatial_thresh, max_components, 
+                                           consec_failures, max_iters, tol)
+    print("success")
+ 
+    # ---------- Vertical Skew -----------
     # Full Blocks
-    U, V, K, I = batch_decompose(d1, d2 - bwidth, t, 
-                                 Y[:, hbwidth:d2-hbwidth,:], 
-                                 bheight, bwidth, 
-                                 lambda_tv, spatial_thresh, max_components, 
-                                 consec_failures, max_iters, tol)
-    Yd[:, hbwidth:d2-hbwidth,:] += weighted_batch_recompose(U, V, K, I, W)
-
-    # tall half blocks
-    U, V, K, I = batch_decompose(d1, bwidth, t, 
-                                 np.hstack([Y[:,:hbwidth,:], Y[:,d2-hbwidth:,:]]),
-                                 bheight, hbwidth, 
-                                 lambda_tv, spatial_thresh, max_components, 
-                                 consec_failures, max_iters, tol)
-    Yd[:,:hbwidth,:] += np.asarray(weighted_batch_recompose(U[:nbrow], V[:nbrow], K[:nbrow], I[:nbrow],  W[:, hbwidth:]))
-    Yd[:,d2-hbwidth:,:] += weighted_batch_recompose(U[nbrow:], V[nbrow:], K[nbrow:], I[nbrow:], W[:, :hbwidth])
-
-    # -------------Diagonal Skew
-    # Full Blocks
-    U, V, K, I = batch_decompose(d1 - bheight, d2 - bwidth, t, 
-                                 Y[hbheight:d1-hbheight, hbwidth:d2-hbwidth, :], 
-                                  bheight, bwidth, 
-                                  lambda_tv, spatial_thresh, max_components, 
-                                  consec_failures, max_iters, tol)
-    Yd[hbheight:d1-hbheight, hbwidth:d2-hbwidth, :] += weighted_batch_recompose(U, V, K, I, W)
-
-    # tall half blocks
-    U, V, K, I = batch_decompose(d1 - bheight, bwidth, t, 
-                                 np.hstack([Y[hbheight:d1-hbheight, :hbwidth, :],
-                                            Y[hbheight:d1-hbheight, d2-hbwidth:, :]]),
-                                 bheight, hbwidth, 
-                                 lambda_tv, spatial_thresh, max_components, 
-                                 consec_failures, max_iters, tol)
-    Yd[hbheight:d1-hbheight,:hbwidth,:] += weighted_batch_recompose(U[:nbrow-1], V[:nbrow-1], K[:nbrow-1], I[:nbrow-1],  W[:, hbwidth:])
-    Yd[hbheight:d1-hbheight,d2-hbwidth:,:] += weighted_batch_recompose(U[nbrow-1:], V[nbrow-1:], K[nbrow-1:], I[nbrow-1:], W[:, :hbwidth])
+    U['vert_skew']['full'],\
+    V['vert_skew']['full'],\
+    K['vert_skew']['full'],\
+    I['vert_skew']['full'] = batch_decompose(d1 - bheight, d2, t, 
+                                             Y[hbheight:d1-hbheight,:,:], 
+                                             bheight, bwidth, 
+                                             lambda_tv, spatial_thresh,
+                                             max_components, consec_failures,
+                                             max_iters, tol)
 
     # wide half blocks
-    U, V, K, I = batch_decompose(bheight, d2 - bwidth, t, 
-                                 np.vstack([Y[:hbheight, hbwidth:d2-hbwidth, :], 
-                                            Y[d1-hbheight:, hbwidth:d2-hbwidth, :]]),
-                                 hbheight, bwidth, 
-                                 lambda_tv, spatial_thresh, max_components, 
-                                 consec_failures, max_iters, tol) 
-    Yd[:hbheight,hbwidth:d2-hbwidth,:] += weighted_batch_recompose(U[::2], V[::2], K[::2], I[::2],  W[hbheight:, :])
-    Yd[d1-hbheight:,hbwidth:d2-hbwidth,:] += weighted_batch_recompose(U[1::2], V[1::2], K[1::2], I[1::2], W[:hbheight, :])
+    U['vert_skew']['half'],\
+    V['vert_skew']['half'],\
+    K['vert_skew']['half'],\
+    I['vert_skew']['half'] = batch_decompose(bheight, d2, t, 
+                                             np.vstack([Y[:hbheight,:,:], 
+                                                        Y[d1-hbheight:,:,:]]),
+                                             hbheight, bwidth, lambda_tv,
+                                             spatial_thresh, max_components, 
+                                             consec_failures, max_iters, tol)
+    
+    # --------------Horizontal Skew---------- 
+    # Full Blocks
+    U['horz_skew']['full'],\
+    V['horz_skew']['full'],\
+    K['horz_skew']['full'],\
+    I['horz_skew']['full'] = batch_decompose(d1, d2 - bwidth, t, 
+                                             Y[:, hbwidth:d2-hbwidth,:], 
+                                             bheight, bwidth, lambda_tv, 
+                                             spatial_thresh, max_components, 
+                                             consec_failures, max_iters, tol)
+
+    # tall half blocks
+    U['horz_skew']['half'],\
+    V['horz_skew']['half'],\
+    K['horz_skew']['half'],\
+    I['horz_skew']['half'] = batch_decompose(d1, bwidth, t, 
+                                             np.hstack([Y[:,:hbwidth,:],
+                                                        Y[:,d2-hbwidth:,:]]),
+                                             bheight, hbwidth, lambda_tv, 
+                                             spatial_thresh, max_components, 
+                                             consec_failures, max_iters, tol)
+
+    # -------------Diagonal Skew---------- 
+    # Full Blocks
+    U['diag_skew']['full'],\
+    V['diag_skew']['full'],\
+    K['diag_skew']['full'],\
+    I['diag_skew']['full'] = batch_decompose(d1 - bheight, d2 - bwidth, t, 
+                                             Y[hbheight:d1-hbheight,
+                                               hbwidth:d2-hbwidth, :], 
+                                             bheight, bwidth, lambda_tv,
+                                             spatial_thresh, max_components, 
+                                             consec_failures, max_iters, tol)
+
+    # tall half blocks
+    U['diag_skew']['thalf'],\
+    V['diag_skew']['thalf'],\
+    K['diag_skew']['thalf'],\
+    I['diag_skew']['thalf'] = batch_decompose(d1 - bheight, bwidth, t, 
+                                             np.hstack([Y[hbheight:d1-hbheight,
+                                                          :hbwidth, :],
+                                                        Y[hbheight:d1-hbheight,
+                                                          d2-hbwidth:, :]]),
+                                             bheight, hbwidth, lambda_tv, 
+                                             spatial_thresh, max_components, 
+                                             consec_failures, max_iters, tol)
+
+    # wide half blocks
+    U['diag_skew']['whalf'],\
+    V['diag_skew']['whalf'],\
+    K['diag_skew']['whalf'],\
+    I['diag_skew']['whalf'] = batch_decompose(bheight, d2 - bwidth, t, 
+                                             np.vstack([Y[:hbheight, 
+                                                          hbwidth:d2-hbwidth,
+                                                          :], 
+                                                        Y[d1-hbheight:,
+                                                          hbwidth:d2-hbwidth,
+                                                          :]]),
+                                             hbheight, bwidth, lambda_tv,
+                                             spatial_thresh, max_components, 
+                                             consec_failures, max_iters, tol) 
 
     # Corners
-    U, V, K, I = batch_decompose(bheight, bwidth, t, 
-                                 np.hstack([np.vstack([Y[:hbheight, :hbwidth, :], 
-                                                       Y[d1-hbheight:, :hbwidth, :]]),
-                                            np.vstack([Y[:hbheight, d2-hbwidth:, :], 
-                                                       Y[d1-hbheight:, d2-hbwidth:, :]])]),
-                                 hbheight, hbwidth, 
-                                 lambda_tv, spatial_thresh, max_components, 
-                                 consec_failures, max_iters, tol)
-    Yd[:hbheight,:hbwidth,:] += weighted_batch_recompose(U[:1], V[:1], K[:1], I[:1],  W[hbheight:, hbwidth:])
-    Yd[d1-hbheight:,:hbwidth,:] += weighted_batch_recompose(U[1:2], V[1:2], K[1:2], I[1:2],  W[:hbheight, hbwidth:])
-    Yd[:hbheight,d2-hbwidth:,:] += weighted_batch_recompose(U[2:3], V[2:3], K[2:3], I[2:3],  W[hbheight:, :hbwidth])
-    Yd[d1-hbheight:,d2-hbwidth:,:] += weighted_batch_recompose(U[3:], V[3:], K[3:], I[3:],  W[:hbheight:, :hbwidth])
+    U['diag_skew']['quarter'],\
+    V['diag_skew']['quarter'],\
+    K['diag_skew']['quarter'],\
+    I['diag_skew']['quarter'] = batch_decompose(bheight, bwidth, t, 
+                                                np.hstack([
+                                                    np.vstack([Y[:hbheight,
+                                                                 :hbwidth,
+                                                                 :], 
+                                                               Y[d1-hbheight:,
+                                                                 :hbwidth,
+                                                                 :]]),
+                                                    np.vstack([Y[:hbheight,
+                                                                 d2-hbwidth:,
+                                                                 :], 
+                                                               Y[d1-hbheight:,
+                                                                 d2-hbwidth:,
+                                                                 :]])
+                                                               ]),
+                                                hbheight, hbwidth, lambda_tv, 
+                                                spatial_thresh, max_components, 
+                                                consec_failures, max_iters, tol)
+
+    # Return Weighting Matrix For Reconstruction
+    return U, V, K, I, W
+
+
+
+cpdef overlapping_batch_recompose(const int d1,
+                                  const int d2, 
+                                  const int t,
+                                  const int bheight,
+                                  const int bwidth,
+                                  U, V, K, I, W):
+    """ 4x batch denoiser """
+   
+    # Assert Even Blockdims
+    assert bheight % 2 == 0 , "Block height must be an even integer."
+    assert bwidth % 2 == 0 , "Block width must be an even integer."
+    
+    # Assert Even Blockdims
+    assert d1 % bheight == 0 , "Input FOV height must be an evenly divisible by block height."
+    assert d2 % bwidth == 0 , "Input FOV width must be evenly divisible by block width."
+    
+    # Declare internal vars
+    cdef int i,j
+    cdef int hbheight = bheight/2
+    cdef int hbwidth = bwidth/2
+    cdef int nbrow = d1/bheight
+    cdef int nbcol = d2/bwidth
+
+    # Allocate Space For reconstructed Movies
+    Yd = np.zeros((d1,d2,t), dtype=np.float64)
+
+    # ---------------- Handle Blocks Overlays One At A Time --------------#
+
+    # ----------- Original Overlay --------------
+    # Only Need To Process Full-Size Blocks
+    Yd += weighted_recompose(U['no_skew']['full'],
+                             V['no_skew']['full'], 
+                             K['no_skew']['full'], 
+                             I['no_skew']['full'], 
+                             W)
+ 
+    # ---------- Vertical Skew --------------
+    # Full Blocks
+    Yd[hbheight:d1-hbheight,:,:] += weighted_recompose(U['vert_skew']['full'],
+                                                       V['vert_skew']['full'],
+                                                       K['vert_skew']['full'], 
+                                                       I['vert_skew']['full'], 
+                                                       W)
+    # wide half blocks
+    Yd[:hbheight,:,:] += weighted_recompose(U['vert_skew']['half'][::2],
+                                            V['vert_skew']['half'][::2],
+                                            K['vert_skew']['half'][::2],
+                                            I['vert_skew']['half'][::2],
+                                            W[hbheight:, :])
+    Yd[d1-hbheight:,:,:] += weighted_recompose(U['vert_skew']['half'][1::2],
+                                               V['vert_skew']['half'][1::2],
+                                               K['vert_skew']['half'][1::2],
+                                               I['vert_skew']['half'][1::2],
+                                               W[:hbheight, :])
+    
+    # --------------Horizontal Skew--------------
+    # Full Blocks
+    Yd[:, hbwidth:d2-hbwidth,:] += weighted_recompose(U['horz_skew']['full'],
+                                                      V['horz_skew']['full'],
+                                                      K['horz_skew']['full'],
+                                                      I['horz_skew']['full'], 
+                                                      W)
+    # tall half blocks
+    Yd[:,:hbwidth,:] += weighted_recompose(U['horz_skew']['half'][:nbrow],
+                                           V['horz_skew']['half'][:nbrow], 
+                                           K['horz_skew']['half'][:nbrow], 
+                                           I['horz_skew']['half'][:nbrow],  
+                                           W[:, hbwidth:])
+    Yd[:,d2-hbwidth:,:] += weighted_recompose(U['horz_skew']['half'][nbrow:],
+                                              V['horz_skew']['half'][nbrow:],
+                                              K['horz_skew']['half'][nbrow:],
+                                              I['horz_skew']['half'][nbrow:],
+                                              W[:, :hbwidth])
+
+    # -------------Diagonal Skew--------------
+    # Full Blocks
+    Yd[hbheight:d1-hbheight, hbwidth:d2-hbwidth, :] += weighted_recompose(U['diag_skew']['full'],
+                                                                          V['diag_skew']['full'],
+                                                                          K['diag_skew']['full'],
+                                                                          I['diag_skew']['full'],
+                                                                          W)
+    # tall half blocks
+    Yd[hbheight:d1-hbheight,:hbwidth,:] += weighted_recompose(U['diag_skew']['thalf'][:nbrow-1],
+                                                              V['diag_skew']['thalf'][:nbrow-1], 
+                                                              K['diag_skew']['thalf'][:nbrow-1], 
+                                                              I['diag_skew']['thalf'][:nbrow-1],  
+                                                              W[:, hbwidth:])
+    Yd[hbheight:d1-hbheight,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['thalf'][nbrow-1:], 
+                                                                 V['diag_skew']['thalf'][nbrow-1:], 
+                                                                 K['diag_skew']['thalf'][nbrow-1:], 
+                                                                 I['diag_skew']['thalf'][nbrow-1:], 
+                                                                 W[:, :hbwidth])
+    # wide half blocks
+    Yd[:hbheight,hbwidth:d2-hbwidth,:] += weighted_recompose(U['diag_skew']['whalf'][::2], 
+                                                             V['diag_skew']['whalf'][::2], 
+                                                             K['diag_skew']['whalf'][::2], 
+                                                             I['diag_skew']['whalf'][::2],  
+                                                             W[hbheight:, :])
+    Yd[d1-hbheight:,hbwidth:d2-hbwidth,:] += weighted_recompose(U['diag_skew']['whalf'][1::2], 
+                                                                V['diag_skew']['whalf'][1::2], 
+                                                                K['diag_skew']['whalf'][1::2], 
+                                                                I['diag_skew']['whalf'][1::2], 
+                                                                W[:hbheight, :])
+    # Corners
+    Yd[:hbheight,:hbwidth,:] += weighted_recompose(U['diag_skew']['quarter'][:1],
+                                                   V['diag_skew']['quarter'][:1],
+                                                   K['diag_skew']['quarter'][:1],
+                                                   I['diag_skew']['quarter'][:1],
+                                                   W[hbheight:, hbwidth:])
+    Yd[d1-hbheight:,:hbwidth,:] += weighted_recompose(U['diag_skew']['quarter'][1:2],
+                                                      V['diag_skew']['quarter'][1:2],
+                                                      K['diag_skew']['quarter'][1:2],
+                                                      I['diag_skew']['quarter'][1:2],
+                                                      W[:hbheight, hbwidth:])
+    Yd[:hbheight,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['quarter'][2:3], 
+                                                      V['diag_skew']['quarter'][2:3], 
+                                                      K['diag_skew']['quarter'][2:3], 
+                                                      I['diag_skew']['quarter'][2:3],  
+                                                      W[hbheight:, :hbwidth])
+    Yd[d1-hbheight:,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['quarter'][3:], 
+                                                         V['diag_skew']['quarter'][3:], 
+                                                         K['diag_skew']['quarter'][3:], 
+                                                         I['diag_skew']['quarter'][3:],  
+                                                         W[:hbheight:, :hbwidth])
     return np.asarray(Yd)
