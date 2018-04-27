@@ -906,7 +906,7 @@ struct __pyx_memoryview_obj;
 struct __pyx_memoryviewslice_obj;
 struct __pyx_opt_args_7trefide_5utils_welch_psd_estimate;
 
-/* "trefide/utils.pyx":33
+/* "trefide/utils.pyx":30
  * 
  * 
  * cpdef double[:, ::1] welch_psd_estimate(double[:, ::1] signal,             # <<<<<<<<<<<<<<
@@ -1656,7 +1656,6 @@ static const char __pyx_k_c[] = "c";
 static const char __pyx_k_fs[] = "fs";
 static const char __pyx_k_id[] = "id";
 static const char __pyx_k_np[] = "np";
-static const char __pyx_k_sp[] = "sp";
 static const char __pyx_k_new[] = "__new__";
 static const char __pyx_k_obj[] = "obj";
 static const char __pyx_k_base[] = "base";
@@ -1679,7 +1678,6 @@ static const char __pyx_k_flags[] = "flags";
 static const char __pyx_k_int64[] = "int64";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
-static const char __pyx_k_scipy[] = "scipy";
 static const char __pyx_k_shape[] = "shape";
 static const char __pyx_k_start[] = "start";
 static const char __pyx_k_zeros[] = "zeros";
@@ -1713,7 +1711,6 @@ static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static const char __pyx_k_MemoryError[] = "MemoryError";
 static const char __pyx_k_PickleError[] = "PickleError";
 static const char __pyx_k_pyx_checksum[] = "__pyx_checksum";
-static const char __pyx_k_scipy_signal[] = "scipy.signal";
 static const char __pyx_k_stringsource[] = "stringsource";
 static const char __pyx_k_nsamp_overlap[] = "nsamp_overlap";
 static const char __pyx_k_pyx_getbuffer[] = "__pyx_getbuffer";
@@ -1823,14 +1820,11 @@ static PyObject *__pyx_n_s_range;
 static PyObject *__pyx_n_s_reduce;
 static PyObject *__pyx_n_s_reduce_cython;
 static PyObject *__pyx_n_s_reduce_ex;
-static PyObject *__pyx_n_s_scipy;
-static PyObject *__pyx_n_s_scipy_signal;
 static PyObject *__pyx_n_s_setstate;
 static PyObject *__pyx_n_s_setstate_cython;
 static PyObject *__pyx_n_s_shape;
 static PyObject *__pyx_n_s_signal;
 static PyObject *__pyx_n_s_size;
-static PyObject *__pyx_n_s_sp;
 static PyObject *__pyx_n_s_start;
 static PyObject *__pyx_n_s_step;
 static PyObject *__pyx_n_s_stop;
@@ -1924,7 +1918,7 @@ static PyObject *__pyx_tuple__24;
 static PyObject *__pyx_tuple__25;
 static PyObject *__pyx_codeobj__26;
 
-/* "trefide/utils.pyx":33
+/* "trefide/utils.pyx":30
  * 
  * 
  * cpdef double[:, ::1] welch_psd_estimate(double[:, ::1] signal,             # <<<<<<<<<<<<<<
@@ -1961,7 +1955,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
     }
   }
 
-  /* "trefide/utils.pyx":60
+  /* "trefide/utils.pyx":57
  *     # Declare & Initialize Local Variables
  *     cdef size_t c
  *     cdef size_t nchan = signal.shape[0]             # <<<<<<<<<<<<<<
@@ -1970,7 +1964,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
  */
   __pyx_v_nchan = (__pyx_v_signal.shape[0]);
 
-  /* "trefide/utils.pyx":61
+  /* "trefide/utils.pyx":58
  *     cdef size_t c
  *     cdef size_t nchan = signal.shape[0]
  *     cdef size_t nsamp = signal.shape[1]             # <<<<<<<<<<<<<<
@@ -1979,7 +1973,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
  */
   __pyx_v_nsamp = (__pyx_v_signal.shape[1]);
 
-  /* "trefide/utils.pyx":62
+  /* "trefide/utils.pyx":59
  *     cdef size_t nchan = signal.shape[0]
  *     cdef size_t nsamp = signal.shape[1]
  *     cdef size_t ncoef = <size_t> floor(nsamp / 2) + 1             # <<<<<<<<<<<<<<
@@ -1988,23 +1982,23 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
  */
   __pyx_v_ncoef = (((size_t)floor((__pyx_v_nsamp / 2))) + 1);
 
-  /* "trefide/utils.pyx":65
+  /* "trefide/utils.pyx":62
  * 
  *     # Allocate & Init PSD Coefs (IMPORTANT: Pxx must be init'd to 0)
  *     cdef double[:, ::1] pxx = np.zeros((nchan, ncoef), dtype=np.int64)             # <<<<<<<<<<<<<<
  * 
  *     # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_nchan); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_nchan); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_ncoef); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_FromSize_t(__pyx_v_ncoef); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
@@ -2012,33 +2006,33 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
   PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 65, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 65, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_t_5);
-  if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 65, __pyx_L1_error)
+  if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 62, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_v_pxx = __pyx_t_6;
   __pyx_t_6.memview = NULL;
   __pyx_t_6.data = NULL;
 
-  /* "trefide/utils.pyx":69
+  /* "trefide/utils.pyx":66
  *     # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
  *     # TODO: modify cpp implementation for more efficient multichannel estimation
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -2053,7 +2047,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
       #endif
       /*try:*/ {
 
-        /* "trefide/utils.pyx":70
+        /* "trefide/utils.pyx":67
  *     # TODO: modify cpp implementation for more efficient multichannel estimation
  *     with nogil:
  *         for c in range(nchan):             # <<<<<<<<<<<<<<
@@ -2064,7 +2058,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
         for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
           __pyx_v_c = __pyx_t_8;
 
-          /* "trefide/utils.pyx":71
+          /* "trefide/utils.pyx":68
  *     with nogil:
  *         for c in range(nchan):
  *             welch(nsamp, nsamp, nsamp, fs, &signal[c,0], &pxx[c,0], NULL)             # <<<<<<<<<<<<<<
@@ -2079,7 +2073,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
         }
       }
 
-      /* "trefide/utils.pyx":69
+      /* "trefide/utils.pyx":66
  *     # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
  *     # TODO: modify cpp implementation for more efficient multichannel estimation
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -2098,7 +2092,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
       }
   }
 
-  /* "trefide/utils.pyx":72
+  /* "trefide/utils.pyx":69
  *         for c in range(nchan):
  *             welch(nsamp, nsamp, nsamp, fs, &signal[c,0], &pxx[c,0], NULL)
  *     return pxx             # <<<<<<<<<<<<<<
@@ -2109,7 +2103,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_welch_psd_estimate(__Pyx_memvi
   __pyx_r = __pyx_v_pxx;
   goto __pyx_L0;
 
-  /* "trefide/utils.pyx":33
+  /* "trefide/utils.pyx":30
  * 
  * 
  * cpdef double[:, ::1] welch_psd_estimate(double[:, ::1] signal,             # <<<<<<<<<<<<<<
@@ -2194,7 +2188,7 @@ static PyObject *__pyx_pw_7trefide_5utils_1welch_psd_estimate(PyObject *__pyx_se
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "welch_psd_estimate") < 0)) __PYX_ERR(0, 33, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "welch_psd_estimate") < 0)) __PYX_ERR(0, 30, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -2209,26 +2203,26 @@ static PyObject *__pyx_pw_7trefide_5utils_1welch_psd_estimate(PyObject *__pyx_se
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_signal = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0]); if (unlikely(!__pyx_v_signal.memview)) __PYX_ERR(0, 33, __pyx_L3_error)
+    __pyx_v_signal = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0]); if (unlikely(!__pyx_v_signal.memview)) __PYX_ERR(0, 30, __pyx_L3_error)
     if (values[1]) {
-      __pyx_v_nsamp_seg = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_nsamp_seg == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 34, __pyx_L3_error)
+      __pyx_v_nsamp_seg = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_nsamp_seg == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 31, __pyx_L3_error)
     } else {
       __pyx_v_nsamp_seg = ((int)0x100);
     }
     if (values[2]) {
-      __pyx_v_nsamp_overlap = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_nsamp_overlap == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 35, __pyx_L3_error)
+      __pyx_v_nsamp_overlap = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_nsamp_overlap == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 32, __pyx_L3_error)
     } else {
       __pyx_v_nsamp_overlap = ((int)0x80);
     }
     if (values[3]) {
-      __pyx_v_fs = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_fs == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 36, __pyx_L3_error)
+      __pyx_v_fs = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_fs == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 33, __pyx_L3_error)
     } else {
       __pyx_v_fs = ((double)1.0);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("welch_psd_estimate", 0, 1, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 33, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("welch_psd_estimate", 0, 1, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 30, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("trefide.utils.welch_psd_estimate", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2253,8 +2247,8 @@ static PyObject *__pyx_pf_7trefide_5utils_welch_psd_estimate(CYTHON_UNUSED PyObj
   __pyx_t_2.nsamp_seg = __pyx_v_nsamp_seg;
   __pyx_t_2.nsamp_overlap = __pyx_v_nsamp_overlap;
   __pyx_t_2.fs = __pyx_v_fs;
-  __pyx_t_1 = __pyx_f_7trefide_5utils_welch_psd_estimate(__pyx_v_signal, 0, &__pyx_t_2); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 33, __pyx_L1_error)
-  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_t_1, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_7trefide_5utils_welch_psd_estimate(__pyx_v_signal, 0, &__pyx_t_2); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_t_1, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 30, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __PYX_XDEC_MEMVIEW(&__pyx_t_1, 1);
   __pyx_t_1.memview = NULL;
@@ -2276,7 +2270,7 @@ static PyObject *__pyx_pf_7trefide_5utils_welch_psd_estimate(CYTHON_UNUSED PyObj
   return __pyx_r;
 }
 
-/* "trefide/utils.pyx":75
+/* "trefide/utils.pyx":72
  * 
  * 
  * cpdef double[::1] psd_noise_estimate(double [:,::1] signal):             # <<<<<<<<<<<<<<
@@ -2305,7 +2299,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_psd_noise_estimate(__Pyx_memvi
   size_t __pyx_t_11;
   __Pyx_RefNannySetupContext("psd_noise_estimate", 0);
 
-  /* "trefide/utils.pyx":96
+  /* "trefide/utils.pyx":93
  *     # Declare & Initialize Local Variables
  *     cdef size_t c
  *     cdef size_t nchan = signal.shape[0]             # <<<<<<<<<<<<<<
@@ -2314,7 +2308,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_psd_noise_estimate(__Pyx_memvi
  */
   __pyx_v_nchan = (__pyx_v_signal.shape[0]);
 
-  /* "trefide/utils.pyx":97
+  /* "trefide/utils.pyx":94
  *     cdef size_t c
  *     cdef size_t nchan = signal.shape[0]
  *     cdef size_t nsamp = signal.shape[1]             # <<<<<<<<<<<<<<
@@ -2323,47 +2317,47 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_psd_noise_estimate(__Pyx_memvi
  */
   __pyx_v_nsamp = (__pyx_v_signal.shape[1]);
 
-  /* "trefide/utils.pyx":100
+  /* "trefide/utils.pyx":97
  * 
  *     # Allocate Space For Output Variances
  *     cdef double[::1] var_hat = np.empty(nchan, dtype=np.float64)             # <<<<<<<<<<<<<<
  * 
  *     # Compute & Return Estimates
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_nchan); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_FromSize_t(__pyx_v_nchan); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 100, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_dc_double(__pyx_t_5);
-  if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 100, __pyx_L1_error)
+  if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 97, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_v_var_hat = __pyx_t_6;
   __pyx_t_6.memview = NULL;
   __pyx_t_6.data = NULL;
 
-  /* "trefide/utils.pyx":104
+  /* "trefide/utils.pyx":101
  *     # Compute & Return Estimates
  *     # TODO: modify cpp implementation for more efficient multichannel estimation
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -2378,7 +2372,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_psd_noise_estimate(__Pyx_memvi
       #endif
       /*try:*/ {
 
-        /* "trefide/utils.pyx":105
+        /* "trefide/utils.pyx":102
  *     # TODO: modify cpp implementation for more efficient multichannel estimation
  *     with nogil:
  *         for c in range(nchan):             # <<<<<<<<<<<<<<
@@ -2389,12 +2383,11 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_psd_noise_estimate(__Pyx_memvi
         for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
           __pyx_v_c = __pyx_t_8;
 
-          /* "trefide/utils.pyx":106
+          /* "trefide/utils.pyx":103
  *     with nogil:
  *         for c in range(nchan):
  *             var_hat[c] = _psd_noise_estimate(nsamp, &signal[c,0], NULL)             # <<<<<<<<<<<<<<
  *     return var_hat
- * 
  */
           __pyx_t_9 = __pyx_v_c;
           __pyx_t_10 = 0;
@@ -2403,7 +2396,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_psd_noise_estimate(__Pyx_memvi
         }
       }
 
-      /* "trefide/utils.pyx":104
+      /* "trefide/utils.pyx":101
  *     # Compute & Return Estimates
  *     # TODO: modify cpp implementation for more efficient multichannel estimation
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -2422,18 +2415,16 @@ static __Pyx_memviewslice __pyx_f_7trefide_5utils_psd_noise_estimate(__Pyx_memvi
       }
   }
 
-  /* "trefide/utils.pyx":107
+  /* "trefide/utils.pyx":104
  *         for c in range(nchan):
  *             var_hat[c] = _psd_noise_estimate(nsamp, &signal[c,0], NULL)
  *     return var_hat             # <<<<<<<<<<<<<<
- * 
- * 
  */
   __PYX_INC_MEMVIEW(&__pyx_v_var_hat, 0);
   __pyx_r = __pyx_v_var_hat;
   goto __pyx_L0;
 
-  /* "trefide/utils.pyx":75
+  /* "trefide/utils.pyx":72
  * 
  * 
  * cpdef double[::1] psd_noise_estimate(double [:,::1] signal):             # <<<<<<<<<<<<<<
@@ -2473,7 +2464,7 @@ static PyObject *__pyx_pw_7trefide_5utils_3psd_noise_estimate(PyObject *__pyx_se
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("psd_noise_estimate (wrapper)", 0);
   assert(__pyx_arg_signal); {
-    __pyx_v_signal = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_arg_signal); if (unlikely(!__pyx_v_signal.memview)) __PYX_ERR(0, 75, __pyx_L3_error)
+    __pyx_v_signal = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_arg_signal); if (unlikely(!__pyx_v_signal.memview)) __PYX_ERR(0, 72, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -2495,8 +2486,8 @@ static PyObject *__pyx_pf_7trefide_5utils_2psd_noise_estimate(CYTHON_UNUSED PyOb
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("psd_noise_estimate", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_7trefide_5utils_psd_noise_estimate(__pyx_v_signal, 0); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 75, __pyx_L1_error)
-  __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_t_1, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_7trefide_5utils_psd_noise_estimate(__pyx_v_signal, 0); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 72, __pyx_L1_error)
+  __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_t_1, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 72, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __PYX_XDEC_MEMVIEW(&__pyx_t_1, 1);
   __pyx_t_1.memview = NULL;
@@ -16111,14 +16102,11 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_reduce, __pyx_k_reduce, sizeof(__pyx_k_reduce), 0, 0, 1, 1},
   {&__pyx_n_s_reduce_cython, __pyx_k_reduce_cython, sizeof(__pyx_k_reduce_cython), 0, 0, 1, 1},
   {&__pyx_n_s_reduce_ex, __pyx_k_reduce_ex, sizeof(__pyx_k_reduce_ex), 0, 0, 1, 1},
-  {&__pyx_n_s_scipy, __pyx_k_scipy, sizeof(__pyx_k_scipy), 0, 0, 1, 1},
-  {&__pyx_n_s_scipy_signal, __pyx_k_scipy_signal, sizeof(__pyx_k_scipy_signal), 0, 0, 1, 1},
   {&__pyx_n_s_setstate, __pyx_k_setstate, sizeof(__pyx_k_setstate), 0, 0, 1, 1},
   {&__pyx_n_s_setstate_cython, __pyx_k_setstate_cython, sizeof(__pyx_k_setstate_cython), 0, 0, 1, 1},
   {&__pyx_n_s_shape, __pyx_k_shape, sizeof(__pyx_k_shape), 0, 0, 1, 1},
   {&__pyx_n_s_signal, __pyx_k_signal, sizeof(__pyx_k_signal), 0, 0, 1, 1},
   {&__pyx_n_s_size, __pyx_k_size, sizeof(__pyx_k_size), 0, 0, 1, 1},
-  {&__pyx_n_s_sp, __pyx_k_sp, sizeof(__pyx_k_sp), 0, 0, 1, 1},
   {&__pyx_n_s_start, __pyx_k_start, sizeof(__pyx_k_start), 0, 0, 1, 1},
   {&__pyx_n_s_step, __pyx_k_step, sizeof(__pyx_k_step), 0, 0, 1, 1},
   {&__pyx_n_s_stop, __pyx_k_stop, sizeof(__pyx_k_stop), 0, 0, 1, 1},
@@ -16136,7 +16124,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 70, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 67, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 131, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(1, 146, __pyx_L1_error)
   __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(1, 149, __pyx_L1_error)
@@ -16626,37 +16614,13 @@ static int __pyx_pymod_exec_utils(PyObject *__pyx_pyinit_module)
   /* "trefide/utils.pyx":7
  * # cython: nonecheck=False
  * 
- * import scipy.signal             # <<<<<<<<<<<<<<
- * 
- * import numpy as np
- */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_scipy_signal, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_scipy, __pyx_t_1) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "trefide/utils.pyx":9
- * import scipy.signal
- * 
  * import numpy as np             # <<<<<<<<<<<<<<
- * import scipy as sp
- * 
- */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 9, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "trefide/utils.pyx":10
- * 
- * import numpy as np
- * import scipy as sp             # <<<<<<<<<<<<<<
  * 
  * # --------------------------------------------------------------------------- #
  */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_scipy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sp, __pyx_t_1) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "trefide/utils.pyx":1

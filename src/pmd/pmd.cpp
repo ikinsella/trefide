@@ -412,13 +412,13 @@ size_t pmd(const MKL_INT d1,
            void* FFT=NULL)  /* Handle Provided For Threadsafe FFT */
 {
     /* Declare & Intialize Internal Vars */
-    //int* keep_flag = (int *) malloc(consec_failures*sizeof(int));
-    int keep_flag;
-    size_t k, good = 0;
+    int* keep_flag = (int *) malloc(consec_failures*sizeof(int));
+    int max_keep_flag;
+    size_t i, k, good = 0;
     MKL_INT d = d1 * d2;
 
     /* Fill Keep Flags */
-    //for (k = 0; k < consec_failures; k++) keep_flag[k] = 1;
+    for (i = 0; i < consec_failures; i++) keep_flag[i] = 1;
 
     /* Sequentially Extract Rank 1 Updates Until We Are Fitting Noise */
     for (k = 0; k < max_components; k++, good++) {
@@ -426,8 +426,7 @@ size_t pmd(const MKL_INT d1,
         /* U[:,k] <- u_k, V[k,:] <- v_k' : 
          *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
          */
-        //keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, t, R, 
-        keep_flag = rank_one_decomposition(d1, d2, t, R, 
+        keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, t, R, 
                                                                 U + good*d, 
                                                                 V + good*t, 
                                                                 lambda_tv, 
@@ -436,13 +435,21 @@ size_t pmd(const MKL_INT d1,
                                                                 tol, FFT);
 
         /* Check Component Quality: Terminate if we're fitting noise */
-        if (keep_flag < 0) return k;
-        /*if (keep_flag[k % consec_failures] < 0){
+        if (keep_flag[k % consec_failures] < 0){
+            max_keep_flag = -1;  // current component is a failure
+            for (i=1; i < consec_failures; i++){  // check previous
+                max_keep_flag = max(max_keep_flag, keep_flag[(k+i) % consec_failures]);
+            } 
+            if (max_keep_flag < 0){
+                free(keep_flag);
+                return good;
+            }
+            /* Possibly Buggy
             if (std::max_element(keep_flag, keep_flag + consec_failures) < 0){
                 free(keep_flag);
                 return good; // terminate
-            }
-        }*/
+            }*/
+        }
         
         /* Debias Temporal Temporal Component: V[k,:]' <- R_k' U[:,k] */
         regress_temporal(d, t, R, U + good*d, V + good*t);
@@ -451,12 +458,12 @@ size_t pmd(const MKL_INT d1,
         cblas_dger(CblasColMajor, d, t, -1.0, U + good*d, 1, V + good*t, 1, R, d);
 
         /* Make Sure We Overwrite Failed Components */
-        //if (keep_flag[k % consec_failures] < 0) good--;
+        if (keep_flag[k % consec_failures] < 0) good--;
     }
 
     /* MAXCOMPONENTS EXCEEDED: Terminate Early */
-    //free(keep_flag);
-    //return good; 
+    free(keep_flag);
+    return good; 
     return k;
 }
 

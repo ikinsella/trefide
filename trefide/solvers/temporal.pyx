@@ -125,7 +125,7 @@ cpdef cpdas(const double[::1] y,        # Observations
     elif status == 0:
         warnings.warn("CPDAS line search stalled. Returning best solution found.")
  
-    return x_hat, z_hat, lambda_, iters
+    return np.asarray(x_hat), np.asarray(z_hat), lambda_, iters
 
 
 cpdef cps_cpdas(const double[::1] y,        # Observations
@@ -166,7 +166,7 @@ cpdef cps_cpdas(const double[::1] y,        # Observations
     elif status == 0:
         warnings.warn("CPS line search stalled. Returning best solution found.")
  
-    return x_hat, z_hat, lambda_, iters
+    return np.asarray(x_hat), np.asarray(z_hat), lambda_, iters
  
 
 cpdef lpdas(double[::1] y,
@@ -209,13 +209,7 @@ cpdef lpdas(double[::1] y,
         warnings.warn("LPDAS failed to converge in MAXITER iterations.\
                 Returning solution for last partition evaluated.")
 
-    return x_hat, z_hat, iters
-
-
-# ---------------------------------------------------------------------------- #
-# ------------------------------ ADMM Wrappers ------------------------------- #
-# ---------------------------------------------------------------------------- #
-
+    return np.asarray(x_hat), np.asarray(z_hat), iters
 
 
 # ---------------------------------------------------------------------------- #
@@ -314,4 +308,4 @@ cpdef ipm(double[::1] y,
     if iter_status < 0:
         raise RuntimeError("Interior Point Method Failed To Converge In MAXITER iterations.")
 	
-    return x_hat, z_hat, iter_
+    return np.asarray(x_hat), np.asarray(z_hat), iter_

@@ -187,7 +187,7 @@ cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U,
                 (bheight,bwidth,t),
                 order='F')
     # Rank One updates
-    return Yd
+    return np.asarray(Yd)
 
 
 
@@ -376,4 +376,4 @@ cpdef overlapping_batch_denoise(const int d1,
     Yd[d1-hbheight:,:hbwidth,:] += weighted_batch_recompose(U[1:2], V[1:2], K[1:2], I[1:2],  W[:hbheight, hbwidth:])
     Yd[:hbheight,d2-hbwidth:,:] += weighted_batch_recompose(U[2:3], V[2:3], K[2:3], I[2:3],  W[hbheight:, :hbwidth])
     Yd[d1-hbheight:,d2-hbwidth:,:] += weighted_batch_recompose(U[3:], V[3:], K[3:], I[3:],  W[:hbheight:, :hbwidth])
-    return Yd
+    return np.asarray(Yd)
