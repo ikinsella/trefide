@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <mkl.h>
-#include "../glmgen/include/glmgen.h"
+#include <glmgen.h>
 
 short cps_tf_admm(const int n,        // data length
                   const int degree,
