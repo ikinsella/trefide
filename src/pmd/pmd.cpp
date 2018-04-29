@@ -184,6 +184,7 @@ void denoise_temporal(const MKL_INT t,
 {
     /* Declare & Allocate Local Variables */
     int iters;
+    short status;
     double scale, tau, delta;
     double* wi = (double *) malloc(t * sizeof(double));
     double *v = (double *) malloc(t * sizeof(double));
@@ -195,16 +196,22 @@ void denoise_temporal(const MKL_INT t,
 
     /* Estimate Noise Level Via Welch PSD Estimate & Compute Ideal Step Size */
     delta = psd_noise_estimate(t, v_k, FFT);
-    scale = compute_scale(t, v_k, delta);
-    tau = (log(20 + (1 / scale)) - log(3 + (1 / scale))) / 60;
+    //scale = compute_scale(t, v_k, delta);
+    //tau = (log(20 + (1 / scale)) - log(3 + (1 / scale))) / 60;
 
     /* If Uninitialized Compute Starting Point For Search */
     if (*lambda_tf <= 0){
+        scale = compute_scale(t, v_k, delta);
         *lambda_tf = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
     }
 
     /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
-    line_search(t, v, wi, delta, tau, v_k, z_k, lambda_tf, &iters, 1, 1e-3, 0);
+    //status = line_search(t, v, wi, delta, tau, v_k, z_k, lambda_tf, &iters, 1, 1e-3, 0);
+    status = cps_tf(t, v, wi, delta, v_k, z_k, lambda_tf, &iters, 5e-2, 0);
+
+    if (status < 1){
+        copy(t, v, v_k);
+    }
 
     /* v_k /= ||v_k||_2 */
     normalize(t, v_k);
