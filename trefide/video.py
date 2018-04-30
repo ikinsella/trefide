@@ -48,9 +48,9 @@ def write_mpl(mov_list,
         
         # Choose Layout
         if horizontal:
-            fig, ax = plt.subplots(1, n_mov, figsize=(16,16))
+            fig, ax = plt.subplots(1, n_mov, figsize=(8,8))
         else:
-            fig, ax = plt.subplots(n_mov, 1, figsize=(16,16))
+            fig, ax = plt.subplots(n_mov, 1, figsize=(8,8))
         
         # Display Current Frame From Each Mov
         for mdx, mov in enumerate(mov_list):

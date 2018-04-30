@@ -309,6 +309,31 @@ double spatial_test_statistic(const MKL_INT d1,
     }
 }
 
+/* Computes the ratio of the L1 to TV norm for a spatial components in order to 
+ * test against the null hypothesis that it is gaussian noise.
+ */
+double temporal_test_statistic(const MKL_INT t,
+                               const double* v_k)
+{
+    
+    /* Declare & Initialize Internal Variables */
+    int i;
+    double norm_tf = 0;
+    double norm_l1 = fabs(v_k[0]) + fabs(v_k[t-1]);
+
+    /* All Elements Except Union (Bottom Row, Rightmost Column) */
+    for (i = 1; i < t-1; i++){
+        norm_tf += fabs(v_k[i]+ v_k[i] - v_k[i-1] - v_k[i+1]); 
+        norm_l1 += fabs(v_k[i]);
+    }
+
+    /* Return Test Statistic */
+    if (norm_l1 > 0){
+        return norm_tf / norm_l1;
+    } else{
+        return 0; // temporal component constant => garbage
+    }
+}
 
 /* Intialize with equivalent of temporal upate where u_k = 1/sqrt(d).
  * Return computed value of lambda_tf to use as a warm start.
@@ -395,8 +420,9 @@ int rank_one_decomposition(const MKL_INT d1,
 
     /* MAXITER EXCEEDED: Free Memory & Test Spatial Component Against Null */
     free(z_k);
-    if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh) 
+    if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh){ 
         return -1;  // Discard Component
+    }
     return 1;  // Keep Component
 }
 
@@ -451,14 +477,8 @@ size_t pmd(const MKL_INT d1,
                 free(keep_flag);
                 return good;
             }
-            /* Possibly Buggy
-            if (std::max_element(keep_flag, keep_flag + consec_failures) < 0){
-                free(keep_flag);
-                return good; // terminate
-            }*/
         }
-        
-        /* Debias Temporal Temporal Component: V[k,:]' <- R_k' U[:,k] */
+        /* Debias Components */
         regress_temporal(d, t, R, U + good*d, V + good*t);
 
         /* Update Residual: R_k <- R_k - U[:,k] V[k,:] */

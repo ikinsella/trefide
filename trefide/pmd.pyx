@@ -303,7 +303,6 @@ cpdef overlapping_batch_decompose(const int d1,
     I['no_skew']['full'] = batch_decompose(d1, d2, t, Y, bheight, bwidth, lambda_tv,
                                            spatial_thresh, max_components, 
                                            consec_failures, max_iters, tol)
-    print("success")
  
     # ---------- Vertical Skew -----------
     # Full Blocks
