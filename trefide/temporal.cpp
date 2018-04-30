@@ -2171,7 +2171,6 @@ static const char __pyx_k_stop[] = "stop";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_ASCII[] = "ASCII";
 static const char __pyx_k_class[] = "__class__";
-static const char __pyx_k_cpdas[] = "cpdas";
 static const char __pyx_k_delta[] = "delta";
 static const char __pyx_k_dtype[] = "dtype";
 static const char __pyx_k_error[] = "error";
@@ -2206,12 +2205,12 @@ static const char __pyx_k_itemsize[] = "itemsize";
 static const char __pyx_k_pyx_type[] = "__pyx_type";
 static const char __pyx_k_setstate[] = "__setstate__";
 static const char __pyx_k_TypeError[] = "TypeError";
+static const char __pyx_k_cps_cpdas[] = "cps_cpdas";
 static const char __pyx_k_enumerate[] = "enumerate";
 static const char __pyx_k_pyx_state[] = "__pyx_state";
 static const char __pyx_k_reduce_ex[] = "__reduce_ex__";
 static const char __pyx_k_IndexError[] = "IndexError";
 static const char __pyx_k_ValueError[] = "ValueError";
-static const char __pyx_k_max_interp[] = "max_interp";
 static const char __pyx_k_pyx_result[] = "__pyx_result";
 static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static const char __pyx_k_ImportError[] = "ImportError";
@@ -2297,7 +2296,7 @@ static PyObject *__pyx_n_s_class;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_kp_s_contiguous_and_direct;
 static PyObject *__pyx_kp_s_contiguous_and_indirect;
-static PyObject *__pyx_n_s_cpdas;
+static PyObject *__pyx_n_s_cps_cpdas;
 static PyObject *__pyx_n_s_delta;
 static PyObject *__pyx_n_s_denoise;
 static PyObject *__pyx_n_s_dict;
@@ -2321,7 +2320,6 @@ static PyObject *__pyx_kp_s_itemsize_0_for_cython_array;
 static PyObject *__pyx_n_s_lambda;
 static PyObject *__pyx_n_s_lpdas;
 static PyObject *__pyx_n_s_main;
-static PyObject *__pyx_n_s_max_interp;
 static PyObject *__pyx_n_s_maxiter;
 static PyObject *__pyx_n_s_memview;
 static PyObject *__pyx_n_s_mode;
@@ -2950,21 +2948,21 @@ __pyx_t_5 = __pyx_memoryview_fromslice(__pyx_t_11, 2, (PyObject *(*)(char *)) __
   /* "trefide/temporal.pyx":38
  * 
  *         # Call constrained solver
- *         x_hat, self.warm_start, self.lambda_, _ = cpdas(y,             # <<<<<<<<<<<<<<
- *                                                         self.delta,
- *                                                         wi=self.weights,
+ *         x_hat, self.warm_start, self.lambda_, _ = cps_cpdas(y,             # <<<<<<<<<<<<<<
+ *                                                             self.delta,
+ *                                                             wi=self.weights,
  */
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_cpdas); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 38, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_cps_cpdas); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 38, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_y, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 38, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
 
   /* "trefide/temporal.pyx":39
  *         # Call constrained solver
- *         x_hat, self.warm_start, self.lambda_, _ = cpdas(y,
- *                                                         self.delta,             # <<<<<<<<<<<<<<
- *                                                         wi=self.weights,
- *                                                         z_hat=self.warm_start,
+ *         x_hat, self.warm_start, self.lambda_, _ = cps_cpdas(y,
+ *                                                             self.delta,             # <<<<<<<<<<<<<<
+ *                                                             wi=self.weights,
+ *                                                             z_hat=self.warm_start,
  */
   __pyx_t_4 = PyFloat_FromDouble(__pyx_v_self->delta); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 39, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
@@ -2972,9 +2970,9 @@ __pyx_t_5 = __pyx_memoryview_fromslice(__pyx_t_11, 2, (PyObject *(*)(char *)) __
   /* "trefide/temporal.pyx":38
  * 
  *         # Call constrained solver
- *         x_hat, self.warm_start, self.lambda_, _ = cpdas(y,             # <<<<<<<<<<<<<<
- *                                                         self.delta,
- *                                                         wi=self.weights,
+ *         x_hat, self.warm_start, self.lambda_, _ = cps_cpdas(y,             # <<<<<<<<<<<<<<
+ *                                                             self.delta,
+ *                                                             wi=self.weights,
  */
   __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 38, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
@@ -2986,13 +2984,13 @@ __pyx_t_5 = __pyx_memoryview_fromslice(__pyx_t_11, 2, (PyObject *(*)(char *)) __
   __pyx_t_4 = 0;
 
   /* "trefide/temporal.pyx":40
- *         x_hat, self.warm_start, self.lambda_, _ = cpdas(y,
- *                                                         self.delta,
- *                                                         wi=self.weights,             # <<<<<<<<<<<<<<
- *                                                         z_hat=self.warm_start,
- *                                                         lambda_=self.lambda_,
+ *         x_hat, self.warm_start, self.lambda_, _ = cps_cpdas(y,
+ *                                                             self.delta,
+ *                                                             wi=self.weights,             # <<<<<<<<<<<<<<
+ *                                                             z_hat=self.warm_start,
+ *                                                             lambda_=self.lambda_,
  */
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(5); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 40, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 40, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_self->weights, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 40, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -3000,11 +2998,11 @@ __pyx_t_5 = __pyx_memoryview_fromslice(__pyx_t_11, 2, (PyObject *(*)(char *)) __
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "trefide/temporal.pyx":41
- *                                                         self.delta,
- *                                                         wi=self.weights,
- *                                                         z_hat=self.warm_start,             # <<<<<<<<<<<<<<
- *                                                         lambda_=self.lambda_,
- *                                                         max_interp=0,
+ *                                                             self.delta,
+ *                                                             wi=self.weights,
+ *                                                             z_hat=self.warm_start,             # <<<<<<<<<<<<<<
+ *                                                             lambda_=self.lambda_,
+ *                                                             verbose=self.verbose)
  */
   __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_self->warm_start, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 41, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -3012,26 +3010,25 @@ __pyx_t_5 = __pyx_memoryview_fromslice(__pyx_t_11, 2, (PyObject *(*)(char *)) __
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "trefide/temporal.pyx":42
- *                                                         wi=self.weights,
- *                                                         z_hat=self.warm_start,
- *                                                         lambda_=self.lambda_,             # <<<<<<<<<<<<<<
- *                                                         max_interp=0,
- *                                                         verbose=self.verbose)
+ *                                                             wi=self.weights,
+ *                                                             z_hat=self.warm_start,
+ *                                                             lambda_=self.lambda_,             # <<<<<<<<<<<<<<
+ *                                                             verbose=self.verbose)
+ *         self.notfit = 0
  */
   __pyx_t_1 = PyFloat_FromDouble(__pyx_v_self->lambda_); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_lambda, __pyx_t_1) < 0) __PYX_ERR(1, 40, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_max_interp, __pyx_int_0) < 0) __PYX_ERR(1, 40, __pyx_L1_error)
 
-  /* "trefide/temporal.pyx":44
- *                                                         lambda_=self.lambda_,
- *                                                         max_interp=0,
- *                                                         verbose=self.verbose)             # <<<<<<<<<<<<<<
+  /* "trefide/temporal.pyx":43
+ *                                                             z_hat=self.warm_start,
+ *                                                             lambda_=self.lambda_,
+ *                                                             verbose=self.verbose)             # <<<<<<<<<<<<<<
  *         self.notfit = 0
  *         return x_hat
  */
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->verbose); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 44, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->verbose); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 43, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_verbose, __pyx_t_1) < 0) __PYX_ERR(1, 40, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -3039,9 +3036,9 @@ __pyx_t_5 = __pyx_memoryview_fromslice(__pyx_t_11, 2, (PyObject *(*)(char *)) __
   /* "trefide/temporal.pyx":38
  * 
  *         # Call constrained solver
- *         x_hat, self.warm_start, self.lambda_, _ = cpdas(y,             # <<<<<<<<<<<<<<
- *                                                         self.delta,
- *                                                         wi=self.weights,
+ *         x_hat, self.warm_start, self.lambda_, _ = cps_cpdas(y,             # <<<<<<<<<<<<<<
+ *                                                             self.delta,
+ *                                                             wi=self.weights,
  */
   __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_5, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 38, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -3126,24 +3123,24 @@ __pyx_t_5 = __pyx_memoryview_fromslice(__pyx_t_11, 2, (PyObject *(*)(char *)) __
   __pyx_v__ = __pyx_t_8;
   __pyx_t_8 = 0;
 
-  /* "trefide/temporal.pyx":45
- *                                                         max_interp=0,
- *                                                         verbose=self.verbose)
+  /* "trefide/temporal.pyx":44
+ *                                                             lambda_=self.lambda_,
+ *                                                             verbose=self.verbose)
  *         self.notfit = 0             # <<<<<<<<<<<<<<
  *         return x_hat
  * 
  */
   __pyx_v_self->notfit = 0;
 
-  /* "trefide/temporal.pyx":46
- *                                                         verbose=self.verbose)
+  /* "trefide/temporal.pyx":45
+ *                                                             verbose=self.verbose)
  *         self.notfit = 0
  *         return x_hat             # <<<<<<<<<<<<<<
  * 
  *     cpdef double[::1] denoise(self, double[::1] y, int refit=1, double delta=0):
  */
   __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_dc_double(__pyx_v_x_hat);
-  if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(1, 46, __pyx_L1_error)
+  if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(1, 45, __pyx_L1_error)
   __pyx_r = __pyx_t_9;
   __pyx_t_9.memview = NULL;
   __pyx_t_9.data = NULL;
@@ -3286,7 +3283,7 @@ static PyObject *__pyx_pf_7trefide_8temporal_11TrendFilter_2_fit(struct __pyx_ob
   return __pyx_r;
 }
 
-/* "trefide/temporal.pyx":48
+/* "trefide/temporal.pyx":47
  *         return x_hat
  * 
  *     cpdef double[::1] denoise(self, double[::1] y, int refit=1, double delta=0):             # <<<<<<<<<<<<<<
@@ -3330,14 +3327,14 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
   if (unlikely(__pyx_skip_dispatch)) ;
   /* Check if overridden in Python */
   else if (unlikely(Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_denoise); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 48, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_denoise); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 47, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (!PyCFunction_Check(__pyx_t_1) || (PyCFunction_GET_FUNCTION(__pyx_t_1) != (PyCFunction)__pyx_pw_7trefide_8temporal_11TrendFilter_5denoise)) {
-      __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_y, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 48, __pyx_L1_error)
+      __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_y, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 47, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_refit); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 48, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_refit); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 47, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_5 = PyFloat_FromDouble(__pyx_v_delta); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 48, __pyx_L1_error)
+      __pyx_t_5 = PyFloat_FromDouble(__pyx_v_delta); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 47, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_INCREF(__pyx_t_1);
       __pyx_t_6 = __pyx_t_1; __pyx_t_7 = NULL;
@@ -3355,7 +3352,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_6)) {
         PyObject *__pyx_temp[4] = {__pyx_t_7, __pyx_t_3, __pyx_t_4, __pyx_t_5};
-        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 48, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 47, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3366,7 +3363,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
         PyObject *__pyx_temp[4] = {__pyx_t_7, __pyx_t_3, __pyx_t_4, __pyx_t_5};
-        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 48, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_8, 3+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 47, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3375,7 +3372,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
       } else
       #endif
       {
-        __pyx_t_9 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 48, __pyx_L1_error)
+        __pyx_t_9 = PyTuple_New(3+__pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 47, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         if (__pyx_t_7) {
           __Pyx_GIVEREF(__pyx_t_7); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_7); __pyx_t_7 = NULL;
@@ -3389,13 +3386,13 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
         __pyx_t_3 = 0;
         __pyx_t_4 = 0;
         __pyx_t_5 = 0;
-        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_9, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 48, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_9, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 47, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       }
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_t_10 = __Pyx_PyObject_to_MemoryviewSlice_dc_double(__pyx_t_2);
-      if (unlikely(!__pyx_t_10.memview)) __PYX_ERR(1, 48, __pyx_L1_error)
+      if (unlikely(!__pyx_t_10.memview)) __PYX_ERR(1, 47, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_r = __pyx_t_10;
       __pyx_t_10.memview = NULL;
@@ -3406,7 +3403,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "trefide/temporal.pyx":50
+  /* "trefide/temporal.pyx":49
  *     cpdef double[::1] denoise(self, double[::1] y, int refit=1, double delta=0):
  *         """ Denoise an input signal, default to constrained l1tf"""
  *         if refit or self.notfit:             # <<<<<<<<<<<<<<
@@ -3424,7 +3421,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_11) {
 
-    /* "trefide/temporal.pyx":51
+    /* "trefide/temporal.pyx":50
  *         """ Denoise an input signal, default to constrained l1tf"""
  *         if refit or self.notfit:
  *             return self._fit(y, delta=delta)             # <<<<<<<<<<<<<<
@@ -3433,13 +3430,13 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
  */
     __pyx_t_13.__pyx_n = 1;
     __pyx_t_13.delta = __pyx_v_delta;
-    __pyx_t_10 = ((struct __pyx_vtabstruct_7trefide_8temporal_TrendFilter *)__pyx_v_self->__pyx_vtab)->_fit(__pyx_v_self, __pyx_v_y, 0, &__pyx_t_13); if (unlikely(!__pyx_t_10.memview)) __PYX_ERR(1, 51, __pyx_L1_error)
+    __pyx_t_10 = ((struct __pyx_vtabstruct_7trefide_8temporal_TrendFilter *)__pyx_v_self->__pyx_vtab)->_fit(__pyx_v_self, __pyx_v_y, 0, &__pyx_t_13); if (unlikely(!__pyx_t_10.memview)) __PYX_ERR(1, 50, __pyx_L1_error)
     __pyx_r = __pyx_t_10;
     __pyx_t_10.memview = NULL;
     __pyx_t_10.data = NULL;
     goto __pyx_L0;
 
-    /* "trefide/temporal.pyx":50
+    /* "trefide/temporal.pyx":49
  *     cpdef double[::1] denoise(self, double[::1] y, int refit=1, double delta=0):
  *         """ Denoise an input signal, default to constrained l1tf"""
  *         if refit or self.notfit:             # <<<<<<<<<<<<<<
@@ -3448,7 +3445,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
  */
   }
 
-  /* "trefide/temporal.pyx":53
+  /* "trefide/temporal.pyx":52
  *             return self._fit(y, delta=delta)
  *         else:
  *             x_hat, z_hat, _ = lpdas(y,             # <<<<<<<<<<<<<<
@@ -3456,29 +3453,29 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
  *                                     wi=self.weights,
  */
   /*else*/ {
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_lpdas); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 53, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_lpdas); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 52, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_v_y, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 53, __pyx_L1_error)
+    __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_v_y, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 52, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
 
-    /* "trefide/temporal.pyx":54
+    /* "trefide/temporal.pyx":53
  *         else:
  *             x_hat, z_hat, _ = lpdas(y,
  *                                     self.lambda_,             # <<<<<<<<<<<<<<
  *                                     wi=self.weights,
  *                                     z_hat=self.warm_start,
  */
-    __pyx_t_6 = PyFloat_FromDouble(__pyx_v_self->lambda_); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 54, __pyx_L1_error)
+    __pyx_t_6 = PyFloat_FromDouble(__pyx_v_self->lambda_); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 53, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
 
-    /* "trefide/temporal.pyx":53
+    /* "trefide/temporal.pyx":52
  *             return self._fit(y, delta=delta)
  *         else:
  *             x_hat, z_hat, _ = lpdas(y,             # <<<<<<<<<<<<<<
  *                                     self.lambda_,
  *                                     wi=self.weights,
  */
-    __pyx_t_9 = PyTuple_New(2); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 53, __pyx_L1_error)
+    __pyx_t_9 = PyTuple_New(2); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 52, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_2);
@@ -3487,63 +3484,63 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
     __pyx_t_2 = 0;
     __pyx_t_6 = 0;
 
-    /* "trefide/temporal.pyx":55
+    /* "trefide/temporal.pyx":54
  *             x_hat, z_hat, _ = lpdas(y,
  *                                     self.lambda_,
  *                                     wi=self.weights,             # <<<<<<<<<<<<<<
  *                                     z_hat=self.warm_start,
  *                                     maxiter=self.maxiter,
  */
-    __pyx_t_6 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 55, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 54, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_v_self->weights, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 55, __pyx_L1_error)
+    __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_v_self->weights, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 54, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_wi, __pyx_t_2) < 0) __PYX_ERR(1, 55, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_wi, __pyx_t_2) < 0) __PYX_ERR(1, 54, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "trefide/temporal.pyx":56
+    /* "trefide/temporal.pyx":55
  *                                     self.lambda_,
  *                                     wi=self.weights,
  *                                     z_hat=self.warm_start,             # <<<<<<<<<<<<<<
  *                                     maxiter=self.maxiter,
  *                                     verbose=self.verbose)
  */
-    __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_v_self->warm_start, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 56, __pyx_L1_error)
+    __pyx_t_2 = __pyx_memoryview_fromslice(__pyx_v_self->warm_start, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 55, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_z_hat, __pyx_t_2) < 0) __PYX_ERR(1, 55, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_z_hat, __pyx_t_2) < 0) __PYX_ERR(1, 54, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "trefide/temporal.pyx":57
+    /* "trefide/temporal.pyx":56
  *                                     wi=self.weights,
  *                                     z_hat=self.warm_start,
  *                                     maxiter=self.maxiter,             # <<<<<<<<<<<<<<
  *                                     verbose=self.verbose)
  *             return x_hat
  */
-    __pyx_t_2 = __Pyx_PyInt_FromSize_t(__pyx_v_self->maxiter); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 57, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyInt_FromSize_t(__pyx_v_self->maxiter); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 56, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_maxiter, __pyx_t_2) < 0) __PYX_ERR(1, 55, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_maxiter, __pyx_t_2) < 0) __PYX_ERR(1, 54, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "trefide/temporal.pyx":58
+    /* "trefide/temporal.pyx":57
  *                                     z_hat=self.warm_start,
  *                                     maxiter=self.maxiter,
  *                                     verbose=self.verbose)             # <<<<<<<<<<<<<<
  *             return x_hat
  */
-    __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_self->verbose); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 58, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_self->verbose); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 57, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_verbose, __pyx_t_2) < 0) __PYX_ERR(1, 55, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_verbose, __pyx_t_2) < 0) __PYX_ERR(1, 54, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "trefide/temporal.pyx":53
+    /* "trefide/temporal.pyx":52
  *             return self._fit(y, delta=delta)
  *         else:
  *             x_hat, z_hat, _ = lpdas(y,             # <<<<<<<<<<<<<<
  *                                     self.lambda_,
  *                                     wi=self.weights,
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_9, __pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 53, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_9, __pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 52, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
@@ -3558,7 +3555,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
       if (unlikely(size != 3)) {
         if (size > 3) __Pyx_RaiseTooManyValuesError(3);
         else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-        __PYX_ERR(1, 53, __pyx_L1_error)
+        __PYX_ERR(1, 52, __pyx_L1_error)
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
       if (likely(PyTuple_CheckExact(sequence))) {
@@ -3574,17 +3571,17 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
       __Pyx_INCREF(__pyx_t_9);
       __Pyx_INCREF(__pyx_t_1);
       #else
-      __pyx_t_6 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 53, __pyx_L1_error)
+      __pyx_t_6 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 52, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_9 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 53, __pyx_L1_error)
+      __pyx_t_9 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 52, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_9);
-      __pyx_t_1 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 53, __pyx_L1_error)
+      __pyx_t_1 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 52, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       #endif
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     } else {
       Py_ssize_t index = -1;
-      __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 53, __pyx_L1_error)
+      __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 52, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_t_14 = Py_TYPE(__pyx_t_5)->tp_iternext;
@@ -3594,7 +3591,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
       __Pyx_GOTREF(__pyx_t_9);
       index = 2; __pyx_t_1 = __pyx_t_14(__pyx_t_5); if (unlikely(!__pyx_t_1)) goto __pyx_L6_unpacking_failed;
       __Pyx_GOTREF(__pyx_t_1);
-      if (__Pyx_IternextUnpackEndCheck(__pyx_t_14(__pyx_t_5), 3) < 0) __PYX_ERR(1, 53, __pyx_L1_error)
+      if (__Pyx_IternextUnpackEndCheck(__pyx_t_14(__pyx_t_5), 3) < 0) __PYX_ERR(1, 52, __pyx_L1_error)
       __pyx_t_14 = NULL;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       goto __pyx_L7_unpacking_done;
@@ -3602,7 +3599,7 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __pyx_t_14 = NULL;
       if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-      __PYX_ERR(1, 53, __pyx_L1_error)
+      __PYX_ERR(1, 52, __pyx_L1_error)
       __pyx_L7_unpacking_done:;
     }
     __pyx_v_x_hat = __pyx_t_6;
@@ -3612,20 +3609,20 @@ static __Pyx_memviewslice __pyx_f_7trefide_8temporal_11TrendFilter_denoise(struc
     __pyx_v__ = __pyx_t_1;
     __pyx_t_1 = 0;
 
-    /* "trefide/temporal.pyx":59
+    /* "trefide/temporal.pyx":58
  *                                     maxiter=self.maxiter,
  *                                     verbose=self.verbose)
  *             return x_hat             # <<<<<<<<<<<<<<
  */
     __pyx_t_10 = __Pyx_PyObject_to_MemoryviewSlice_dc_double(__pyx_v_x_hat);
-    if (unlikely(!__pyx_t_10.memview)) __PYX_ERR(1, 59, __pyx_L1_error)
+    if (unlikely(!__pyx_t_10.memview)) __PYX_ERR(1, 58, __pyx_L1_error)
     __pyx_r = __pyx_t_10;
     __pyx_t_10.memview = NULL;
     __pyx_t_10.data = NULL;
     goto __pyx_L0;
   }
 
-  /* "trefide/temporal.pyx":48
+  /* "trefide/temporal.pyx":47
  *         return x_hat
  * 
  *     cpdef double[::1] denoise(self, double[::1] y, int refit=1, double delta=0):             # <<<<<<<<<<<<<<
@@ -3706,7 +3703,7 @@ static PyObject *__pyx_pw_7trefide_8temporal_11TrendFilter_5denoise(PyObject *__
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "denoise") < 0)) __PYX_ERR(1, 48, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "denoise") < 0)) __PYX_ERR(1, 47, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -3719,21 +3716,21 @@ static PyObject *__pyx_pw_7trefide_8temporal_11TrendFilter_5denoise(PyObject *__
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_y = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0]); if (unlikely(!__pyx_v_y.memview)) __PYX_ERR(1, 48, __pyx_L3_error)
+    __pyx_v_y = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[0]); if (unlikely(!__pyx_v_y.memview)) __PYX_ERR(1, 47, __pyx_L3_error)
     if (values[1]) {
-      __pyx_v_refit = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_refit == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 48, __pyx_L3_error)
+      __pyx_v_refit = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_refit == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 47, __pyx_L3_error)
     } else {
       __pyx_v_refit = ((int)1);
     }
     if (values[2]) {
-      __pyx_v_delta = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_delta == (double)-1) && PyErr_Occurred())) __PYX_ERR(1, 48, __pyx_L3_error)
+      __pyx_v_delta = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_delta == (double)-1) && PyErr_Occurred())) __PYX_ERR(1, 47, __pyx_L3_error)
     } else {
       __pyx_v_delta = ((double)0.0);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("denoise", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 48, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("denoise", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 47, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("trefide.temporal.TrendFilter.denoise", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3757,8 +3754,8 @@ static PyObject *__pyx_pf_7trefide_8temporal_11TrendFilter_4denoise(struct __pyx
   __pyx_t_2.__pyx_n = 2;
   __pyx_t_2.refit = __pyx_v_refit;
   __pyx_t_2.delta = __pyx_v_delta;
-  __pyx_t_1 = __pyx_vtabptr_7trefide_8temporal_TrendFilter->denoise(__pyx_v_self, __pyx_v_y, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(1, 48, __pyx_L1_error)
-  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_t_1, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 48, __pyx_L1_error)
+  __pyx_t_1 = __pyx_vtabptr_7trefide_8temporal_TrendFilter->denoise(__pyx_v_self, __pyx_v_y, 1, &__pyx_t_2); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(1, 47, __pyx_L1_error)
+  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_t_1, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __PYX_XDEC_MEMVIEW(&__pyx_t_1, 1);
   __pyx_t_1.memview = NULL;
@@ -20573,7 +20570,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
   {&__pyx_kp_s_contiguous_and_direct, __pyx_k_contiguous_and_direct, sizeof(__pyx_k_contiguous_and_direct), 0, 0, 1, 0},
   {&__pyx_kp_s_contiguous_and_indirect, __pyx_k_contiguous_and_indirect, sizeof(__pyx_k_contiguous_and_indirect), 0, 0, 1, 0},
-  {&__pyx_n_s_cpdas, __pyx_k_cpdas, sizeof(__pyx_k_cpdas), 0, 0, 1, 1},
+  {&__pyx_n_s_cps_cpdas, __pyx_k_cps_cpdas, sizeof(__pyx_k_cps_cpdas), 0, 0, 1, 1},
   {&__pyx_n_s_delta, __pyx_k_delta, sizeof(__pyx_k_delta), 0, 0, 1, 1},
   {&__pyx_n_s_denoise, __pyx_k_denoise, sizeof(__pyx_k_denoise), 0, 0, 1, 1},
   {&__pyx_n_s_dict, __pyx_k_dict, sizeof(__pyx_k_dict), 0, 0, 1, 1},
@@ -20597,7 +20594,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_lambda, __pyx_k_lambda, sizeof(__pyx_k_lambda), 0, 0, 1, 1},
   {&__pyx_n_s_lpdas, __pyx_k_lpdas, sizeof(__pyx_k_lpdas), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
-  {&__pyx_n_s_max_interp, __pyx_k_max_interp, sizeof(__pyx_k_max_interp), 0, 0, 1, 1},
   {&__pyx_n_s_maxiter, __pyx_k_maxiter, sizeof(__pyx_k_maxiter), 0, 0, 1, 1},
   {&__pyx_n_s_memview, __pyx_k_memview, sizeof(__pyx_k_memview), 0, 0, 1, 1},
   {&__pyx_n_s_mode, __pyx_k_mode, sizeof(__pyx_k_mode), 0, 0, 1, 1},
@@ -21290,7 +21286,7 @@ static int __pyx_pymod_exec_temporal(PyObject *__pyx_pyinit_module)
  * 
  * cimport numpy as np
  * import numpy as np             # <<<<<<<<<<<<<<
- * from trefide.solvers.temporal import cpdas, lpdas
+ * from trefide.solvers.temporal import cps_cpdas, lpdas
  * from trefide.utils import psd_noise_estimate
  */
   __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 8, __pyx_L1_error)
@@ -21301,24 +21297,24 @@ static int __pyx_pymod_exec_temporal(PyObject *__pyx_pyinit_module)
   /* "trefide/temporal.pyx":9
  * cimport numpy as np
  * import numpy as np
- * from trefide.solvers.temporal import cpdas, lpdas             # <<<<<<<<<<<<<<
+ * from trefide.solvers.temporal import cps_cpdas, lpdas             # <<<<<<<<<<<<<<
  * from trefide.utils import psd_noise_estimate
  * 
  */
   __pyx_t_1 = PyList_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_n_s_cpdas);
-  __Pyx_GIVEREF(__pyx_n_s_cpdas);
-  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_cpdas);
+  __Pyx_INCREF(__pyx_n_s_cps_cpdas);
+  __Pyx_GIVEREF(__pyx_n_s_cps_cpdas);
+  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_cps_cpdas);
   __Pyx_INCREF(__pyx_n_s_lpdas);
   __Pyx_GIVEREF(__pyx_n_s_lpdas);
   PyList_SET_ITEM(__pyx_t_1, 1, __pyx_n_s_lpdas);
   __pyx_t_2 = __Pyx_Import(__pyx_n_s_trefide_solvers_temporal, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_cpdas); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 9, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_cps_cpdas); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_cpdas, __pyx_t_1) < 0) __PYX_ERR(1, 9, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_cps_cpdas, __pyx_t_1) < 0) __PYX_ERR(1, 9, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_lpdas); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -21328,7 +21324,7 @@ static int __pyx_pymod_exec_temporal(PyObject *__pyx_pyinit_module)
 
   /* "trefide/temporal.pyx":10
  * import numpy as np
- * from trefide.solvers.temporal import cpdas, lpdas
+ * from trefide.solvers.temporal import cps_cpdas, lpdas
  * from trefide.utils import psd_noise_estimate             # <<<<<<<<<<<<<<
  * 
  * 

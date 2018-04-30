@@ -62,14 +62,30 @@ cdef extern from "trefide.h":
 			   double *y,
 			   const int verbose) nogil
  
+    short constrained_tf_admm(const int n,           # data length
+                              double* x,             # data locations
+                              double *y,             # data observations
+                              double *w,             # data observation weights
+                              const double delta,    # MSE constraint (noise var estimate)	
+                              double *beta,          # primal variable
+                              double *alpha,
+                              double *u,
+                              double *lambda_,       # initial regularization parameter
+                              int *iters,            # pointer to iter # (so we can return it)
+                              const double tol,      # relative difference from target MSE
+                              const int verbose) nogil
 
-#cdef extern from "glmgen.h":
-#    void tf_admm(double * x, double * y, double * w, int n, int k, int family,
-#                 int max_iter, int lam_flag, double * lambda_, 
-#                 int nlambda, double lambda_min_ratio, int * df,
-#                 double * beta, double * obj, int * iter, int * status, 
-#                 double rho, double obj_tol, double obj_tol_newton, double alpha_ls,
-#                 double gamma_ls, int max_iter_ls, int max_inner_iter, int verbose) nogil
+    short langrangian_tf_admm(const int n,           # data length
+                              double* x,             # data locations
+                              double *y,             # data observations
+                              double *w,             # data observation weights
+                              double lambda_,        # regularization parameter
+                              double *beta,          # primal variable
+                              double *alpha,
+                              double *u,
+                              int *iter_,            # pointer to iter # (so we can return it)
+                              const int verbose) nogil
+
 
 # ---------------------------------------------------------------------------- #
 # -------------------- Primal Dual Active Set Wrappers ----------------------- #
@@ -106,7 +122,38 @@ cdef lpdas(double[::1] y,
             int maxiter=?,
             int verbose=?)
 
-cdef ipm(double[::1] y,
+
+# ---------------------------------------------------------------------------- #
+# ------------------------------ ADMM Wrappers ------------------------------- #
+# ---------------------------------------------------------------------------- #
+
+
+cpdef cps_cadmm(const double[::1] y,        # Observations
+                const double delta,         # MSE constraint
+                double[::1] w=?,        # Observation weights
+                double[::1] beta=?,      # Primal Warm Start
+                double[::1] alpha=?,     # Dual variable warm start
+                double[::1] u=?,     # Dual variable warm start
+                double lambda_=?,          # Lagrange multiplier warm start
+                double tol=?,            # Constraint tolerance
+                int verbose=?)
+ 
+
+cpdef ladmm(const double[::1] y,        # Observations
+            const double lambda_,         # MSE constraint
+            double[::1] w=?,        # Observation weights
+            double[::1] beta=?,      # Primal Warm Start
+            double[::1] alpha=?,     # Dual variable warm start
+            double[::1] u=?,     # Dual variable warm start
+            int verbose=?)
+
+
+# ---------------------------------------------------------------------------- #
+# --------------------- Interion Point Method Wrappers ----------------------- #
+# ---------------------------------------------------------------------------- #
+
+
+cdef lipm(double[::1] y,
           double lambda_,
           bool max_lambda=?,
           double tol=?,

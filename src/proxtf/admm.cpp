@@ -2,6 +2,7 @@
 #include <math.h>
 #include <mkl.h>
 #include <glmgen.h>
+#include "line_search.h"
 
 short cps_tf_admm(const int n,        // data length
                   const int degree,
@@ -39,7 +40,7 @@ short constrained_tf_admm(const int n,           // data length
     /* Declare & Initialize Local Variables */
     short status;
     int i;
-    double rho = 1;
+    double scale, rho = 1;
     double * temp_n = (double *) malloc(n * sizeof(double));
     for(i = 0; i < n; i++) temp_n[i] = 1/sqrt(w[i]); // Assume w does not have zeros 
     
@@ -56,25 +57,28 @@ short constrained_tf_admm(const int n,           // data length
     /* If Uninitialized, Compute Starting Points For Search */
     if (*lambda <= 0){
 
+        /* Compute Step Size wrt Transformed Lambda Space*/
+        scale = compute_scale(n, y, delta);
+        *lambda = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
         /* Initialize search from maximum lambda */
-        *lambda = tf_maxlam(n, y, Dt_qr, w);
+        //*lambda = tf_maxlam(n, y, Dt_qr, w);
         
         /* Initialize Primal At beta_max */
-        calc_beta_max(y, w, n, Dt_qr, Dt, temp_n, beta);
+        //calc_beta_max(y, w, n, Dt_qr, Dt, temp_n, beta);
 
         /* Check if beta = weighted mean(y) is better than beta_max */ 
-        double yc = weighted_mean(y,w,n);
-        for (i = 0; i < n; i++) temp_n[i] = yc;
-        double obj1 = tf_obj(x,y,w,n,DEGREE,*lambda,FAMILY_GAUSSIAN,beta,alpha);
-        double obj2 = tf_obj(x,y,w,n,DEGREE,*lambda,FAMILY_GAUSSIAN,temp_n,alpha);
-        if(obj2 < obj1) memcpy(beta, temp_n, n*sizeof(double));
+        //double yc = weighted_mean(y,w,n);
+        //for (i = 0; i < n; i++) temp_n[i] = yc;
+        //double obj1 = tf_obj(x,y,w,n,DEGREE,*lambda,FAMILY_GAUSSIAN,beta,alpha);
+        //double obj2 = tf_obj(x,y,w,n,DEGREE,*lambda,FAMILY_GAUSSIAN,temp_n,alpha);
+        //if(obj2 < obj1) memcpy(beta, temp_n, n*sizeof(double));
 
         /* initalize alpha at alpha_max */
-        tf_dxtil(x, n, DEGREE, beta, alpha);
+        //tf_dxtil(x, n, DEGREE, beta, alpha);
 
         /* intialize u at u_max */ 
-        for (i = 0; i < n; i++) u[i] = w[i] * (beta[i] - y[i]) / (rho * lambda[0]);
-        glmgen_qrsol (Dkt_qr, u);
+        //for (i = 0; i < n; i++) u[i] = w[i] * (beta[i] - y[i]) / (rho * lambda[0]);
+        //glmgen_qrsol (Dkt_qr, u);
     }
    
     /* Compute Rho From Data Locations */ 
@@ -131,8 +135,8 @@ short cps_tf_admm(const int n,        // data length
                   const int verbose)
 {
     /* TF constants */
-    int maxiter = 500;
-    double obj_tol = 1e-6;
+    int maxiter = 100;
+    double obj_tol = 1e-4;
 
     /* Declare & allocate internal admm vars */
     int df;
@@ -203,8 +207,8 @@ short langrangian_tf_admm(const int n,           // data length
 {
     /* Trend Filtering Constants */
     int DEGREE = 1;
-    int maxiter = 500;
-    double obj_tol = 1e-6;
+    int maxiter = 100;
+    double obj_tol = 1e-4;
 
     /* Declare & allocate internal admm vars */
     int i, df;

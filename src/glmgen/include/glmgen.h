@@ -33,9 +33,9 @@
 extern "C" {
 #endif
 
+#include "utils.h"
 #include "cs.h"
 #include "tf.h"
-#include "utils.h"
 
 /* User-level c functions here */
 double * tf_admm_default(double * y, int n);

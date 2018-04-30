@@ -1,8 +1,7 @@
 #ifndef ADMM_H
 #define ADMM_H
 
-# include <glmgen.h>
-
+# include "../glmgen/include/cs.h"
 short cps_tf_admm(const int n,        // data length
                   const int degree,
                   double* x,          // data locations

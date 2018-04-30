@@ -19,48 +19,118 @@ np.import_array()
 # ------------------------------ ADMM Wrappers ------------------------------- #
 # ---------------------------------------------------------------------------- #
 
-cdef extern from "glmgen.h":
-    void tf_admm(double * x, double * y, double * w, int n, int k, int family,
-                 int max_iter, int lam_flag, double * lambda_, 
-                 int nlambda, double lambda_min_ratio, int * df,
-                 double * beta, double * obj, int * iter, int * status, 
-                 double rho, double obj_tol, double obj_tol_newton, double alpha_ls,
-                 double gamma_ls, int max_iter_ls, int max_inner_iter, int verbose) nogil
-
-cpdef ladmm(double[::1] y):
-    """ Handle to weighted pdas solver allowing warm start intialization"""
-    cdef int n = y.shape[0]
-    cdef int k = 2
-    cdef int family = 0
-    cdef int max_iter = 500
-    cdef int lam_flag = 0
-    cdef int nlambda = 50
-    cdef double lambda_min_ratio = 1e-5
-    cdef double rho = 1
-    cdef double obj_tol = 1e-6
-    cdef double obj_tol_newton = 1e-6
-    cdef double alpha_ls = 0.5
-    cdef double gamma_ls = 0.9
-    cdef int max_iter_ls = 20
-    cdef int max_iter_newton = 50
-    cdef int max_iter_outer = max_iter
-    cdef int verbose= 0
-
-
-    # Allocate Space
-    cdef double[::1] x = np.arange(n, dtype=np.float64)
-    cdef double[::1] w = np.ones(n, dtype=np.float64)
-    cdef double[::1] lambda_ = np.zeros(nlambda, np.float64)
-    cdef int[::1] df = np.zeros(nlambda, dtype=np.int32)
-    cdef double[::1] beta = np.zeros(nlambda * n, dtype=np.float64)
-    cdef double[::1] obj = np.zeros(nlambda * max_iter_outer, dtype=np.float64)
-    cdef int[::1] iters = np.zeros(nlambda, dtype=np.int32)
-    cdef int[::1] status = np.zeros(nlambda, dtype=np.int32)
-
-    with nogil:
-        tf_admm(&x[0], &y[0], &w[0], n, k, family, max_iter, lam_flag,
-                &lambda_[0], nlambda, lambda_min_ratio, &df[0], &beta[0],
-                &obj[0], &iters[0], &status[0], rho, obj_tol, obj_tol_newton,
-                alpha_ls, gamma_ls, max_iter_ls, max_iter_newton, verbose);
+cdef extern from "trefide.h":
     
-    return beta, lambda_, df, obj, iters, status 
+    short constrained_tf_admm(const int n,           # data length
+                              double* x,             # data locations
+                              double *y,             # data observations
+                              double *w,             # data observation weights
+                              const double delta,    # MSE constraint (noise var estimate)	
+                              double *beta,          # primal variable
+                              double *alpha,
+                              double *u,
+                              double *lambda_,       # initial regularization parameter
+                              int *iters,            # pointer to iter # (so we can return it)
+                              const double tol,      # relative difference from target MSE
+                              const int verbose) nogil
+
+    short langrangian_tf_admm(const int n,           # data length
+                              double* x,             # data locations
+                              double *y,             # data observations
+                              double *w,             # data observation weights
+                              double lambda_,        # regularization parameter
+                              double *beta,          # primal variable
+                              double *alpha,
+                              double *u,
+                              int *iter_,            # pointer to iter # (so we can return it)
+                              const int verbose) nogil
+
+
+# ---------------------------------------------------------------------------- #
+# --------------------------- ADMM Solver Wrappers --------------------------- #
+# ---------------------------------------------------------------------------- #
+
+
+cpdef cps_admm(const double[::1] y,        # Observations
+               const double delta,         # MSE constraint
+               double[::1] w=None,        # Observation weights
+               double[::1] alpha=None,     # Dual variable warm start
+               double[::1] u=None,     # Dual variable warm start
+               double lambda_=-1,          # Lagrange multiplier warm start
+               double tol=5e-2,            # Constraint tolerance
+               int verbose=0):
+    """ 
+    Shallow wrapper to call libtrefide solver 
+    """
+    
+    # Declare & Intialize Local Variables
+    cdef int iters = 0;
+    cdef short status;
+    cdef size_t t = y.shape[0]
+
+    # Allocate Space For Output
+    cdef double[::1] x = np.arange(t, dtype=np.float64)
+    cdef double[::1] beta = y.copy()
+
+    # Default to unweighted l1tf
+    if w is None:
+        w = np.ones(t, dtype=np.float64)
+
+    # Default to initializing dual vars at 0
+    if alpha is None:
+        alpha = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
+    if u is None:
+        u = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
+ 
+    # Call Solver
+    with nogil:
+        status  = constrained_tf_admm(t, &x[0], &y[0], &w[0], delta, &beta[0],
+                                      &alpha[0], &u[0], &lambda_, &iters,
+                                      tol, verbose)
+
+    # Check For Failures 
+    if status < 0:
+        raise RuntimeError("ADMM Failed Within CPS Line Search.")
+    elif status == 0:
+        warnings.warn("CPS ADMM line search stalled or exceeded maxiter.")
+ 
+    return np.asarray(beta), np.asarray(alpha), np.asarray(u), lambda_
+ 
+
+cpdef ladmm(const double[::1] y,        # Observations
+            const double lambda_,         # MSE constraint
+            double[::1] w=None,        # Observation weights
+            double[::1] alpha=None,     # Dual variable warm start
+            double[::1] u=None,     # Dual variable warm start
+            int verbose=0):
+    """ Handle to weighted pdas solver allowing warm start intialization"""
+   
+    # Declare & Intialize Local Variables
+    cdef int iter_ = 0;
+    cdef short status;
+    cdef size_t t = y.shape[0]
+
+    # Allocate Space For Output
+    cdef double[::1] x = np.arange(t, dtype=np.float64)
+    cdef double[::1] beta = y.copy()
+
+    # Default to unweighted l1tf
+    if w is None:
+        w = np.ones(t, dtype=np.float64)
+
+    # Default to initializing dual vars at 0
+    if alpha is None:
+        alpha = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
+    if u is None:
+        u = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
+ 
+    # Call Solver
+    with nogil:
+        status = langrangian_tf_admm(t, &x[0], &y[0], &w[0], lambda_, &beta[0],
+                                     &alpha[0], &u[0], &iter_, verbose)
+
+    # Check For Failures 
+    if status < 0:
+        raise RuntimeError("ADMM Failed Within CPS Line Search.")
+ 
+    return np.asarray(beta), np.asarray(alpha), np.asarray(u)

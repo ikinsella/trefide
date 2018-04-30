@@ -68,7 +68,7 @@ typedef struct gcs_qr /* holds numeric and symbolic qr together */
 
 typedef double (*func_RtoR)(double); /* double to double function typedef */
 
-typedef enum { FIRST, SECOND } bt_node_lvl;
+typedef enum { FIRST_ian, SECOND_ian } bt_node_lvl;
 
 struct btreenode
 {
