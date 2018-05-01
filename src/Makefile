@@ -7,7 +7,7 @@ GLMGEN = glmgen
 LIBGLMGEN = $(GLMGEN)/lib/libglmgen.so
 LIBTREFIDE = libtrefide.so
 LIBS = -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
-SRCS = utils/welch.cpp proxtf/wpdas.cpp proxtf/line_search.cpp proxtf/utils.cpp proxtf/l1tf/ipm.cpp proxtf/admm.cpp pmd/pmd.cpp
+SRCS = utils/welch.cpp proxtf/wpdas.cpp proxtf/line_search.cpp proxtf/utils.cpp proxtf/l1tf/ipm.cpp proxtf/admm.cpp pmd/pmd.cpp pmd/decimation.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 .PHONY: all
