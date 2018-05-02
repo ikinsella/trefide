@@ -121,7 +121,7 @@ cpdef double[::1] downsample_signal(const int t,
 cpdef double[::1,:] downsample_image(const int d1, 
                                      const int d2, 
                                      const int ds,
-                                     double[::1] U):
+                                     double[::1,:] U):
     """ Downsample Image In Each Dimension By Factor Of ds """
 
     # Assert Dimensions Match
@@ -137,7 +137,7 @@ cpdef double[::1,:] downsample_image(const int d1,
 
     # Call C-Routines From Trefide
     with nogil:
-        downsample_2d(d1, d2, ds, &U[0], &U_ds[0])
+        downsample_2d(d1, d2, ds, &U[0,0], &U_ds[0])
 
     return np.reshape(U_ds, (d1_ds, d2_ds), order='F')
 
@@ -147,7 +147,7 @@ cpdef double[::1,:,:] downsample_video(const int d1,
                                        const int d_sub, 
                                        const int t, 
                                        const int t_sub, 
-                                       double[::1] Y):
+                                       double[::1,:,:] Y):
     """ Downsample (d1xd2xt) movie in row-major order """
 
     # Assert Dimensions Match
@@ -164,7 +164,7 @@ cpdef double[::1,:,:] downsample_video(const int d1,
 
     # Call C-Routine From Trefide
     with nogil:
-        downsample_3d(d1, d2, d_sub, t, t_sub, &Y[0], &Y_ds[0]) 
+        downsample_3d(d1, d2, d_sub, t, t_sub, &Y[0,0,0], &Y_ds[0]) 
 
     # Format output
     return np.reshape(Y_ds, (d1_ds, d2_ds, t_ds), order='F')
@@ -173,25 +173,6 @@ cpdef double[::1,:,:] downsample_video(const int d1,
 # -----------------------------------------------------------------------------#
 # ---------------------------- Upsampling Wrappers --------------------------#
 # -----------------------------------------------------------------------------#
-
-cpdef double[::1,:] upsample_image(const int d1, 
-                                   const int d2, 
-                                   const int ds,
-                                   double[::1] U_ds):
-    """ Downsample Image In Each Dimension By Factor Of ds """
-
-    # Assert Dimensions Match
-    assert d1 % ds == 0, "Height of image must be divisible by downsampling factor."
-    assert d2 % ds == 0, "Width of image must be divisible by downsampling factor."
-    
-    # Allocate Space For Upsampled Image
-    cdef double[::1] U = np.zeros(d1 * d2, dtype=np.float64)
-
-    # Call C-Routines From Trefide
-    with nogil:
-        upsample_2d(d1, d2, ds, &U[0], &U_ds[0])
-
-    return np.reshape(U, (d1, d2), order='F')
 
 
 cpdef double[::1] upsample_signal(const int t, 
@@ -211,6 +192,25 @@ cpdef double[::1] upsample_signal(const int t,
 
     return np.asarray(V)
 
+
+cpdef double[::1,:] upsample_image(const int d1, 
+                                   const int d2, 
+                                   const int ds,
+                                   double[::1,:] U_ds):
+    """ Downsample Image In Each Dimension By Factor Of ds """
+
+    # Assert Dimensions Match
+    assert d1 % ds == 0, "Height of image must be divisible by downsampling factor."
+    assert d2 % ds == 0, "Width of image must be divisible by downsampling factor."
+    
+    # Allocate Space For Upsampled Image
+    cdef double[::1] U = np.zeros(d1 * d2, dtype=np.float64)
+
+    # Call C-Routines From Trefide
+    with nogil:
+        upsample_2d(d1, d2, ds, &U[0], &U_ds[0,0])
+
+    return np.reshape(U, (d1, d2), order='F')
 
 
 # -----------------------------------------------------------------------------#
@@ -255,6 +255,7 @@ cpdef decimated_batch_decompose(const int d1,
                                 const int t,
                                 const int t_sub,
                                 double[:, :, ::1] Y, 
+                                double[:, :, ::1] Y_ds, 
                                 const int bheight,
                                 const int bwidth,
                                 const double lambda_tv,
@@ -315,13 +316,21 @@ cpdef decimated_batch_decompose(const int d1,
                         for i in range(bheight):
                             Rp[bi + (bj * nbi)][i + (j * bheight) + (k * bheight * bwidth)] =\
                                     Y[(bi * bheight) + i, (bj * bwidth) + j, k]
+ 
+        for bj in range(nbj):
+            for bi in range(nbi):
+                for k in range(t_ds):
+                    for j in range(bwidth_ds):
+                        for i in range(bheight_ds):
+                            Rp_ds[bi + (bj * nbi)][i + (j * bheight_ds) + (k * bheight_ds * bwidth_ds)] =\
+                                    Y_ds[(bi * bheight_ds) + i, (bj * bwidth_ds) + j, k]
 
         # Decimate Raw Blocks
-        for b in range(num_blocks):
-            downsample_3d(bheight, bwidth, d_sub, t, t_sub, Rp[b], Rp_ds[b]) 
+        #for b in prange(num_blocks, schedule='guided'):
+        #    downsample_3d(bheight, bwidth, d_sub, t, t_sub, Rp[b], Rp_ds[b]) 
 
         # Factor Blocks In Parallel
-        decimated_batch_pmd(bheight, bheight_ds, bwidth, bwidth_ds, t, t_ds, b, 
+        decimated_batch_pmd(bheight, bheight_ds, bwidth, bwidth_ds, t, t_ds, num_blocks, 
                             Rp,  Rp_ds, Up, Vp, &K[0], 
                             lambda_tv, max_components, consec_failures, 
                             max_iters, max_iters_ds, tol)

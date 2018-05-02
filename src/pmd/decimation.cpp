@@ -185,6 +185,69 @@ void upsample_2d(const int d1,
  *----------------------------------------------------------------------------*/
 
 
+/* Update spatial component by regression of temporal component against
+ * the residual followed by denoising via TV prox operator. Returns the 
+ * normed difference between the updated spatial component and the 
+ * previous iterate (used to monitor convergence).
+ */
+double update_spatial_ds(const MKL_INT d1,
+                         const MKL_INT d2,
+                         const MKL_INT t,
+                         const double *R_k,
+                         double* u_k,
+                         const double* v_k)
+{
+    /* Declare & Allocate For Internal Vars */
+    MKL_INT d = d1*d2;
+    double delta_u;
+    double* u__ = (double *) malloc(d * sizeof(double));
+
+    /* u__ <- u_k */
+    copy(d, u_k, u__);
+
+    /* u_{k+1} <- R_{k+1} v_k / ||R_{k+1} v_k||_2 */
+    regress_spatial(d, t, R_k, u_k, v_k);
+
+    /* delta_u <- ||u_{k+1} - u_{k}||_2 */
+    delta_u = distance_inplace(d, u_k, u__);
+   
+    /* Free Allocated Memory */ 
+    free(u__);
+    return delta_u;
+}
+
+
+/* Update temporal component by regression of spatial component against
+ * the residual followed by denoising via constrained TF. Returns the 
+ * normed difference between the updated temporal component and the 
+ * previous iterate (used to monitor convergence).
+ */
+double update_temporal_ds(const MKL_INT d,
+                          const MKL_INT t,
+                          const double* R_k, 
+                          const double* u_k,
+                          double* v_k)
+{
+    /* Declare & Allocate For Internal Vars */
+    double delta_v;
+    double* v__ = (double *) malloc(t * sizeof(double));
+
+    /* v__ <- v_k */
+    copy(t, v_k, v__);
+
+    /* v_{k+1} <- R_{k+1}' u_k / ||R_{k+1}' u_k||_2 */
+    regress_temporal(d, t, R_k, u_k, v_k);
+    normalize(t, v_k);
+    
+    /* return ||v_{k+1} - v_{k}||_2 */
+    delta_v = distance_inplace(t, v_k, v__);
+   
+    /* Free Allocated Memory */
+    free(v__); 
+    return delta_v;
+}
+
+
 /* Initialize A Partition Of The Dual TF Var Based On Primal
  */
 void init_dual_from_primal(const MKL_INT t, const double* v,double* z){
@@ -237,19 +300,25 @@ int decimated_rod(const MKL_INT d1,
     MKL_INT d, d_ds, iters;
     double delta_u, delta_v, lambda_tf;
     double *z_k = (double *) malloc((t-2) * sizeof(double));
-    double *z_ds = (double *) malloc((t_ds-2) * sizeof(double));
+    /*double *z_ds = (double *) malloc((t_ds-2) * sizeof(double));*/
 
     /* Initialize Internal Variables */
     d = d1 * d2;
     d_ds = d1_ds * d2_ds;
-    lambda_tf = initialize_components(d_ds, t_ds, R_ds, u_ds, v_ds, z_ds, FFT);
+    /*lambda_tf = initialize_components(d_ds, t_ds, R_ds, u_ds, v_ds, z_ds, FFT);*/
+    initvec(d_ds, u_ds, 1 / sqrt(d_ds));
+    regress_temporal(d_ds, t_ds, R_ds, u_ds, v_ds);
+    normalize(t_ds, v_ds);
     
     /* Speed Up Intial Iterations With Decimated Components */
     for (iters = 0; iters < max_iters_ds; iters++){
         
         /* Update Downsampled Components */
-        delta_u = update_spatial(d1_ds, d2_ds, t_ds, R_ds, u_ds, v_ds, lambda_tv);
-        delta_v = update_temporal(d_ds, t_ds, R_ds, u_ds, v_ds, z_ds, &lambda_tf, FFT);
+        delta_u = update_spatial_ds(d1_ds, d2_ds, t_ds, R_ds, u_ds, v_ds);
+        delta_v = update_temporal_ds(d_ds, t_ds, R_ds, u_ds, v_ds);
+        /*delta_u = update_spatial(d1_ds, d2_ds, t_ds, R_ds, u_ds, v_ds, lambda_tv);
+         *delta_v = update_temporal(d_ds, t_ds, R_ds, u_ds, v_ds, z_ds, &lambda_tf, FFT);
+         */
 
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol){    
@@ -258,10 +327,11 @@ int decimated_rod(const MKL_INT d1,
     }
 
     /* Upsample Results */
-    upsample_2d(d1, d2, d1 / d1_ds, u_k, u_ds);
+    /*upsample_2d(d1, d2, d1 / d1_ds, u_k, u_ds);*/
     upsample_1d(t, t / t_ds, v_k, v_ds);
     init_dual_from_primal(t, v_k, z_k);
-    lambda_tf /= t / t_ds;
+    /*lambda_tf /= t / t_ds;*/
+    lambda_tf = 0; /* signal to initialize lambda using heuristic during 1st denoise */
 
     /* Iterate Until Convergence With Full Components */
     for (iters = 0; iters < max_iters; iters++){
@@ -274,7 +344,7 @@ int decimated_rod(const MKL_INT d1,
         if (fmax(delta_u, delta_v) < tol){    
             /* Free Allocated Memory & Test Spatial Component Against Null */
             free(z_k);
-            free(z_ds);
+            /*free(z_ds);*/
             if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh) 
                 return -1;  // Discard Component
             return 1;  // Keep Component
@@ -285,7 +355,7 @@ int decimated_rod(const MKL_INT d1,
             if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh){         
                 /* Free Allocated Memory & Return */
                 free(z_k);
-                free(z_ds); 
+                /*free(z_ds);*/ 
                 return -1; // Discard Component
             } 
         }    
@@ -293,12 +363,13 @@ int decimated_rod(const MKL_INT d1,
 
     /* MAXITER EXCEEDED: Free Memory & Test Spatial Component Against Null */
     free(z_k);
-    free(z_ds);
+    /*free(z_ds);*/
     if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh){ 
         return -1;  // Discard Component
     }
     return 1;  // Keep Component
 }
+
 
 /* Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a (d1*d2)xT
  * column major formatted video into sptial and temporal components.
