@@ -11,6 +11,7 @@ cimport numpy as np
 
 from libc.stdlib cimport abort, calloc, malloc, free
 from cython.parallel import parallel, prange
+from trefide.pmd import weighted_recompose
 
 
 # -----------------------------------------------------------------------------#
@@ -349,3 +350,269 @@ cpdef decimated_batch_decompose(const int d1,
             np.asarray(V).reshape((num_blocks, max_components, t), order='C'), 
             np.asarray(K), indices.astype(np.uint64))
 
+
+# -----------------------------------------------------------------------------#
+# --------------------------- Overlapping Wrappers ----------------------------#
+# -----------------------------------------------------------------------------#
+
+
+cpdef overlapping_dbd(const int d1, 
+                      const int d2, 
+                      const int d_sub,
+                      const int t,
+                      const int t_sub,
+                      double[:, :, ::1] Y, 
+                      double[:, :, ::1] Y_ds, 
+                      const int bheight,
+                      const int bwidth,
+                      const double lambda_tv,
+                      const size_t max_components,
+                      const size_t consec_failures,
+                      const size_t max_iters,
+                      const size_t max_iters_ds,
+                      const double tol):
+    """ 4x batch denoiser """
+
+    # Assert Even Blockdims
+    assert bheight % 2 == 0 , "Block height must be an even integer."
+    assert bwidth % 2 == 0 , "Block width must be an even integer."
+    
+    # Assert Blockdims Compatible With FOV
+    assert d1 % bheight == 0 , "Input FOV height must be an evenly divisible by block height."
+    assert d2 % bwidth == 0 , "Input FOV width must be evenly divisible by block width."
+
+    # Assert Blocksizes Compatible with Downsampling
+    assert bheight % d_sub == 0 , "Block height must be evenly divisible by spatial downsampling factor."
+    assert bwidth % d_sub == 0 , "Block width must be evenly divisible by spatial downsampling factor."
+    assert bheight / 2 % d_sub == 0 , "Half block height must be evenly divisible by spatial downsampling factor for overlapping decomposition."
+    assert bwidth / 2 % d_sub == 0 , "Half block width must be evenly divisible by spatial downsampling factor for overlapping decomposition."
+    assert t % t_sub == 0 , "Num Frames must be evenly divisible by temporal downsampling factor."
+    
+    # Declare internal vars
+    cdef int i,j
+    cdef int d1_ds = d1 / d_sub
+    cdef int d2_ds = d2 / d_sub
+    cdef int hbheight = bheight/2
+    cdef int hbheight_ds = hbheight / d_sub
+    cdef int hbwidth = bwidth/2
+    cdef int hbwidth_ds = hbwidth / d_sub
+    cdef int nbrow = d1/bheight
+    cdef int nbcol = d2/bwidth
+
+    # -------------------- Construct Combination Weights ----------------------#
+    
+    # Generate Single Quadrant Weighting matrix
+    cdef double[:,:] ul_weights = np.empty((hbheight, hbwidth), dtype=np.float64)
+    for i in range(hbheight):
+        for j in range(hbwidth):
+            ul_weights[i,j] = min(i, j)
+
+    # Compute Cumulative Overlapped Weights (Normalizing Factor)
+    cdef double[:,:] cum_weights = np.asarray(ul_weights) +\
+            np.fliplr(ul_weights) + np.flipud(ul_weights) +\
+            np.fliplr(np.flipud(ul_weights)) 
+
+    # Normalize By Cumulative Weights
+    for i in range(hbheight):
+        for j in range(hbwidth):
+            ul_weights[i,j] = ul_weights[i,j] / cum_weights[i,j]
+
+
+    # Construct Full Weighting Matrix From Normalize Quadrant
+    cdef double[:,:] W = np.hstack([np.vstack([ul_weights, 
+                                               np.flipud(ul_weights)]),
+                                    np.vstack([np.fliplr(ul_weights), 
+                                               np.fliplr(np.flipud(ul_weights))])]) 
+
+    # Initialize Outputs
+    cdef dict U = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
+    cdef dict V = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
+    cdef dict K = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
+    cdef dict I = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
+    
+    # ---------------- Handle Blocks Overlays One At A Time --------------#
+
+    # ----------- Original Overlay -----------
+    # Only Need To Process Full-Size Blocks
+    U['no_skew']['full'],\
+    V['no_skew']['full'],\
+    K['no_skew']['full'],\
+    I['no_skew']['full'] = decimated_batch_decompose(d1, d2, d_sub, t, t_sub, Y, Y_ds,
+                                                     bheight, bwidth, lambda_tv,
+                                                     max_components, consec_failures,
+                                                     max_iters, max_iters_ds, tol)
+
+    # ---------- Vertical Skew -----------
+    # Full Blocks
+    U['vert_skew']['full'],\
+    V['vert_skew']['full'],\
+    K['vert_skew']['full'],\
+    I['vert_skew']['full'] = decimated_batch_decompose(d1 - bheight, d2, d_sub, 
+                                                       t, t_sub, 
+                                                       Y[hbheight:d1-hbheight,:,:], 
+                                                       Y_ds[hbheight_ds:d1_ds-hbheight_ds,:,:],
+                                                       bheight, bwidth, 
+                                                       lambda_tv,
+                                                       max_components, 
+                                                       consec_failures,
+                                                       max_iters, max_iters_ds,
+                                                       tol)
+
+    # wide half blocks
+    U['vert_skew']['half'],\
+    V['vert_skew']['half'],\
+    K['vert_skew']['half'],\
+    I['vert_skew']['half'] = decimated_batch_decompose(bheight, d2, d_sub,
+                                                       t, t_sub, 
+                                                       np.vstack([Y[:hbheight,:,:], 
+                                                                  Y[d1-hbheight:,:,:]]),
+                                                       np.vstack([Y_ds[:hbheight_ds,:,:], 
+                                                                  Y_ds[d1_ds-hbheight_ds:,:,:]]),
+                                                       hbheight, bwidth, 
+                                                       lambda_tv,
+                                                       max_components, 
+                                                       consec_failures, 
+                                                       max_iters, max_iters_ds, 
+                                                       tol)
+    
+    # --------------Horizontal Skew---------- 
+    # Full Blocks
+    U['horz_skew']['full'],\
+    V['horz_skew']['full'],\
+    K['horz_skew']['full'],\
+    I['horz_skew']['full'] = decimated_batch_decompose(d1, d2 - bwidth, d_sub,
+                                                       t, t_sub, 
+                                                       Y[:, hbwidth:d2-hbwidth,:], 
+                                                       Y_ds[:, hbwidth_ds:d2_ds-hbwidth_ds,:], 
+                                                       bheight, bwidth,
+                                                       lambda_tv,
+                                                       max_components, 
+                                                       consec_failures, 
+                                                       max_iters, max_iters_ds,
+                                                       tol)
+
+    # tall half blocks
+    U['horz_skew']['half'],\
+    V['horz_skew']['half'],\
+    K['horz_skew']['half'],\
+    I['horz_skew']['half'] = decimated_batch_decompose(d1, bwidth, d_sub,
+                                                       t, t_sub, 
+                                                       np.hstack([Y[:,:hbwidth,:],
+                                                                  Y[:,d2-hbwidth:,:]]),
+                                                       np.hstack([Y_ds[:,:hbwidth_ds,:],
+                                                                  Y_ds[:,d2_ds-hbwidth_ds:,:]]),
+                                                       bheight, hbwidth, 
+                                                       lambda_tv, 
+                                                       max_components, 
+                                                       consec_failures, 
+                                                       max_iters, max_iters_ds,
+                                                       tol)
+
+    # -------------Diagonal Skew---------- 
+    # Full Blocks
+    U['diag_skew']['full'],\
+    V['diag_skew']['full'],\
+    K['diag_skew']['full'],\
+    I['diag_skew']['full'] = decimated_batch_decompose(d1 - bheight, d2 - bwidth, d_sub,
+                                                       t, t_sub, 
+                                                       Y[hbheight:d1-hbheight,
+                                                         hbwidth:d2-hbwidth, :], 
+                                                       Y_ds[hbheight_ds:d1_ds-hbheight_ds,
+                                                            hbwidth_ds:d2_ds-hbwidth_ds, :], 
+                                                       bheight, bwidth,
+                                                       lambda_tv,
+                                                       max_components, 
+                                                       consec_failures,
+                                                       max_iters, max_iters_ds,
+                                                       tol)
+
+    # tall half blocks
+    U['diag_skew']['thalf'],\
+    V['diag_skew']['thalf'],\
+    K['diag_skew']['thalf'],\
+    I['diag_skew']['thalf'] = decimated_batch_decompose(d1 - bheight, bwidth, d_sub, 
+                                                        t, t_sub, 
+                                                        np.hstack([Y[hbheight:d1-hbheight,
+                                                                     :hbwidth, :],
+                                                                   Y[hbheight:d1-hbheight,
+                                                                     d2-hbwidth:, :]]),
+                                                        np.hstack([Y_ds[hbheight_ds:d1_ds-hbheight_ds,
+                                                                        :hbwidth_ds, :],
+                                                                   Y_ds[hbheight_ds:d1_ds-hbheight_ds,
+                                                                        d2_ds-hbwidth_ds:, :]]),
+                                                        bheight, hbwidth,
+                                                        lambda_tv, 
+                                                        max_components, 
+                                                        consec_failures, 
+                                                        max_iters, max_iters_ds,
+                                                        tol)
+
+    # wide half blocks
+    U['diag_skew']['whalf'],\
+    V['diag_skew']['whalf'],\
+    K['diag_skew']['whalf'],\
+    I['diag_skew']['whalf'] = decimated_batch_decompose(bheight, d2 - bwidth, d_sub, 
+                                                        t, t_sub, 
+                                                        np.vstack([Y[:hbheight, 
+                                                                     hbwidth:d2-hbwidth,
+                                                                     :], 
+                                                                   Y[d1-hbheight:,
+                                                                     hbwidth:d2-hbwidth,
+                                                                     :]]),
+                                                        np.vstack([Y_ds[:hbheight_ds, 
+                                                                        hbwidth_ds:d2_ds-hbwidth_ds,
+                                                                        :], 
+                                                                   Y_ds[d1_ds-hbheight_ds:,
+                                                                        hbwidth_ds:d2_ds-hbwidth_ds,
+                                                                        :]]),
+                                                         hbheight, bwidth,
+                                                         lambda_tv,
+                                                         max_components, 
+                                                         consec_failures, 
+                                                         max_iters, 
+                                                         max_iters_ds, 
+                                                         tol) 
+
+    # Corners
+    U['diag_skew']['quarter'],\
+    V['diag_skew']['quarter'],\
+    K['diag_skew']['quarter'],\
+    I['diag_skew']['quarter'] = decimated_batch_decompose(bheight, bwidth, d_sub,  
+                                                          t, t_sub, 
+                                                          np.hstack([
+                                                              np.vstack([Y[:hbheight,
+                                                                           :hbwidth,
+                                                                           :], 
+                                                                         Y[d1-hbheight:,
+                                                                           :hbwidth,
+                                                                           :]]),
+                                                              np.vstack([Y[:hbheight,
+                                                                           d2-hbwidth:,
+                                                                           :], 
+                                                                         Y[d1-hbheight:,
+                                                                           d2-hbwidth:,
+                                                                           :]])
+                                                                    ]),
+                                                          np.hstack([
+                                                              np.vstack([Y_ds[:hbheight_ds,
+                                                                              :hbwidth_ds,
+                                                                              :], 
+                                                                         Y_ds[d1_ds-hbheight_ds:,
+                                                                              :hbwidth_ds,
+                                                                              :]]),
+                                                              np.vstack([Y_ds[:hbheight_ds,
+                                                                              d2_ds-hbwidth_ds:,
+                                                                              :], 
+                                                                         Y_ds[d1_ds-hbheight_ds:,
+                                                                              d2_ds-hbwidth_ds:,
+                                                                              :]])
+                                                                    ]),
+                                                          hbheight, hbwidth, 
+                                                          lambda_tv, 
+                                                          max_components, 
+                                                          consec_failures, 
+                                                          max_iters, max_iters_ds, 
+                                                          tol)
+
+    # Return Weighting Matrix For Reconstruction
+    return U, V, K, I, W
