@@ -2,11 +2,6 @@
 #include <stdio.h>
 #include <mkl.h>
 #include <math.h>
-#include "pmd.h"
-#include "../proxtf/utils.h"
-#include "../proxtf/line_search.h"
-#include "../utils/welch.h"
-#include <proxtv.h>
 #include <algorithm>
 
 /*----------------------------------------------------------------------------*
@@ -67,37 +62,40 @@ void downsample_3d(const int d1,
                    const int d_sub, 
                    const int t, 
                    const int t_sub, 
-                   double *Y, 
+                   const double *Y, 
                    double *Y_ds)
 {
 
     /* Declare & Initialize Local Variables */
+    int d = d1 * d2;
     int d1_ds = d1 / d_sub;
     int d2_ds = d2 / d_sub;
+    int d_ds = d1_ds * d2_ds;
     int t_ds = t / t_sub;
+    double elems_per_block = d_sub * d_sub * t_sub;
 
-    /* Allocate Space For Temporary Variables */
-    double *Y_tmp = (double *) malloc(d1 * d2 * t_ds * sizeof(double));
+    /* Init Downsampled Elems to 0*/
+    int k;
+    for (k = 0; k < t_ds; k++){
+        int j;
+        for (j = 0; j < d2_ds; j++){
+            int i;
+            for (i = 0; i < d1_ds; i++){
+                Y_ds[i + d1_ds*j + d_ds*k] = 0;
+            }
+        }
+    }
 
-    /* Perform Inplace Transpose To Get Row Major Formatted Video */
-    mkl_dimatcopy('C', 'T', d1*d2, t, 1.0, Y, d1*d2, t);
-
-    /* Start By Downsampling Each Pixel's Time Series */
-    int p_ds;
-    for (p_ds = 0; p_ds < d1 * d2; p_ds++) 
-        downsample_1d(t, t_sub, Y + t*p_ds, Y_tmp + t_ds*p_ds);
-
-    /* Perform Inplace Transpose To Return To Column Major Format */
-    mkl_dimatcopy('C', 'T', t, d1*d2, 1.0, Y, t, d1*d2);
-    mkl_dimatcopy('C', 'T', t_ds, d1*d2, 1.0, Y_tmp, t_ds, d1*d2);
-
-    /* Finish By Downsampling Each Remaining Frame */
-    int i;
-    for (i = 0; i < t_ds; i++) 
-        downsample_2d(d1, d2, d_sub, Y_tmp + i*d1*d2, Y_ds + i*d1_ds*d2_ds);
-
-    /* Free Temporary Variables */
-    free(Y_tmp);
+    /* Loop Over Elems of Y in order of storage */
+    for (k = 0; k < t; k++){
+        int j;
+        for (j = 0; j < d2; j++){
+            int i;
+            for (i = 0; i < d1; i++){
+                Y_ds[(i/d_sub)+(j/d_sub)*d1_ds+(k/t_sub)*d_ds] += Y[i + d1*j + d*k] / elems_per_block;
+            }
+        }
+    }
 }  
 
 
@@ -177,335 +175,4 @@ void upsample_2d(const int d1,
     int j;
     for (j = 0; j < d2; j++) 
         upsample_1d_inplace(d1, ds, u + j*d1);
-}
-
-
-/*----------------------------------------------------------------------------*
- *-------------------------- Decimated PMD Routines --------------------------*
- *----------------------------------------------------------------------------*/
-
-
-/* Update spatial component by regression of temporal component against
- * the residual followed by denoising via TV prox operator. Returns the 
- * normed difference between the updated spatial component and the 
- * previous iterate (used to monitor convergence).
- */
-double update_spatial_ds(const MKL_INT d1,
-                         const MKL_INT d2,
-                         const MKL_INT t,
-                         const double *R_k,
-                         double* u_k,
-                         const double* v_k)
-{
-    /* Declare & Allocate For Internal Vars */
-    MKL_INT d = d1*d2;
-    double delta_u;
-    double* u__ = (double *) malloc(d * sizeof(double));
-
-    /* u__ <- u_k */
-    copy(d, u_k, u__);
-
-    /* u_{k+1} <- R_{k+1} v_k / ||R_{k+1} v_k||_2 */
-    regress_spatial(d, t, R_k, u_k, v_k);
-
-    /* delta_u <- ||u_{k+1} - u_{k}||_2 */
-    delta_u = distance_inplace(d, u_k, u__);
-   
-    /* Free Allocated Memory */ 
-    free(u__);
-    return delta_u;
-}
-
-
-/* Update temporal component by regression of spatial component against
- * the residual followed by denoising via constrained TF. Returns the 
- * normed difference between the updated temporal component and the 
- * previous iterate (used to monitor convergence).
- */
-double update_temporal_ds(const MKL_INT d,
-                          const MKL_INT t,
-                          const double* R_k, 
-                          const double* u_k,
-                          double* v_k)
-{
-    /* Declare & Allocate For Internal Vars */
-    double delta_v;
-    double* v__ = (double *) malloc(t * sizeof(double));
-
-    /* v__ <- v_k */
-    copy(t, v_k, v__);
-
-    /* v_{k+1} <- R_{k+1}' u_k / ||R_{k+1}' u_k||_2 */
-    regress_temporal(d, t, R_k, u_k, v_k);
-    normalize(t, v_k);
-    
-    /* return ||v_{k+1} - v_{k}||_2 */
-    delta_v = distance_inplace(t, v_k, v__);
-   
-    /* Free Allocated Memory */
-    free(v__); 
-    return delta_v;
-}
-
-
-/* Initialize A Partition Of The Dual TF Var Based On Primal
- */
-void init_dual_from_primal(const MKL_INT t, const double* v,double* z){
-    
-    /* Compute Second Order Differences */
-    Dx(t, v, z);
-
-    /* Partition Elements Based On Differences */
-    int j;
-    for (j=0; j < t-2; j++){
-        if (z[j] > 1e-5){
-            z[j] = 1;
-        } else if (z[j] < -1e-5){
-            z[j] = -1;
-        } else {
-            z[j] = 0;
-        } 
-    }
-}
-
-
-/* Solves: 
- *  u_k, v_k : min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
- *  
- *  Returns:
- *      1: If we reject the null hypothesis that u_k is noise 
- *     -1: If we accept the null hypothesis that u_k is noise
- */
-int decimated_rod(const MKL_INT d1, 
-                  const MKL_INT d1_ds, 
-                  const MKL_INT d2, 
-                  const MKL_INT d2_ds, 
-                  const MKL_INT t,
-                  const MKL_INT t_ds,
-                  const double* R_k, 
-                  const double* R_ds, 
-                  double* u_k, 
-                  double* u_ds, 
-                  double* v_k,
-                  double* v_ds,
-                  const double lambda_tv,
-                  const double spatial_thresh,
-                  const MKL_INT max_iters,
-                  const MKL_INT max_iters_ds,
-                  const double tol,
-                  void* FFT=NULL)
-{
- 
-    /* Declare & Allocate Mem For Internal Vars */
-    MKL_INT d, d_ds, iters;
-    double delta_u, delta_v, lambda_tf;
-    double *z_k = (double *) malloc((t-2) * sizeof(double));
-    /*double *z_ds = (double *) malloc((t_ds-2) * sizeof(double));*/
-
-    /* Initialize Internal Variables */
-    d = d1 * d2;
-    d_ds = d1_ds * d2_ds;
-    /*lambda_tf = initialize_components(d_ds, t_ds, R_ds, u_ds, v_ds, z_ds, FFT);*/
-    initvec(d_ds, u_ds, 1 / sqrt(d_ds));
-    regress_temporal(d_ds, t_ds, R_ds, u_ds, v_ds);
-    normalize(t_ds, v_ds);
-    
-    /* Speed Up Intial Iterations With Decimated Components */
-    for (iters = 0; iters < max_iters_ds; iters++){
-        
-        /* Update Downsampled Components */
-        delta_u = update_spatial_ds(d1_ds, d2_ds, t_ds, R_ds, u_ds, v_ds);
-        delta_v = update_temporal_ds(d_ds, t_ds, R_ds, u_ds, v_ds);
-        /*delta_u = update_spatial(d1_ds, d2_ds, t_ds, R_ds, u_ds, v_ds, lambda_tv);
-         *delta_v = update_temporal(d_ds, t_ds, R_ds, u_ds, v_ds, z_ds, &lambda_tf, FFT);
-         */
-
-        /* Check Convergence */
-        if (fmax(delta_u, delta_v) < tol){    
-            break;
-        }
-    }
-
-    /* Upsample Results */
-    /*upsample_2d(d1, d2, d1 / d1_ds, u_k, u_ds);*/
-    upsample_1d(t, t / t_ds, v_k, v_ds);
-    init_dual_from_primal(t, v_k, z_k);
-    /*lambda_tf /= t / t_ds;*/
-    lambda_tf = 0; /* signal to initialize lambda using heuristic during 1st denoise */
-
-    /* Iterate Until Convergence With Full Components */
-    for (iters = 0; iters < max_iters; iters++){
-        
-        /* Update Components */
-        delta_u = update_spatial(d1, d2, t, R_k, u_k, v_k, lambda_tv);
-        delta_v = update_temporal(d, t, R_k, u_k, v_k, z_k, &lambda_tf, FFT);
-
-        /* Check Convergence */
-        if (fmax(delta_u, delta_v) < tol){    
-            /* Free Allocated Memory & Test Spatial Component Against Null */
-            free(z_k);
-            /*free(z_ds);*/
-            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh) 
-                return -1;  // Discard Component
-            return 1;  // Keep Component
-        }
-
-        /* Preemptive Check To See If We're Fitting Noise */
-        if (iters == 4){
-            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh){         
-                /* Free Allocated Memory & Return */
-                free(z_k);
-                /*free(z_ds);*/ 
-                return -1; // Discard Component
-            } 
-        }    
-    }
-
-    /* MAXITER EXCEEDED: Free Memory & Test Spatial Component Against Null */
-    free(z_k);
-    /*free(z_ds);*/
-    if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh){ 
-        return -1;  // Discard Component
-    }
-    return 1;  // Keep Component
-}
-
-
-/* Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a (d1*d2)xT
- * column major formatted video into sptial and temporal components.
- */
-size_t decimated_pmd(const MKL_INT d1, 
-                     const MKL_INT d1_ds,
-                     const MKL_INT d2, 
-                     const MKL_INT d2_ds,
-                     const MKL_INT t,
-                     const MKL_INT t_ds,
-                     double* R, 
-                     double* R_ds,
-                     double* U,
-                     double* V,
-                     const double lambda_tv,
-                     const size_t max_components,
-                     const size_t consec_failures,
-                     const size_t max_iters,
-                     const size_t max_iters_ds,
-                     const double tol,
-                     void* FFT=NULL)  /* Handle Provided For Threadsafe FFT */
-{
-    /* Declare & Intialize Internal Vars */
-    int* keep_flag = (int *) malloc(consec_failures*sizeof(int));
-    int max_keep_flag;
-    size_t i, k, good = 0;
-    MKL_INT d = d1 * d2;
-    MKL_INT d_ds = d1_ds * d2_ds;
-    double spatial_thresh = (double) d1 * d2 / (d1 * (d2-1) + d2 * (d1-1));
-
-    /* Allocate Space For Downsampled Components */
-    double* u_ds = (double *) malloc(d_ds * sizeof(double));
-    double* v_ds = (double *) malloc(t_ds * sizeof(double));
-
-    /* Fill Keep Flags */
-    for (i = 0; i < consec_failures; i++) keep_flag[i] = 1;
-
-    /* Sequentially Extract Rank 1 Updates Until We Are Fitting Noise */
-    for (k = 0; k < max_components; k++, good++) {
-        
-        /* Use Upsampled Results To Initialize ROD Against Full Data */
-        keep_flag[k % consec_failures] = decimated_rod(d1, d1_ds, 
-                                                       d2, d2_ds, 
-                                                       t, t_ds, 
-                                                       R, R_ds, 
-                                                       U + good*d, u_ds, 
-                                                       V + good*t, v_ds,
-                                                       lambda_tv, 
-                                                       spatial_thresh,
-                                                       max_iters, max_iters_ds, 
-                                                       tol, FFT);
-
-        /* Check Component Quality: Terminate if we're fitting noise */
-        if (keep_flag[k % consec_failures] < 0){
-            max_keep_flag = -1;  // current component is a failure
-            for (i=1; i < consec_failures; i++){  // check previous
-                max_keep_flag = max(max_keep_flag, keep_flag[(k+i) % consec_failures]);
-            } 
-            if (max_keep_flag < 0){
-                free(keep_flag);
-                free(u_ds);
-                free(v_ds);
-                return good;
-            }
-        }
-        /* Debias Components */
-        regress_temporal(d, t, R, U + good*d, V + good*t);
-
-        /* Update Full Residual: R_k <- R_k - U[:,k] V[k,:] */
-        cblas_dger(CblasColMajor, d, t, -1.0, U + good*d, 1, V + good*t, 1, R, d);
-
-        /* Downsample Components */
-        downsample_2d(d1, d2, d1 / d1_ds, U + good*d, u_ds);
-        downsample_1d(t, t / t_ds, V + good*t, v_ds);
-
-        /* Update Downsampled Residual: R_k <- R_k - U[:,k] V[k,:] */
-        cblas_dger(CblasColMajor, d_ds, t_ds, -1.0, u_ds, 1, v_ds, 1, R_ds, d_ds);
-        
-        /* Make Sure We Overwrite Failed Components */
-        if (keep_flag[k % consec_failures] < 0) good--;
-    }
-
-    /* MAXCOMPONENTS EXCEEDED: Terminate Early */
-    free(keep_flag);
-    free(u_ds);
-    free(v_ds);
-    return good; 
-    return k;
-}
-
-
-/* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable parallel, 
- * block-wiseprocessing of large datasets in shared memory.
- */
-void decimated_batch_pmd(const MKL_INT bheight,
-                         const MKL_INT bheight_ds, 
-                         const MKL_INT bwidth, 
-                         const MKL_INT bwidth_ds, 
-                         const MKL_INT t,
-                         const MKL_INT t_ds,
-                         const MKL_INT b,
-                         double** R, 
-                         double** R_ds, 
-                         double** U,
-                         double** V,
-                         size_t* K,
-                         const double lambda_tv,
-                         const size_t max_components,
-                         const size_t consec_failures,
-                         const size_t max_iters,
-                         const size_t max_iters_ds,
-                         const double tol)
-{
-    // Create FFT Handle So It can Be Shared Aross Threads
-    DFTI_DESCRIPTOR_HANDLE FFT;
-    MKL_LONG status;
-    MKL_LONG L = 256;  /* Size Of Subsamples in welch estimator */
-    status = DftiCreateDescriptor( &FFT, DFTI_DOUBLE, DFTI_REAL, 1, L );
-    status = DftiSetValue( FFT, DFTI_PACKED_FORMAT, DFTI_PACK_FORMAT);
-    status = DftiCommitDescriptor( FFT );
-    if (status != 0) 
-        fprintf(stderr, "Error while creating MKL_FFT Handle: %ld\n", status);
-
-    // Loop Over All Patches In Parallel
-    int m;
-    #pragma omp parallel for shared(FFT) schedule(guided)
-    for (m = 0; m < b; m++){
-        //Use dummy vars for decomposition  
-        K[m] = decimated_pmd(bheight, bheight_ds, bwidth, bwidth_ds, t, t_ds, 
-                             R[m],  R_ds[m], U[m], V[m], lambda_tv, 
-                             max_components, consec_failures, max_iters, 
-                             max_iters_ds, tol, &FFT); 
-    }
-
-    // Free MKL FFT Handle
-    status = DftiFreeDescriptor( &FFT ); 
-    if (status != 0)
-        fprintf(stderr, "Error while deallocating MKL_FFT Handle: %ld\n", status);
 }

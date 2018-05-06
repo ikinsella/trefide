@@ -5,6 +5,7 @@
 # cython: nonecheck=False
 
 import os
+import time
 
 import numpy as np
 cimport numpy as np
@@ -13,40 +14,59 @@ from cython.parallel import parallel, prange
 from libc.stdlib cimport abort, calloc, malloc, free
 
 
+FOV_BHEIGHT_WARNING = "Input FOV height must be an evenly divisible by block height."
+FOV_BWIDTH_WARNING = "Input FOV width must be evenly divisible by block width." 
+DSUB_BHEIGHT_WARNING = "Block height must be evenly divisible by spatial downsampling factor."
+DSUB_BWIDTH_WARNING = "Block width must be evenly divisible by spatial downsampling factor."
+TSUB_FRAMES_WARNING = "Num Frames must be evenly divisible by temporal downsampling factor."
+
+
 # -----------------------------------------------------------------------------#
 # ------------------------- Imports From Libtrefide.so ------------------------#
 # -----------------------------------------------------------------------------#
 
 
 cdef extern from "trefide.h":
+    
     size_t pmd(const int d1, 
                const int d2, 
+               int d_sub, 
                const int t,
+               int t_sub,
                double* R, 
+               double* R_ds,
                double* U,
                double* V,
-               const double lambda_tv,
-               const double spatial_thresh,
                const size_t max_components,
                const size_t consec_failures,
-               const size_t max_iters,
+               const int max_iters_main,
+               const int max_iters_init,
                const double tol) nogil
 
-    void batch_pmd(const int bheight, 
+    void batch_pmd(const int bheight,
                    const int bwidth, 
+                   int d_sub,
                    const int t,
+                   int t_sub,
                    const int b,
                    double** Rpt, 
+                   double** Rpt_ds, 
                    double** Upt,
                    double** Vpt,
                    size_t* Kpt,
-                   const double lambda_tv,
-                   const double spatial_thresh,
                    const size_t max_components,
                    const size_t consec_failures,
-                   const size_t max_iters,
+                   const size_t max_iters_main,
+                   const size_t max_iters_init,
                    const double tol) nogil
 
+    void downsample_3d(const int d1, 
+                       const int d2, 
+                       const int d_sub, 
+                       const int t, 
+                       const int t_sub, 
+                       const double *Y, 
+                       double *Y_ds) nogil
 
 # -----------------------------------------------------------------------------#
 # -------------------------- Single-Block Wrapper -----------------------------#
@@ -59,20 +79,41 @@ cpdef size_t decompose(const int d1,
                        double[::1] Y, 
                        double[::1] U,
                        double[::1] V,
-                       const double lambda_tv,
-                       const double spatial_thresh,
                        const size_t max_components,
                        const size_t consec_failures,
-                       const size_t max_iters,
+                       const size_t max_iters_main,
+                       const size_t max_iters_init,
                        const double tol) nogil:
     """ Wrap the single patch cpp PMD functions """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
     with nogil:
-        return pmd(d1, d2, t, &Y[0], &U[0], &V[0], lambda_tv, 
-                   spatial_thresh, max_components, consec_failures, 
-                   max_iters, tol)
+        return pmd(d1, d2, 1, t, 1, &Y[0], NULL, &U[0], &V[0], 
+                   max_components, consec_failures, 
+                   max_iters_main, max_iters_init, tol)
 
+
+cpdef size_t decimated_decompose(const int d1, 
+                                 const int d2, 
+                                 int d_sub,
+                                 const int t,
+                                 int t_sub,
+                                 double[::1] Y, 
+                                 double[::1] Y_ds, 
+                                 double[::1] U,
+                                 double[::1] V,
+                                 const size_t max_components,
+                                 const size_t consec_failures,
+                                 const int max_iters_main,
+                                 const int max_iters_init,
+                                 const double tol) nogil:
+    """ Wrap the single patch cpp PMD functions """
+
+    # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
+    with nogil:
+        return pmd(d1, d2, d_sub, t, t_sub, &Y[0], &Y_ds[0], &U[0], &V[0], 
+                   max_components, consec_failures, 
+                   max_iters_main, max_iters_init, tol);
 
 # -----------------------------------------------------------------------------#
 # --------------------------- Multi-Block Wrappers ----------------------------#
@@ -85,25 +126,32 @@ cpdef batch_decompose(const int d1,
                       double[:, :, ::1] Y, 
                       const int bheight,
                       const int bwidth,
-                      const double lambda_tv,
-                      const double spatial_thresh,
                       const size_t max_components,
                       const size_t consec_failures,
-                      const size_t max_iters,
-                      const double tol):
+                      const size_t max_iters_main,
+                      const size_t max_iters_init,
+                      const double tol,
+                      int d_sub = 1,
+                      int t_sub = 1):
     """ Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
      factor_patch with OpenMP directives to parallelize batch processing."""
 
     # Assert Evenly Divisible FOV/Block Dimensions
-    assert d1 % bheight == 0 , "Input FOV height must be an evenly divisible by block height."
-    assert d2 % bwidth == 0 , "Input FOV width must be evenly divisible by block width."
-
+    assert d1 % bheight == 0 , FOV_BHEIGHT_WARNING
+    assert d2 % bwidth == 0 , FOV_BWIDTH_WARNING
+    assert bheight % d_sub == 0 , DSUB_BHEIGHT_WARNING
+    assert bwidth % d_sub == 0 , DSUB_BWIDTH_WARNING
+    assert t % t_sub == 0 , TSUB_FRAMES_WARNING    
+    
     # Initialize Counters
     cdef size_t iu, ku
     cdef int i, j, k, b, bi, bj
     cdef int nbi = int(d1/bheight)
     cdef int nbj = int(d2/bwidth)
     cdef int num_blocks = nbi * nbj
+    cdef int bheight_ds = bheight / d_sub
+    cdef int bwidth_ds = bwidth / d_sub
+    cdef int t_ds = t / t_sub
 
     # Compute block-start indices and spatial cutoff
     indices = np.transpose([np.tile(range(nbi), nbj), np.repeat(range(nbj), nbi)])
@@ -115,6 +163,7 @@ cpdef batch_decompose(const int d1,
 
     # Allocate Input Pointers
     cdef double** Rp = <double **> malloc(num_blocks * sizeof(double*))
+    cdef double** Rp_ds = <double **> malloc(num_blocks * sizeof(double*))
     cdef double** Vp = <double **> malloc(num_blocks * sizeof(double*))
     cdef double** Up = <double **> malloc(num_blocks * sizeof(double*))
 
@@ -135,16 +184,31 @@ cpdef batch_decompose(const int d1,
                         for i in range(bheight):
                             Rp[bi + (bj * nbi)][i + (j * bheight) + (k * bheight * bwidth)] =\
                                     Y[(bi * bheight) + i, (bj * bwidth) + j, k]
+        
+        # Decimate Raw Blocks
+        if t_sub > 1 or d_sub > 1: 
+            for b in range(num_blocks):
+                Rp_ds[b] = <double *> malloc((bheight / d_sub) * (bwidth / d_sub) * (t / t_sub) * sizeof(double))
+            for b in prange(num_blocks, schedule='guided'):
+                downsample_3d(bheight, bwidth, d_sub, t, t_sub, Rp[b], Rp_ds[b]) 
+        else:
+            for b in range(num_blocks):
+                Rp_ds[b] = NULL
 
         # Factor Blocks In Parallel
-        batch_pmd(bheight, bwidth, t, num_blocks, Rp, Up, Vp, &K[0],
-                  lambda_tv, spatial_thresh, max_components, consec_failures, 
-                  max_iters, tol)
-
+        batch_pmd(bheight, bwidth, d_sub, t, t_sub, num_blocks, 
+                  Rp, Rp_ds, Up, Vp, &K[0], 
+                  max_components, consec_failures, 
+                  max_iters_main, max_iters_init, tol)
+        
         # Free Allocated Memory
         for b in range(num_blocks):
             free(Rp[b])
+        if t_sub > 1 or d_sub > 1: 
+            for b in range(num_blocks):
+                free(Rp_ds[b])
         free(Rp)
+        free(Rp_ds)
         free(Up)
         free(Vp)
             
@@ -239,12 +303,13 @@ cpdef overlapping_batch_decompose(const int d1,
                                   double[:, :, ::1] Y, 
                                   const int bheight,
                                   const int bwidth,
-                                  const double lambda_tv,
-                                  const double spatial_thresh,
                                   const size_t max_components,
                                   const size_t consec_failures,
-                                  const size_t max_iters,
-                                  const double tol):
+                                  const size_t max_iters_main,
+                                  const size_t max_iters_init,
+                                  const double tol,
+                                  int d_sub=1,
+                                  int t_sub=1):
     """ 4x batch denoiser """
 
     # Assert Even Blockdims
@@ -300,9 +365,10 @@ cpdef overlapping_batch_decompose(const int d1,
     U['no_skew']['full'],\
     V['no_skew']['full'],\
     K['no_skew']['full'],\
-    I['no_skew']['full'] = batch_decompose(d1, d2, t, Y, bheight, bwidth, lambda_tv,
-                                           spatial_thresh, max_components, 
-                                           consec_failures, max_iters, tol)
+    I['no_skew']['full'] = batch_decompose(d1, d2, t, Y, bheight, bwidth,
+                                           max_components, consec_failures, 
+                                           max_iters_main, max_iters_init, 
+                                           tol, d_sub=d_sub, t_sub=t_sub)
  
     # ---------- Vertical Skew -----------
     # Full Blocks
@@ -312,9 +378,9 @@ cpdef overlapping_batch_decompose(const int d1,
     I['vert_skew']['full'] = batch_decompose(d1 - bheight, d2, t, 
                                              Y[hbheight:d1-hbheight,:,:], 
                                              bheight, bwidth, 
-                                             lambda_tv, spatial_thresh,
                                              max_components, consec_failures,
-                                             max_iters, tol)
+                                             max_iters_main, max_iters_init,
+                                             tol, d_sub=d_sub, t_sub=t_sub)
 
     # wide half blocks
     U['vert_skew']['half'],\
@@ -323,9 +389,10 @@ cpdef overlapping_batch_decompose(const int d1,
     I['vert_skew']['half'] = batch_decompose(bheight, d2, t, 
                                              np.vstack([Y[:hbheight,:,:], 
                                                         Y[d1-hbheight:,:,:]]),
-                                             hbheight, bwidth, lambda_tv,
-                                             spatial_thresh, max_components, 
-                                             consec_failures, max_iters, tol)
+                                             hbheight, bwidth, max_components, 
+                                             consec_failures, 
+                                             max_iters_main, max_iters_init,
+                                             tol, d_sub=d_sub, t_sub=t_sub)
     
     # --------------Horizontal Skew---------- 
     # Full Blocks
@@ -334,9 +401,10 @@ cpdef overlapping_batch_decompose(const int d1,
     K['horz_skew']['full'],\
     I['horz_skew']['full'] = batch_decompose(d1, d2 - bwidth, t, 
                                              Y[:, hbwidth:d2-hbwidth,:], 
-                                             bheight, bwidth, lambda_tv, 
-                                             spatial_thresh, max_components, 
-                                             consec_failures, max_iters, tol)
+                                             bheight, bwidth, max_components, 
+                                             consec_failures, 
+                                             max_iters_main, max_iters_init,
+                                             tol, d_sub=d_sub, t_sub=t_sub)
 
     # tall half blocks
     U['horz_skew']['half'],\
@@ -345,9 +413,10 @@ cpdef overlapping_batch_decompose(const int d1,
     I['horz_skew']['half'] = batch_decompose(d1, bwidth, t, 
                                              np.hstack([Y[:,:hbwidth,:],
                                                         Y[:,d2-hbwidth:,:]]),
-                                             bheight, hbwidth, lambda_tv, 
-                                             spatial_thresh, max_components, 
-                                             consec_failures, max_iters, tol)
+                                             bheight, hbwidth, max_components, 
+                                             consec_failures, 
+                                             max_iters_main, max_iters_init, 
+                                             tol, d_sub=d_sub, t_sub=t_sub)
 
     # -------------Diagonal Skew---------- 
     # Full Blocks
@@ -357,9 +426,10 @@ cpdef overlapping_batch_decompose(const int d1,
     I['diag_skew']['full'] = batch_decompose(d1 - bheight, d2 - bwidth, t, 
                                              Y[hbheight:d1-hbheight,
                                                hbwidth:d2-hbwidth, :], 
-                                             bheight, bwidth, lambda_tv,
-                                             spatial_thresh, max_components, 
-                                             consec_failures, max_iters, tol)
+                                             bheight, bwidth, max_components, 
+                                             consec_failures, 
+                                             max_iters_main, max_iters_init, 
+                                             tol, d_sub=d_sub, t_sub=t_sub)
 
     # tall half blocks
     U['diag_skew']['thalf'],\
@@ -370,9 +440,10 @@ cpdef overlapping_batch_decompose(const int d1,
                                                           :hbwidth, :],
                                                         Y[hbheight:d1-hbheight,
                                                           d2-hbwidth:, :]]),
-                                             bheight, hbwidth, lambda_tv, 
-                                             spatial_thresh, max_components, 
-                                             consec_failures, max_iters, tol)
+                                             bheight, hbwidth, max_components, 
+                                             consec_failures, 
+                                             max_iters_main, max_iters_init, 
+                                             tol, d_sub=d_sub, t_sub=t_sub)
 
     # wide half blocks
     U['diag_skew']['whalf'],\
@@ -385,9 +456,10 @@ cpdef overlapping_batch_decompose(const int d1,
                                                         Y[d1-hbheight:,
                                                           hbwidth:d2-hbwidth,
                                                           :]]),
-                                             hbheight, bwidth, lambda_tv,
-                                             spatial_thresh, max_components, 
-                                             consec_failures, max_iters, tol) 
+                                             hbheight, bwidth, max_components, 
+                                             consec_failures,
+                                             max_iters_main, max_iters_init, 
+                                             tol, d_sub=d_sub, t_sub=t_sub) 
 
     # Corners
     U['diag_skew']['quarter'],\
@@ -408,9 +480,10 @@ cpdef overlapping_batch_decompose(const int d1,
                                                                  d2-hbwidth:,
                                                                  :]])
                                                                ]),
-                                                hbheight, hbwidth, lambda_tv, 
-                                                spatial_thresh, max_components, 
-                                                consec_failures, max_iters, tol)
+                                                hbheight, hbwidth, max_components, 
+                                                consec_failures, 
+                                                max_iters_main, max_iters_init, 
+                                                tol, d_sub=d_sub, t_sub=t_sub)
 
     # Return Weighting Matrix For Reconstruction
     return U, V, K, I, W
