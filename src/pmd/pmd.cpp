@@ -396,7 +396,6 @@ double update_spatial(const MKL_INT d1,
 
     /* u_{k+1} <- argmin_u ||u_{k+1} - u||_2^2 + 2* lambda_tv ||u||_TV */
     constrained_denoise_spatial(d1, d2, u_k, lambda_tv);
-    //denoise_spatial(d1, d2, u_k, lambda_tv);
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, u__);
@@ -680,6 +679,7 @@ int rank_one_decomposition(const MKL_INT d1,
     double lambda_tf = 0;  /* Signal To Use Heuristic As First Guess */
     double lambda_tv = .0025;  /* First Guess For Constrained Problem */
     double *z_k = (double *) malloc((t-2) * sizeof(double));
+    double *v_tmp = (double *) malloc(t * sizeof(double));
     initvec(t-2, z_k, 0.0); 
 
     /* Intialize Components With Power Method Iters */
@@ -718,26 +718,33 @@ int rank_one_decomposition(const MKL_INT d1,
         if (fmax(delta_u, delta_v) < tol){    
             /* Free Allocated Memory & Test Spatial Component Against Null */
             free(z_k);
-            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh) 
+            free(v_tmp);   
+            regress_temporal(d, t, R_k, u_k, v_k); // debias
+            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh || temporal_test_statistic(t, v_k) > 2.25) 
                 return -1;  // Discard Component
             return 1;  // Keep Component
         }
 
         /* Preemptive Check To See If We're Fitting Noise */
         if (iters == 5){
-            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh){         
+            copy(t, v_k, v_tmp);
+            regress_temporal(d, t, R_k, u_k, v_k);
+            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh || temporal_test_statistic(t, v_k) > 2.25){         
                 /* Free Allocated Memory & Return */
+                free(v_tmp);   
                 free(z_k); 
                 return -1; // Discard Component
             } 
+            copy(t, v_tmp, v_k);
         }    
     }
 
     /* MAXITER EXCEEDED: Free Memory & Test Spatial Component Against Null */
     free(z_k);
-    if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh){ 
+    free(v_tmp);   
+    regress_temporal(d, t, R_k, u_k, v_k);
+    if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh || temporal_test_statistic(t, v_k) > 2.25) 
         return -1;  // Discard Component
-    }
     return 1;  // Keep Component
 }
 
@@ -823,7 +830,7 @@ size_t pmd(const MKL_INT d1,
             }
         }
         /* Debias Components */
-        regress_temporal(d, t, R, U + good*d, V + good*t);
+        /* regress_temporal(d, t, R, U + good*d, V + good*t); Debiasing moved to ROD*/
 
         /* Update Full Residual: R_k <- R_k - U[:,k] V[k,:] */
         cblas_dger(CblasColMajor, d, t, -1.0, U + good*d, 1, V + good*t, 1, R, d);

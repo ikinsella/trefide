@@ -59,7 +59,7 @@ cpdef double[:, ::1] welch_psd_estimate(double[:, ::1] signal,
     cdef size_t ncoef = <size_t> floor(nsamp / 2) + 1
 
     # Allocate & Init PSD Coefs (IMPORTANT: Pxx must be init'd to 0)
-    cdef double[:, ::1] pxx = np.zeros((nchan, ncoef), dtype=np.int64)
+    cdef double[:, ::1] pxx = np.zeros((nchan, ncoef), dtype=np.float64)
 
     # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
     # TODO: modify cpp implementation for more efficient multichannel estimation
