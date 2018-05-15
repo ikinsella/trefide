@@ -148,7 +148,7 @@ double estimate_noise_tv_op(const MKL_INT d1,
 double estimate_noise_mean_filter(const int rows, const int cols, double* image)
 {
     /* Internal Variables */
-    int n = 3;
+    int n = 5;
     double var_hat;
     double* mses = (double *) malloc(rows * cols * sizeof(double));
 
@@ -223,7 +223,7 @@ double estimate_noise_median_filter(const int rows, const int cols, double* imag
 
     /* Sort Local MSES & Return Median */
     std::sort(mses, mses + (rows * cols));
-    var_hat = mses[(rows*cols)/3];
+    var_hat = mses[(rows*cols)/2];
     free(mses);
     free(pixel_values);
     return var_hat;
@@ -290,13 +290,14 @@ void constrained_denoise_spatial(const MKL_INT d1,
 
     /* Declar & Initialize Internal Variables */
     short status;
-    double delta; //, norm_u;
+    double delta;
     double* target = (double *) malloc(d1 * d2 * sizeof(double));
     double* info = (double *) malloc(3 * sizeof(double));
     copy(d1*d2, u_k, target);
 
     /* Compute Noise Level */
     delta = estimate_noise_mean_filter(d1,d2,u_k);
+    /*delta = estimate_noise_median_filter(d1,d2,u_k);*/
     if (delta > 0){
         /* u_k <- argmin_u ||u_k - u|| + 2*lambda_tv ||u||TV */
         status = cps_tv(d1, d2, target, delta, u_k, lambda_tv, info);
