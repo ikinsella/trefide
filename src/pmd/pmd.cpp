@@ -590,9 +590,10 @@ double spatial_test_statistic(const MKL_INT d1,
     //return norm_tv / (d1 * (d2 - 1) + d2 * (d1- 1));
     /* Return Test Statistic */
     if (norm_tv > 0){
-        return norm_l1 / norm_tv;
+        return (norm_tv * (d1 * d2)) / (norm_l1 * (d1 * (d2-1) + d2 * (d1-1)));
+
     } else{
-        return 0; // Spatial component constant => garbage
+        return 100; // Spatial component constant => garbage
     }
 }
 
@@ -619,7 +620,7 @@ double temporal_test_statistic(const MKL_INT t,
     if (norm_l1 > 0){
         return norm_tf / norm_l1;
     } else{
-        return 0; // temporal component constant => garbage
+        return 100; // temporal component constant => garbage
     }
 }
 
@@ -664,6 +665,7 @@ int rank_one_decomposition(const MKL_INT d1,
                            double* v_k,
                            double* v_init,
                            const double spatial_thresh,
+                           const double temporal_thresh,
                            const MKL_INT max_iters_main,
                            const MKL_INT max_iters_init,
                            const double tol,
@@ -720,7 +722,7 @@ int rank_one_decomposition(const MKL_INT d1,
             free(z_k);
             free(v_tmp);   
             regress_temporal(d, t, R_k, u_k, v_k); // debias
-            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh || temporal_test_statistic(t, v_k) > 2.25) 
+            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) 
                 return -1;  // Discard Component
             return 1;  // Keep Component
         }
@@ -729,7 +731,7 @@ int rank_one_decomposition(const MKL_INT d1,
         if (iters == 5){
             copy(t, v_k, v_tmp);
             regress_temporal(d, t, R_k, u_k, v_k);
-            if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh || temporal_test_statistic(t, v_k) > 2.25){         
+            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh){         
                 /* Free Allocated Memory & Return */
                 free(v_tmp);   
                 free(z_k); 
@@ -743,7 +745,7 @@ int rank_one_decomposition(const MKL_INT d1,
     free(z_k);
     free(v_tmp);   
     regress_temporal(d, t, R_k, u_k, v_k);
-    if (spatial_test_statistic(d1, d2, u_k) < spatial_thresh || temporal_test_statistic(t, v_k) > 2.25) 
+    if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) 
         return -1;  // Discard Component
     return 1;  // Keep Component
 }
@@ -761,6 +763,8 @@ size_t pmd(const MKL_INT d1,
            double* R_ds,
            double* U,
            double* V,
+           const double spatial_thresh,
+           const double temporal_thresh,
            const size_t max_components,
            const size_t consec_failures,
            const MKL_INT max_iters_main,
@@ -773,7 +777,8 @@ size_t pmd(const MKL_INT d1,
     int max_keep_flag;
     size_t i, k, good = 0;
     MKL_INT d = d1 * d2;
-    double spatial_thresh = (double) d1 * d2 / (d1 * (d2-1) + d2 * (d1-1));
+    /*double spatial_thresh = 1.0; TODO: Hyp Testing*/
+    /*double temporal_thresh = 2.25; TODO: Hyp Testing*/
     
     /* Assign/Allocate Init Vars Based On Whether Or Not We Are Decimating */
     double *R_init, *u_init, *v_init;
@@ -810,6 +815,7 @@ size_t pmd(const MKL_INT d1,
                                                                 V + good*t, 
                                                                 v_init, 
                                                                 spatial_thresh, 
+                                                                temporal_thresh,
                                                                 max_iters_main, 
                                                                 max_iters_init,
                                                                 tol, FFT);
@@ -884,6 +890,8 @@ void batch_pmd(const MKL_INT bheight,
                double** Up,
                double** Vp,
                size_t* K,
+               const double spatial_thresh,
+               const double temporal_thresh,
                const size_t max_components,
                const size_t consec_failures,
                const size_t max_iters_main,
@@ -907,6 +915,7 @@ void batch_pmd(const MKL_INT bheight,
         //Use dummy vars for decomposition  
         K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
                    Rp[m], Rp_ds[m], Up[m], Vp[m], 
+                   spatial_thresh, temporal_thresh,
                    max_components, consec_failures,
                    max_iters_main, max_iters_init, tol, &FFT);
     }
