@@ -396,7 +396,7 @@ double update_spatial(const MKL_INT d1,
     regress_spatial(d, t, R_k, u_k, v_k);
 
     /* u_{k+1} <- argmin_u ||u_{k+1} - u||_2^2 + 2* lambda_tv ||u||_TV */
-    constrained_denoise_spatial(d1, d2, u_k, lambda_tv);
+    constrained_denoise_spatial(d1, d2, u_k, lambda_tv); 
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, u__);
@@ -778,8 +778,6 @@ size_t pmd(const MKL_INT d1,
     int max_keep_flag;
     size_t i, k, good = 0;
     MKL_INT d = d1 * d2;
-    /*double spatial_thresh = 1.0; TODO: Hyp Testing*/
-    /*double temporal_thresh = 2.25; TODO: Hyp Testing*/
     
     /* Assign/Allocate Init Vars Based On Whether Or Not We Are Decimating */
     double *R_init, *u_init, *v_init;
@@ -911,7 +909,7 @@ void batch_pmd(const MKL_INT bheight,
 
     // Loop Over All Patches In Parallel
     int m;
-    #pragma omp parallel for shared(FFT) schedule(dynamic)
+    #pragma omp parallel for shared(FFT) schedule(guided)
     for (m = 0; m < b; m++){
         //Use dummy vars for decomposition  
         K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
