@@ -926,3 +926,53 @@ cpdef overlapping_pca_decompose(const int d1,
 
     # Return Weighting Matrix For Reconstruction
     return U, V, K, I, W
+
+
+# Temporary TODO: Optimize, streamline, & add more options (multiple simulations when block size large relative to FOV)
+import matplotlib.pyplot as plt
+
+def determine_thresholds(mov_dims, block_dims, num_components,
+                         max_iters_main, max_iters_init, tol, 
+                         d_sub, t_sub, conf, plot):
+    
+    # Simulate Noise Movie
+    noise_mov = np.ascontiguousarray(np.reshape(np.random.randn(np.prod(mov_dims)), mov_dims))
+    
+    # Perform Blockwise PMD Of Noise Matrix In Parallel
+    spatial_components,\
+    temporal_components,\
+    block_ranks,\
+    block_indices = batch_decompose(mov_dims[0], mov_dims[1], mov_dims[2],
+                                    noise_mov, block_dims[0], block_dims[1],
+                                    1e3, 1e3,
+                                    num_components, num_components,
+                                    max_iters_main, max_iters_init, tol,
+                                    d_sub=d_sub, t_sub=t_sub)
+    
+    # Gather Test Statistics
+    spatial_stat = []
+    temporal_stat = []
+    num_blocks = int((mov_dims[0] / block_dims[0]) * (mov_dims[1] / block_dims[1]))
+    for block_idx in range(num_blocks): 
+        for k in range(int(block_ranks[block_idx])):
+            spatial_stat.append(spatial_test_statistic(spatial_components[block_idx,:,:,k]))
+            temporal_stat.append(temporal_test_statistic(temporal_components[block_idx,k,:]))
+
+    # Compute Thresholds
+    spatial_thresh =  np.percentile(spatial_stat, conf)
+    temporal_thresh = np.percentile(temporal_stat, conf)
+    
+    if plot:
+        fig, ax = plt.subplots(2,2,figsize=(8,8))
+        ax[0,0].scatter(spatial_stat, temporal_stat, marker='x', c='r', alpha = .2)
+        ax[0,0].axvline(spatial_thresh)
+        ax[0,0].axhline(temporal_thresh)
+        ax[0,1].hist(temporal_stat, bins=20, color='r')
+        ax[0,1].axvline(temporal_thresh)
+        ax[0,1].set_title("Temporal Threshold: {}".format(temporal_thresh))
+        ax[1,0].hist(spatial_stat, bins=20, color='r')
+        ax[1,0].axvline(spatial_thresh)
+        ax[1,0].set_title("Spatial Threshold: {}".format(spatial_thresh))
+        plt.show()
+    
+    return spatial_thresh, temporal_thresh
