@@ -6,13 +6,15 @@
 
 import os
 import time
+import multiprocessing
 
 import numpy as np
 cimport numpy as np
 
 from cython.parallel import parallel, prange
 from libc.stdlib cimport abort, calloc, malloc, free
-from sklearn.utils.extmath import randomized_svd as svd # TODO: PCA comparisons
+from sklearn.utils.extmath import randomized_svd as svd
+from functools import partial
 
 FOV_BHEIGHT_WARNING = "Input FOV height must be an evenly divisible by block height."
 FOV_BWIDTH_WARNING = "Input FOV width must be evenly divisible by block width." 
@@ -654,6 +656,38 @@ cpdef temporal_test_statistic(signal):
     return np.sum(np.abs(signal[2:] + signal[:-2] - 2*signal[1:-1])) / np.sum(np.abs(signal))
 
 
+cpdef pca_patch(R, bheight=None, bwidth=None, num_frames=None, spatial_thresh=None, temporal_thresh=None, 
+                max_components=50, consec_failures=3, n_iter=7):
+    """ """
+    
+    # Preallocate Space For Outputs
+    U = np.zeros((bheight*bwidth, max_components), dtype=np.float64)
+    V = np.zeros((max_components, num_frames), dtype=np.float64)
+
+    if np.sum(np.abs(R)) <= 0:
+        return U, V, 0
+    # Run SVD on the patch
+    Ub, sb, Vtb = svd(R, n_components=max_components, n_iter=n_iter)
+
+    # Iteratively Test & discard components
+    fails = 0
+    K = 0
+    for k in range(max_components):
+        spatial_stat = spatial_test_statistic(Ub[:,k].reshape((bheight,bwidth), order='F'))
+        temporal_stat = temporal_test_statistic(Vtb[k,:])
+        if (spatial_stat > spatial_thresh or
+            temporal_stat > temporal_thresh):
+            fails += 1
+            if fails >= consec_failures:
+                break
+        else:
+            U[:,K] = Ub[:,k]
+            V[K,:] = Vtb[k,:] * sb[k]
+            fails = 0
+            K += 1
+    return U, V, K
+
+
 cpdef pca_decompose(const int d1,
                     const int d2,
                     const int t,
@@ -681,46 +715,37 @@ cpdef pca_decompose(const int d1,
     # Compute block-start indices and spatial cutoff
     indices = np.transpose([np.tile(range(nbi), nbj), np.repeat(range(nbj), nbi)])
 
-    # Preallocate Space For Outputs
-    U = np.zeros((num_blocks, bheight * bwidth, max_components), dtype=np.float64)
-    V = np.zeros((num_blocks, max_components, t), dtype=np.float64)
-    R = np.zeros((num_blocks, bheight * bwidth, t), dtype=np.float64)
-    K = np.zeros((num_blocks,), dtype=np.uint64)
-
     cdef size_t good, fails
     cdef double spatial_stat
     cdef double temporal_stat
+
+    # Copy Residual For Multiprocessing
+    R = []
     for bj in range(nbj):
         for bi in range(nbi):
-            b = bi + (bj * nbi)
-            # Run SVD on each block
-            Ub, sb, Vtb = svd(np.reshape(Y[(bi * bheight):((bi+1) * bheight),
-                                           (bj * bwidth):((bj+1) * bwidth), :],
-                                         (bheight*bwidth, t),
-                                         order='F'),
-                              n_components=max_components,
-                              n_iter=7)
-            # Iteratively Test & discard components
-            fails = 0
-            good = 0
-            for k in range(max_components):
-                spatial_stat = spatial_test_statistic(Ub[:,k].reshape((bheight,bwidth), order='F'))
-                temporal_stat = temporal_test_statistic(Vtb[k,:])
-                if (spatial_stat > spatial_thresh or
-                    temporal_stat > temporal_thresh):
-                    fails += 1
-                    if fails >= consec_failures:
-                        break
-                else:
-                    U[b,:,good] = Ub[:,k]
-                    V[b,good,:] = Vtb[k,:] * sb[k]
-                    fails = 0
-                    good += 1
-            K[b] = good
-    
+            R.append(np.reshape(Y[(bi * bheight):((bi+1) * bheight),
+                                  (bj * bwidth):((bj+1) * bwidth), :],
+                                (bheight*bwidth, t), order='F'))
+
+    # Process In Parallel
+    try:
+        pool = multiprocessing.Pool(multiprocessing.cpu_count())
+        results = pool.map(partial(pca_patch, 
+                                   bheight=bheight, bwidth=bwidth, num_frames=t,
+                                   spatial_thresh=spatial_thresh, 
+                                   temporal_thresh=temporal_thresh,
+                                   max_components=max_components, 
+                                   consec_failures=consec_failures),
+                           R)
+    finally:
+        pool.close()
+        pool.join()
+
+
     # Format Components & Return To Numpy Array
-    return (U.reshape((num_blocks, bheight, bwidth, max_components), order='F'),
-            V, K, indices.astype(np.uint64))
+    U, V, K = zip(*results) 
+    return (np.array(U).reshape((num_blocks, bheight, bwidth, max_components), order='F'),
+            np.array(V), np.array(K).astype(np.uint64), indices.astype(np.uint64))
 
     
 cpdef overlapping_pca_decompose(const int d1, 
