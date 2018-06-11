@@ -56,4 +56,4 @@ The project can be uninstalled from an active python environment at any time by 
 
 ## References:
 - [preprint](https://www.biorxiv.org/content/early/2018/06/03/334706.article-info)
-- slack channel (coming)
+- support [slack channel](https://join.slack.com/t/trefide/shared_invite/enQtMzc5NDM4MDk4OTgxLWE0NjNhZGE5N2VlMTcxNGEwODhkMmFlMjcyYmIzYTdkOGVkYThhNjdkMzEyZmM1NzIzYzc0NTZkYmVjMDY5ZTg)
