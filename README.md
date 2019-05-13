@@ -2,6 +2,8 @@
 
 ## Install using conda
 
+This installation method is supported and tested only on Ubuntu 18.04.
+
 It is recommended to use [conda](https://www.anaconda.com/) to manage the 
 dependencies for TreFiDe in it's own Python environment.
 First, download and install [conda](https://www.anaconda.com/distribution/). Verify conda installation
@@ -12,11 +14,12 @@ conda list
 
 <!-- pytorch only requires nvidia driver, doesn't require to install cuda. -->
 Create a new environment for TreFiDe and install TreFiDe software and all of its dependencies. 
-Currently, this installation method is supported and tested only on Ubuntu 18.04.
+
 ```
 conda create -n trefide python=3.6 trefide -c jw3132 -c intel
 ```
 
+Download `Demo` folder. Follow the notebook scripts in `Demo` folder to try out TreFiDe.
 
 
 ## Install from source
