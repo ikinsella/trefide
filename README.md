@@ -1,6 +1,25 @@
 # TreFiDe - Trend Filter Denoising
 
-## Setup
+## Install using conda
+
+It is recommended to use [conda](https://www.anaconda.com/) to manage the 
+dependencies for TreFiDe in it's own Python environment.
+First, download and install [conda](https://www.anaconda.com/distribution/). Verify conda installation
+by executing the following scripts. A list of base environment packages will be displayed.
+```
+conda list
+```
+
+<!-- pytorch only requires nvidia driver, doesn't require to install cuda. -->
+Create a new environment for TreFiDe and install TreFiDe software and all of its dependencies. 
+Currently, this installation method is supported and tested only on Ubuntu 18.04.
+```
+conda create -n trefide python=3.6 trefide -c jw3132 -c intel
+```
+
+
+
+## Install from source
 
 ### Dependencies:
 - A Linux OS, Ubuntu 16.04 recommended (Installation support for MacOS and Windows coming);
