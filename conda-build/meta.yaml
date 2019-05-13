@@ -1,0 +1,48 @@
+package:
+  name: trefide
+  version: "1.0"
+
+source:
+  path: ../
+
+build:
+  number: 0
+  
+requirements:
+  build:
+    - python=3.6
+    - numpy
+    - scipy
+    - matplotlib
+    - mkl
+    - mkl-devel
+    - mkl-include
+    - jupyterlab
+    - opencv
+    - cython
+    - icc_rt
+    - scikit-learn
+
+  run:
+    - python=3.6
+    - numpy
+    - scipy
+    - matplotlib
+    - mkl
+    - mkl-devel
+    - mkl-include
+    - jupyterlab
+    - opencv
+    - cython
+    - icc_rt
+    - scikit-learn
+
+#test:
+#  imports:
+#    - from trefide.utils import psd_noise_estimate
+
+about:
+  home: https://github.com/ikinsella/trefide
+  license: GPL
+  license_family: GPL3
+  license_file: LICENSE

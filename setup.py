@@ -12,6 +12,10 @@ from Cython.Distutils import build_ext
 DEPENDENCIES = ["numpy", "scipy", "cython", "matplotlib"]
 
 TREFIDE = os.getcwd()
+os.environ["LDSHARED"]="icc -shared"
+os.environ["CC"] = "icc"
+os.environ["CXX"] = "icpc"
+
 
 # We compile against intel mkl will need an intel MKL Disto:
 LIBRARIES = ["mkl_core",          # Used for FFT, Vector Math, CBLAS, Lapacke, ect...
