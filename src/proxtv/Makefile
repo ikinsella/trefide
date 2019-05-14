@@ -31,12 +31,14 @@ SRCS = condat_fast_tv.cpp johnsonRyanTV.cpp TVL1opt_kolmogorov.cpp LPopt.cpp TV2
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 # Compiler Dependent Environment Variables 
-ifeq ($(CC), gcc)
+
+ifeq ($(CXX),)
     CXX = g++
-    CXXFLAGS = -O3 -fPIC -I$(CONDA_PREFIX)/include -L$(CONDA_PREFIX)/lib -D NOMATLAB=1
-else
-    CXX = icpc
+endif
+ifeq ($(CXX), icpc)
     CXXFLAGS = -mkl=sequential -O3 -fPIC -D NOMATLAB=1
+else
+    CXXFLAGS = -O3 -fPIC -I$(CONDA_PREFIX)/include -L$(CONDA_PREFIX)/lib -D NOMATLAB=1
 endif
 
 # Recipes

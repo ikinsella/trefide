@@ -28,8 +28,8 @@ IDIR=../include/
 TARGET=lib/libglmgen${EXT}
 
 # Compiler Dependent Environment Variables 
-ifneq ($(CC), gcc)
-    CC = icc
+ifneq ($(CC),)
+    CC = gcc
 endif
 CFLAGS=-O3 -Wall -Wextra -ansi -std=c89 -pedantic
 CFLAGS2=-O3

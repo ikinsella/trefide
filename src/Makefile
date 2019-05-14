@@ -33,14 +33,13 @@ SRCS = utils/welch.cpp proxtf/wpdas.cpp proxtf/line_search.cpp proxtf/utils.cpp 
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 # Compiler Dependent Environment Variables 
-ifeq ($(CC), gcc)
+ifeq ($(CXX),)
     CXX = g++
-    CXXFLAGS = -fopenmp -O3 -fPIC -I$(PROXTV) -I$(CONDA_PREFIX)/include -I$(GLMGEN)/include -L$(PROXTV) -L$(GLMGEN)/lib -L$(CONDA_PREFIX)/lib -D NOMATLAB=1
-
-else
-    CXX = icpc
+endif
+ifeq ($(CXX), icpc)
     CXXFLAGS = -mkl=sequential -qopenmp -O3 -fPIC -I$(PROXTV) -I$(GLMGEN)/include -L$(PROXTV) -L$(GLMGEN)/lib -D NOMATLAB=1
-
+else
+    CXXFLAGS = -fopenmp -O3 -fPIC -I$(PROXTV) -I$(CONDA_PREFIX)/include -I$(GLMGEN)/include -L$(PROXTV) -L$(GLMGEN)/lib -L$(CONDA_PREFIX)/lib -D NOMATLAB=1
 endif
 
 # Recipes

@@ -39,9 +39,8 @@ LINK_ARGS = ["-L" + os.path.join(CONDA_PREFIX, "lib"),
              "-L"+os.path.join(TREFIDE, "src", "glmgen", "lib")]  # Location of libglmgen.so (Add to $LD_LIBRARY_PATH)
 
 # Defaults To Using Intel icc/icpc Compilers
-if not os.getenv("CC", False):
-    os.environ["CC"] = "icc"
-    os.environ["CXX"] = "icpc"
+os.environ["CC"] = os.getenv("CC", "gcc")
+os.environ["CXX"] = os.getenv("CXX", "g++")
 
 # Compiler Specific Args
 if os.environ["CC"] == "icc":
