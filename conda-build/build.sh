@@ -1,5 +1,3 @@
-
-
 #conda install pytorch torchvision cudatoolkit=10.0 -c pytorch
 
 
@@ -18,7 +16,4 @@ cp ./proxtv/libproxtv.so $CONDA_PREFIX/lib/
 cp ./proxtv/proxtv.h $CONDA_PREFIX/include/
 cd ../
 
-export LDSHARED="icc -shared"
-export CC=icc
-export CXX=icpc
-$PYTHON setup.py install     # Python command to install the script.
+$PYTHON setup.py install  # Python command to install the script.

@@ -3,43 +3,33 @@ package:
   version: "1.0"
 
 source:
-  path: ../
+  git_url: https://github.com/ikinsella/trefide.git
 
 build:
   number: 0
   
 requirements:
   build:
-    - python=3.6
-    - numpy
-    - scipy
-    - matplotlib
-    - mkl
-    - mkl-devel
-    - mkl-include
-    - jupyterlab
-    - opencv
-    - cython
-    - icc_rt
-    - scikit-learn
+    - intel::python>=3.6
+    - intel::numpy
+    - intel::scipy
+    - intel::matplotlib
+    - intel::mkl-devel {{ mkl }}
+    - intel::cython=0.27.3
 
   run:
-    - python=3.6
-    - numpy
-    - scipy
-    - matplotlib
-    - mkl
-    - mkl-devel
-    - mkl-include
-    - jupyterlab
-    - opencv
-    - cython
-    - icc_rt
-    - scikit-learn
+    - intel::python>=3.6
+    - intel::numpy
+    - intel::scipy
+    - intel::matplotlib
+    - intel::mkl {{ mkl }}
+    - intel::jupyter
+    - intel::scikit-learn
+    - menpo::opencv3
 
-#test:
-#  imports:
-#    - from trefide.utils import psd_noise_estimate
+test:
+    #  imports:
+    #- trefide.pmd
 
 about:
   home: https://github.com/ikinsella/trefide
