@@ -871,7 +871,7 @@ size_t pmd(const MKL_INT d1,
     }
     free(keep_flag);
     return good; 
-    return k;
+//    return k;
 }
 
 

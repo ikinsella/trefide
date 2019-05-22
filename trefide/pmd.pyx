@@ -15,6 +15,7 @@ from cython.parallel import parallel, prange
 from libc.stdlib cimport abort, calloc, malloc, free
 from sklearn.utils.extmath import randomized_svd as svd
 from functools import partial
+import matplotlib.pyplot as plt
 
 FOV_BHEIGHT_WARNING = "Input FOV height must be an evenly divisible by block height."
 FOV_BWIDTH_WARNING = "Input FOV width must be evenly divisible by block width." 
@@ -130,7 +131,6 @@ cpdef size_t decimated_decompose(const int d1,
 # -----------------------------------------------------------------------------#
 # --------------------------- Multi-Block Wrappers ----------------------------#
 # -----------------------------------------------------------------------------#
-
 
 cpdef batch_decompose(const int d1, 
                       const int d2, 
@@ -928,12 +928,15 @@ cpdef overlapping_pca_decompose(const int d1,
     return U, V, K, I, W
 
 
-# Temporary TODO: Optimize, streamline, & add more options (multiple simulations when block size large relative to FOV)
-import matplotlib.pyplot as plt
+# Temporary TODO: Optimize, streamline, & add more options (multiple simulations when block
+#  size large relative to FOV)
 
-def determine_thresholds(mov_dims, block_dims, num_components,
+def determine_thresholds(mov_dims,
+                         block_dims,
+                         num_components,
                          max_iters_main, max_iters_init, tol, 
-                         d_sub, t_sub, conf, plot):
+                         d_sub, t_sub,
+                         conf, plot):
     
     # Simulate Noise Movie
     noise_mov = np.ascontiguousarray(np.reshape(np.random.randn(np.prod(mov_dims)), mov_dims))
@@ -976,3 +979,60 @@ def determine_thresholds(mov_dims, block_dims, num_components,
         plt.show()
     
     return spatial_thresh, temporal_thresh
+
+
+# -----------------------------------------------------------------------------#
+# --------------------------- Func Wrappers -----------------------------------#
+# -----------------------------------------------------------------------------#
+
+# Funct wrapper of batch_decompose & overlapping_batch_decompose, taking an extra
+# input value "overlap" (0/1) to indicate whether applying overlapping or not,
+# return the result in a tuple
+cpdef pmd_batch_decompose(const int d1,
+                          const int d2,
+                          const int t,
+                          double[:, :, ::1] Y,
+                          const int bheight,
+                          const int bwidth,
+                          const double spatial_thresh,
+                          const double temporal_thresh,
+                          const size_t max_components,
+                          const size_t consec_failures,
+                          const size_t max_iters_main,
+                          const size_t max_iters_init,
+                          const double tol,
+                          int d_sub = 1,
+                          int t_sub = 1,
+                          int overlap = 0):
+    if not overlap:
+        return (batch_decompose(d1,
+                      d2,
+                      t,
+                      Y,
+                      bheight,
+                      bwidth,
+                      spatial_thresh,
+                      temporal_thresh,
+                      max_components,
+                      consec_failures,
+                      max_iters_main,
+                      max_iters_init,
+                      tol,
+                      d_sub,
+                      t_sub))
+    else:
+        return (overlapping_batch_decompose(d1,
+                      d2,
+                      t,
+                      Y,
+                      bheight,
+                      bwidth,
+                      spatial_thresh,
+                      temporal_thresh,
+                      max_components,
+                      consec_failures,
+                      max_iters_main,
+                      max_iters_init,
+                      tol,
+                      d_sub,
+                      t_sub))
