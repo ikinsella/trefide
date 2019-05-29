@@ -4,6 +4,56 @@
 #include <mkl.h>
 #include <mkl_dfti.h>
 
+class PMD_params {
+private:
+
+    const MKL_INT bheight;
+    const MKL_INT bwidth;
+    MKL_INT d_sub;
+    const MKL_INT t;
+    MKL_INT t_sub;
+    const double spatial_thresh;
+    const double temporal_thresh;
+    const size_t max_components;
+    const size_t consec_failures;
+    const size_t max_iters_main;
+    const size_t max_iters_init;
+    const double tol;
+    void* FFT; /* Handle Provided For Threadsafe FFT */
+    bool enable_temporal_denoiser;
+    bool enable_spatial_denoiser;
+
+public:
+
+    PMD_params(
+            const MKL_INT _bheight,
+            const MKL_INT _bwidth,
+            MKL_INT _d_sub,
+            const MKL_INT _t,
+            MKL_INT _t_sub,
+            const double _spatial_thresh,
+            const double _temporal_thresh,
+            const size_t _max_components,
+            const size_t _consec_failures,
+            const size_t _max_iters_main,
+            const size_t _max_iters_init,
+            const double _tol,
+            void* _FFT,
+            bool _enable_temporal_denoiser,
+            bool _enable_spatial_denoiser);
+
+    MKL_INT get_d_sub();
+    void set_d_sub(MKL_INT _d_sub);
+    MKL_INT get_t_sub();
+    void set_t_sub(MKL_INT _t_sub);
+    void* get_FFT();
+    void set_FFT(void* _FFT);
+    bool get_enable_temporal_denoiser();
+    void set_enable_temporal_denoiser(bool _enable_temporal_denoiser);
+    bool get_enable_spatial_denoiser();
+    void set_enable_spatial_denoiser(bool _enable_spatial_denoiser);
+};
+
 double distance_inplace(const MKL_INT n, 
                         const double* x,
                         double* y);

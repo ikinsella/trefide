@@ -16,6 +16,7 @@ from libc.stdlib cimport abort, calloc, malloc, free
 from sklearn.utils.extmath import randomized_svd as svd
 from functools import partial
 import matplotlib.pyplot as plt
+from libcpp cimport bool
 
 FOV_BHEIGHT_WARNING = "Input FOV height must be an evenly divisible by block height."
 FOV_BWIDTH_WARNING = "Input FOV width must be evenly divisible by block width." 
@@ -30,6 +31,24 @@ TSUB_FRAMES_WARNING = "Num Frames must be evenly divisible by temporal downsampl
 
 
 cdef extern from "trefide.h":
+
+    cdef cppclass PMD_params:
+        PMD_params(
+            const int _bheight,
+            const int _bwidth,
+            int _d_sub,
+            const int _t,
+            int _t_sub,
+            const double _spatial_thresh,
+            const double _temporal_thresh,
+            const size_t _max_components,
+            const size_t _consec_failures,
+            const size_t _max_iters_main,
+            const size_t _max_iters_init,
+            const double _tol,
+            void *_FFT,
+            bool _enable_temporal_denoiser,
+            bool _enable_spatial_denoiser)
     
     size_t pmd(const int d1, 
                const int d2, 
@@ -74,6 +93,52 @@ cdef extern from "trefide.h":
                        const int t_sub, 
                        const double *Y, 
                        double *Y_ds) nogil
+
+# -----------------------------------------------------------------------------#
+# -------------------------- Python Wrapper -----------------------------------#
+# -----------------------------------------------------------------------------#
+
+# Wrapper class of PMD_params, for using in Python. The benefit is auto
+# deallocation.
+cdef class PMD_PARAMS_P:
+    cdef PMD_params* _thisptr
+
+    def __cinit__(self,
+                  const int _bheight,
+                  const int _bwidth,
+                  int _d_sub,
+                  const int _t,
+                  int _t_sub,
+                  const double _spatial_thresh,
+                  const double _temporal_thresh,
+                  const size_t _max_components,
+                  const size_t _consec_failures,
+                  const size_t _max_iters_main,
+                  const size_t _max_iters_init,
+                  const double _tol,
+                  bool _enable_temporal_denoiser,
+                  bool _enable_spatial_denoiser):
+        self._thisptr = new PMD_params(
+            _bheight,
+            _bwidth,
+            _d_sub,
+            _t,
+            _t_sub,
+            _spatial_thresh,
+            _temporal_thresh,
+            _max_components,
+            _consec_failures,
+            _max_iters_main,
+            _max_iters_init,
+            _tol,
+            NULL,
+            _enable_temporal_denoiser,
+            _enable_spatial_denoiser)
+
+    def _dealloc_(self):
+        if self._thisptr != NULL:
+            del self._thisptr
+
 
 # -----------------------------------------------------------------------------#
 # -------------------------- Single-Block Wrapper -----------------------------#

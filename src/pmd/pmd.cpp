@@ -8,6 +8,89 @@
 #include "../utils/welch.h"
 #include <proxtv.h>
 #include <algorithm>
+#include "pmd.h"
+
+
+/*----------------------------------------------------------------------------*
+ *--------------------------- Generic PMD Parameter PKG ----------------------*
+ *----------------------------------------------------------------------------*/
+
+
+PMD_params::PMD_params(
+        const MKL_INT _bheight,
+        const MKL_INT _bwidth,
+        MKL_INT _d_sub,
+        const MKL_INT _t,
+        MKL_INT _t_sub,
+        const double _spatial_thresh,
+        const double _temporal_thresh,
+        const size_t _max_components,
+        const size_t _consec_failures,
+        const size_t _max_iters_main,
+        const size_t _max_iters_init,
+        const double _tol,
+        void* _FFT,
+        bool _enable_temporal_denoiser,
+        bool _enable_spatial_denoiser) :
+
+        bheight(_bheight),
+        bwidth(_bwidth),
+        t(_t),
+        spatial_thresh(_spatial_thresh),
+        temporal_thresh(_temporal_thresh),
+        max_components(_max_components),
+        consec_failures(_consec_failures),
+        max_iters_main(_max_iters_main),
+        max_iters_init(_max_iters_init),
+        tol(_tol) {
+
+    this->d_sub = _d_sub;
+    this->t_sub = _t_sub;
+    this->FFT = _FFT;
+    this->enable_temporal_denoiser = _enable_temporal_denoiser;
+    this->enable_spatial_denoiser = _enable_spatial_denoiser;
+}
+
+MKL_INT PMD_params::get_d_sub() {
+    return this->d_sub;
+}
+
+void PMD_params::set_d_sub(MKL_INT _d_sub) {
+    this->d_sub = _d_sub;
+}
+
+MKL_INT PMD_params::get_t_sub() {
+    return this->t_sub;
+}
+
+void PMD_params::set_t_sub(MKL_INT _t_sub) {
+    this->t_sub = _t_sub;
+}
+
+void* PMD_params::get_FFT() {
+    return this->FFT;
+}
+
+void PMD_params::set_FFT(void *_FFT) {
+    this->FFT = _FFT;
+}
+
+bool PMD_params::get_enable_temporal_denoiser() {
+    return this->enable_temporal_denoiser;
+}
+
+void PMD_params::set_enable_temporal_denoiser(bool _enable_temporal_denoiser) {
+    this->enable_temporal_denoiser = _enable_temporal_denoiser;
+}
+
+bool PMD_params::get_enable_spatial_denoiser() {
+    return this->enable_temporal_denoiser;
+}
+
+void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser) {
+    this->enable_spatial_denoiser = _enable_spatial_denoiser;
+}
+
 
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic Helper Funcs ---------------------------*
@@ -396,7 +479,7 @@ double update_spatial(const MKL_INT d1,
     regress_spatial(d, t, R_k, u_k, v_k);
 
     /* u_{k+1} <- argmin_u ||u_{k+1} - u||_2^2 + 2* lambda_tv ||u||_TV */
-    constrained_denoise_spatial(d1, d2, u_k, lambda_tv); 
+    constrained_denoise_spatial(d1, d2, u_k, lambda_tv);  // enable to skip this step
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, u__);
@@ -436,7 +519,7 @@ void denoise_temporal(const MKL_INT t,
                       double* v_k,
                       double* z_k,
                       double* lambda_tf,
-                      void* FFT=NULL)
+                      void* FFT)
 {
     /* Declare & Allocate Local Variables */
     int iters;
@@ -521,7 +604,7 @@ double update_temporal(const MKL_INT d,
                        double* v_k,
                        double* z_k,
                        double* lambda_tf,
-                       void* FFT=NULL)
+                       void* FFT)
 {
     /* Declare & Allocate For Internal Vars */
     double delta_v;
@@ -534,7 +617,7 @@ double update_temporal(const MKL_INT d,
     regress_temporal(d, t, R_k, u_k, v_k);
 
     /* v_{k+1} <- argmin_v ||v||_TF s.t. ||v_{k+1} - v||_2^2 <= T * delta */
-    denoise_temporal(t, v_k, z_k, lambda_tf, FFT);
+    denoise_temporal(t, v_k, z_k, lambda_tf, FFT); // enable to skip
 
     /* return ||v_{k+1} - v_{k}||_2 */
     delta_v = distance_inplace(t, v_k, v__);
@@ -670,7 +753,7 @@ int rank_one_decomposition(const MKL_INT d1,
                            const MKL_INT max_iters_main,
                            const MKL_INT max_iters_init,
                            const double tol,
-                           void* FFT=NULL)
+                           void* FFT)
 {
  
     /* Declare, Allocate, & Initialize Internal Vars */
@@ -771,7 +854,7 @@ size_t pmd(const MKL_INT d1,
            const MKL_INT max_iters_main,
            const MKL_INT max_iters_init,
            const double tol,
-           void* FFT=NULL)/* Handle Provided For Threadsafe FFT */
+           void* FFT)/* Handle Provided For Threadsafe FFT */
 {
     /* Declare & Intialize Internal Vars */
     int* keep_flag = (int *) malloc(consec_failures*sizeof(int));
@@ -883,7 +966,7 @@ void batch_pmd(const MKL_INT bheight,
                MKL_INT d_sub,
                const MKL_INT t,
                MKL_INT t_sub,
-               const int b,
+               const int b, // number of batches(?)
                double** Rp, 
                double** Rp_ds, 
                double** Up,
@@ -897,7 +980,7 @@ void batch_pmd(const MKL_INT bheight,
                const size_t max_iters_init,
                const double tol)
 {
-    // Create FFT Handle So It can Be Shared Aross Threads
+    // Create FFT Handle So It can Be Shared Across Threads
     DFTI_DESCRIPTOR_HANDLE FFT;
     MKL_LONG status;
     MKL_LONG L = 256;  /* Size Of Subsamples in welch estimator */
