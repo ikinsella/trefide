@@ -48,7 +48,7 @@ cdef extern from "trefide.h":
             const double _tol,
             void *_FFT,
             bool _enable_temporal_denoiser,
-            bool _enable_spatial_denoiser)
+            bool _enable_spatial_denoiser) nogil
     
     size_t pmd(const int d1, 
                const int d2, 
@@ -86,6 +86,15 @@ cdef extern from "trefide.h":
                    const size_t max_iters_init,
                    const double tol) nogil
 
+    void batch_pmd_wrapper(
+               double** Rpt,
+               double** Rpt_ds,
+               double** Upt,
+               double** Vpt,
+               size_t* Kpt,
+               const int b,
+               PMD_params *pars) nogil
+
     void downsample_3d(const int d1, 
                        const int d2, 
                        const int d_sub, 
@@ -98,8 +107,8 @@ cdef extern from "trefide.h":
 # -------------------------- Python Wrapper -----------------------------------#
 # -----------------------------------------------------------------------------#
 
-# Wrapper class of PMD_params, for using in Python. The benefit is auto
-# deallocation.
+# Wrapper class of PMD_params, for using in Python with benefit of garbage
+# clean up.
 cdef class PMD_PARAMS_P:
     cdef PMD_params* _thisptr
 
@@ -135,7 +144,10 @@ cdef class PMD_PARAMS_P:
             _enable_temporal_denoiser,
             _enable_spatial_denoiser)
 
-    def _dealloc_(self):
+    cdef PMD_params* get_thisptr(self):
+        return self._thisptr
+
+    def __dealloc__(self):
         if self._thisptr != NULL:
             del self._thisptr
 
@@ -275,11 +287,19 @@ cpdef batch_decompose(const int d1,
                 Rp_ds[b] = NULL
 
         # Factor Blocks In Parallel
-        batch_pmd(bheight, bwidth, d_sub, t, t_sub, num_blocks, 
-                  Rp, Rp_ds, Up, Vp, &K[0], 
-                  spatial_thresh, temporal_thresh,
-                  max_components, consec_failures, 
-                  max_iters_main, max_iters_init, tol)
+        # batch_pmd(bheight, bwidth, d_sub, t, t_sub, num_blocks,
+        #           Rp, Rp_ds, Up, Vp, &K[0],
+        #           spatial_thresh, temporal_thresh,
+        #           max_components, consec_failures,
+        #           max_iters_main, max_iters_init, tol)
+
+        parms = new PMD_params(bheight, bwidth, d_sub, t, t_sub,
+                             spatial_thresh, temporal_thresh,
+                             max_components, consec_failures,
+                             max_iters_main, max_iters_init, tol,
+                             NULL, True, True)
+        batch_pmd_wrapper(Rp, Rp_ds, Up, Vp, &K[0], num_blocks, parms)
+        del parms
         
         # Free Allocated Memory
         for b in range(num_blocks):

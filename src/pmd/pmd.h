@@ -42,10 +42,20 @@ public:
             bool _enable_temporal_denoiser,
             bool _enable_spatial_denoiser);
 
+    MKL_INT get_bheight();
+    MKL_INT get_bwidth();
     MKL_INT get_d_sub();
     void set_d_sub(MKL_INT _d_sub);
+    MKL_INT get_t();
     MKL_INT get_t_sub();
     void set_t_sub(MKL_INT _t_sub);
+    double get_spatial_thresh();
+    double get_temporal_thresh();
+    size_t get_max_components();
+    size_t get_consec_failures();
+    size_t get_max_iters_main();
+    size_t get_max_iters_init();
+    double get_tol();
     void* get_FFT();
     void set_FFT(void* _FFT);
     bool get_enable_temporal_denoiser();
@@ -197,4 +207,13 @@ void batch_pmd(const MKL_INT bheight,
                const size_t max_iters,
                const size_t max_iters_ds,
                const double tol);
+
+void batch_pmd_wrapper(
+               double** Rp,
+               double** Rp_ds,
+               double** Up,
+               double** Vp,
+               size_t* K,
+               const int b,
+               PMD_params *pars)
 #endif /* PMD_H */

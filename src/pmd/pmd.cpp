@@ -1007,3 +1007,46 @@ void batch_pmd(const MKL_INT bheight,
     if (status != 0)
         fprintf(stderr, "Error while deallocating MKL_FFT Handle: %ld\n", status);
 }
+
+
+void batch_pmd_wrapper(
+               double** Rp,
+               double** Rp_ds,
+               double** Up,
+               double** Vp,
+               size_t* K,
+               const int b,
+               PMD_params *pars)
+{
+    MKL_INT bheight = pars->get_bheight();
+    MKL_INT bwidth = pars->get_bwidth();
+    MKL_INT d_sub = pars->get_d_sub();
+    MKL_INT t = pars->get_t();
+    MKL_INT t_sub = pars->get_t_sub();
+    double spatial_thresh = pars->get_spatial_thresh();
+    double temporal_thresh = pars->get_temporal_thresh();
+    size_t max_components = pars->get_max_components();
+    size_t consec_failures = pars->get_consec_failures();
+    size_t max_iters_main = pars->get_max_iters_main();
+    size_t max_iters_init = pars->get_max_iters_init();
+    double tol = pars->get_tol();
+
+    batch_pmd(bheight,
+                   bwidth,
+                   d_sub,
+                   t,
+                   t_sub,
+                   b, // number of batches(?)
+                   Rp,
+                   Rp_ds,
+                   Up,
+                   Vp,
+                   K,
+                   spatial_thresh,
+                   temporal_thresh,
+                   max_components,
+                   consec_failures,
+                   max_iters_main,
+                   max_iters_init,
+                   tol);
+}
