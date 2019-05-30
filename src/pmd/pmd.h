@@ -189,31 +189,32 @@ size_t pmd(const MKL_INT d1,
            const double tol,
            void* FFT=NULL);
 
-void batch_pmd(const MKL_INT bheight,
-               const MKL_INT bwidth, 
-               MKL_INT d_sub,
-               const MKL_INT t,
-               MKL_INT t_sub,
-               const int b,
-               double** Rpt, 
-               double** Rpt_ds, 
-               double** Upt,
-               double** Vpt,
-               size_t* K,
-               const double spatial_thresh,
-               const double temporal_thresh,
-               const size_t max_components,
-               const size_t consec_failures,
-               const size_t max_iters,
-               const size_t max_iters_ds,
-               const double tol);
+//void batch_pmd(const MKL_INT bheight,
+//               const MKL_INT bwidth,
+//               MKL_INT d_sub,
+//               const MKL_INT t,
+//               MKL_INT t_sub,
+//               const int b,
+//               double** Rpt,
+//               double** Rpt_ds,
+//               double** Upt,
+//               double** Vpt,
+//               size_t* K,
+//               const double spatial_thresh,
+//               const double temporal_thresh,
+//               const size_t max_components,
+//               const size_t consec_failures,
+//               const size_t max_iters,
+//               const size_t max_iters_ds,
+//               const double tol);
 
-void batch_pmd_wrapper(
-               double** Rp,
-               double** Rp_ds,
-               double** Up,
-               double** Vp,
-               size_t* K,
-               const int b,
-               PMD_params *pars)
+void batch_pmd(
+        double** Rp,
+        double** Rp_ds,
+        double** Up,
+        double** Vp,
+        size_t* K,
+        const int b,
+        PMD_params *pars);
+
 #endif /* PMD_H */

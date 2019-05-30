@@ -67,26 +67,26 @@ cdef extern from "trefide.h":
                const int max_iters_init,
                const double tol) nogil
 
-    void batch_pmd(const int bheight,
-                   const int bwidth, 
-                   int d_sub,
-                   const int t,
-                   int t_sub,
-                   const int b,
-                   double** Rpt, 
-                   double** Rpt_ds, 
-                   double** Upt,
-                   double** Vpt,
-                   size_t* Kpt,
-                   const double spatial_thresh,
-                   const double temporal_thresh,
-                   const size_t max_components,
-                   const size_t consec_failures,
-                   const size_t max_iters_main,
-                   const size_t max_iters_init,
-                   const double tol) nogil
+    # void batch_pmd(const int bheight,
+    #                const int bwidth,
+    #                int d_sub,
+    #                const int t,
+    #                int t_sub,
+    #                const int b,
+    #                double** Rpt,
+    #                double** Rpt_ds,
+    #                double** Upt,
+    #                double** Vpt,
+    #                size_t* Kpt,
+    #                const double spatial_thresh,
+    #                const double temporal_thresh,
+    #                const size_t max_components,
+    #                const size_t consec_failures,
+    #                const size_t max_iters_main,
+    #                const size_t max_iters_init,
+    #                const double tol) nogil
 
-    void batch_pmd_wrapper(
+    void batch_pmd(
                double** Rpt,
                double** Rpt_ds,
                double** Upt,
@@ -250,7 +250,7 @@ cpdef batch_decompose(const int d1,
                              max_components, consec_failures,
                              max_iters_main, max_iters_init, tol,
                              NULL, True, True)
-        batch_pmd_wrapper(Rp, Rp_ds, Up, Vp, &K[0], num_blocks, parms)
+        batch_pmd(Rp, Rp_ds, Up, Vp, &K[0], num_blocks, parms)
         del parms
         
         # Free Allocated Memory
