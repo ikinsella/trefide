@@ -103,54 +103,6 @@ cdef extern from "trefide.h":
                        const double *Y, 
                        double *Y_ds) nogil
 
-# -----------------------------------------------------------------------------#
-# -------------------------- Python Wrapper -----------------------------------#
-# -----------------------------------------------------------------------------#
-
-# Wrapper class of PMD_params, for using in Python with benefit of garbage
-# clean up.
-cdef class PMD_PARAMS_P:
-    cdef PMD_params* _thisptr
-
-    def __cinit__(self,
-                  const int _bheight,
-                  const int _bwidth,
-                  int _d_sub,
-                  const int _t,
-                  int _t_sub,
-                  const double _spatial_thresh,
-                  const double _temporal_thresh,
-                  const size_t _max_components,
-                  const size_t _consec_failures,
-                  const size_t _max_iters_main,
-                  const size_t _max_iters_init,
-                  const double _tol,
-                  bool _enable_temporal_denoiser,
-                  bool _enable_spatial_denoiser):
-        self._thisptr = new PMD_params(
-            _bheight,
-            _bwidth,
-            _d_sub,
-            _t,
-            _t_sub,
-            _spatial_thresh,
-            _temporal_thresh,
-            _max_components,
-            _consec_failures,
-            _max_iters_main,
-            _max_iters_init,
-            _tol,
-            NULL,
-            _enable_temporal_denoiser,
-            _enable_spatial_denoiser)
-
-    cdef PMD_params* get_thisptr(self):
-        return self._thisptr
-
-    def __dealloc__(self):
-        if self._thisptr != NULL:
-            del self._thisptr
-
 
 # -----------------------------------------------------------------------------#
 # -------------------------- Single-Block Wrapper -----------------------------#
