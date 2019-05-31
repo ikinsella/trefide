@@ -51,6 +51,14 @@ PMD_params::PMD_params(
     this->enable_spatial_denoiser = _enable_spatial_denoiser;
 }
 
+MKL_INT PMD_params::get_bheight() {
+    return this->bheight;
+}
+
+MKL_INT PMD_params::get_bwidth() {
+    return this->bwidth;
+}
+
 MKL_INT PMD_params::get_d_sub() {
     return this->d_sub;
 }
@@ -59,12 +67,44 @@ void PMD_params::set_d_sub(MKL_INT _d_sub) {
     this->d_sub = _d_sub;
 }
 
+MKL_INT PMD_params::get_t() {
+    return this->t;
+}
+
 MKL_INT PMD_params::get_t_sub() {
     return this->t_sub;
 }
 
 void PMD_params::set_t_sub(MKL_INT _t_sub) {
     this->t_sub = _t_sub;
+}
+
+double PMD_params::get_spatial_thresh() {
+    return this->spatial_thresh;
+}
+
+double PMD_params::get_temporal_thresh() {
+    return this->temporal_thresh;
+}
+
+size_t PMD_params::get_max_components() {
+    return this->max_components;
+}
+
+size_t PMD_params::get_consec_failures() {
+    return this->consec_failures;
+}
+
+size_t PMD_params::get_max_iters_main() {
+    return this->max_iters_main;
+}
+
+size_t PMD_params::get_max_iters_init() {
+    return this->max_iters_init;
+}
+
+double PMD_params::get_tol() {
+    return this->tol;
 }
 
 void* PMD_params::get_FFT() {
