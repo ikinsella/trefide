@@ -838,24 +838,44 @@ int rank_one_decomposition(const MKL_INT d1,
 /* Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a (d1*d2)xT
  * column major formatted video into sptial and temporal components.
  */
-size_t pmd(const MKL_INT d1, 
-           const MKL_INT d2, 
-           MKL_INT d_sub, 
-           const MKL_INT t,
-           MKL_INT t_sub,
-           double* R, 
+//size_t pmd(const MKL_INT d1,
+//           const MKL_INT d2,
+//           MKL_INT d_sub,
+//           const MKL_INT t,
+//           MKL_INT t_sub,
+//           double* R,
+//           double* R_ds,
+//           double* U,
+//           double* V,
+//           const double spatial_thresh,
+//           const double temporal_thresh,
+//           const size_t max_components,
+//           const size_t consec_failures,
+//           const MKL_INT max_iters_main,
+//           const MKL_INT max_iters_init,
+//           const double tol,
+//           void* FFT)/* Handle Provided For Threadsafe FFT */
+
+size_t pmd(double* R,
            double* R_ds,
            double* U,
            double* V,
-           const double spatial_thresh,
-           const double temporal_thresh,
-           const size_t max_components,
-           const size_t consec_failures,
-           const MKL_INT max_iters_main,
-           const MKL_INT max_iters_init,
-           const double tol,
-           void* FFT)/* Handle Provided For Threadsafe FFT */
+           PMD_params *pars)
 {
+    MKL_INT d1 = pars->get_bheight();
+    MKL_INT d2 = pars->get_bwidth();
+    MKL_INT d_sub = pars->get_d_sub();
+    MKL_INT t = pars->get_t();
+    MKL_INT t_sub = pars->get_t_sub();
+    double spatial_thresh = pars->get_spatial_thresh();
+    double temporal_thresh = pars->get_temporal_thresh();
+    size_t max_components = pars->get_max_components();
+    size_t consec_failures = pars->get_consec_failures();
+    size_t max_iters_main = pars->get_max_iters_main();
+    size_t max_iters_init = pars->get_max_iters_init();
+    double tol = pars->get_tol();
+    void* FFT = pars->get_FFT();
+
     /* Declare & Intialize Internal Vars */
     int* keep_flag = (int *) malloc(consec_failures*sizeof(int));
     int max_keep_flag;
@@ -989,18 +1009,18 @@ void batch_pmd(
         const int b,
         PMD_params *pars)
 {
-    MKL_INT bheight = pars->get_bheight();
-    MKL_INT bwidth = pars->get_bwidth();
-    MKL_INT d_sub = pars->get_d_sub();
-    MKL_INT t = pars->get_t();
-    MKL_INT t_sub = pars->get_t_sub();
-    double spatial_thresh = pars->get_spatial_thresh();
-    double temporal_thresh = pars->get_temporal_thresh();
-    size_t max_components = pars->get_max_components();
-    size_t consec_failures = pars->get_consec_failures();
-    size_t max_iters_main = pars->get_max_iters_main();
-    size_t max_iters_init = pars->get_max_iters_init();
-    double tol = pars->get_tol();
+//    MKL_INT bheight = pars->get_bheight();
+//    MKL_INT bwidth = pars->get_bwidth();
+//    MKL_INT d_sub = pars->get_d_sub();
+//    MKL_INT t = pars->get_t();
+//    MKL_INT t_sub = pars->get_t_sub();
+//    double spatial_thresh = pars->get_spatial_thresh();
+//    double temporal_thresh = pars->get_temporal_thresh();
+//    size_t max_components = pars->get_max_components();
+//    size_t consec_failures = pars->get_consec_failures();
+//    size_t max_iters_main = pars->get_max_iters_main();
+//    size_t max_iters_init = pars->get_max_iters_init();
+//    double tol = pars->get_tol();
 
     // Create FFT Handle So It can Be Shared Across Threads
     DFTI_DESCRIPTOR_HANDLE FFT;
@@ -1014,14 +1034,17 @@ void batch_pmd(
 
     // Loop Over All Patches In Parallel
     int m;
+    pars->set_FFT((void *) &FFT);
     #pragma omp parallel for shared(FFT) schedule(guided)
     for (m = 0; m < b; m++){
         //Use dummy vars for decomposition  
-        K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
-                   Rp[m], Rp_ds[m], Up[m], Vp[m], 
-                   spatial_thresh, temporal_thresh,
-                   max_components, consec_failures,
-                   max_iters_main, max_iters_init, tol, &FFT);
+//        K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
+//                   Rp[m], Rp_ds[m], Up[m], Vp[m],
+//                   spatial_thresh, temporal_thresh,
+//                   max_components, consec_failures,
+//                   max_iters_main, max_iters_init, tol, &FFT);
+
+        K[m] = pmd(Rp[m], Rp_ds[m], Up[m], Vp[m], pars);
     }
 
     // Free MKL FFT Handle

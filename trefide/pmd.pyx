@@ -50,22 +50,29 @@ cdef extern from "trefide.h":
             bool _enable_temporal_denoiser,
             bool _enable_spatial_denoiser) nogil
     
-    size_t pmd(const int d1, 
-               const int d2, 
-               int d_sub, 
-               const int t,
-               int t_sub,
-               double* R, 
-               double* R_ds,
-               double* U,
-               double* V,
-               const double spatial_thresh,
-               const double temporal_thresh,
-               const size_t max_components,
-               const size_t consec_failures,
-               const int max_iters_main,
-               const int max_iters_init,
-               const double tol) nogil
+    # size_t pmd(const int d1,
+    #            const int d2,
+    #            int d_sub,
+    #            const int t,
+    #            int t_sub,
+    #            double* R,
+    #            double* R_ds,
+    #            double* U,
+    #            double* V,
+    #            const double spatial_thresh,
+    #            const double temporal_thresh,
+    #            const size_t max_components,
+    #            const size_t consec_failures,
+    #            const int max_iters_main,
+    #            const int max_iters_init,
+    #            const double tol) nogil
+
+    size_t pmd(
+            double* R,
+            double* R_ds,
+            double* U,
+            double* V,
+            PMD_params *pars) nogil
 
     # void batch_pmd(const int bheight,
     #                const int bwidth,
@@ -126,10 +133,19 @@ cpdef size_t decompose(const int d1,
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
     with nogil:
-        return pmd(d1, d2, 1, t, 1, &Y[0], NULL, &U[0], &V[0], 
-                   spatial_thresh, temporal_thresh,
-                   max_components, consec_failures, 
-                   max_iters_main, max_iters_init, tol)
+        # return pmd(d1, d2, 1, t, 1, &Y[0], NULL, &U[0], &V[0],
+        #            spatial_thresh, temporal_thresh,
+        #            max_components, consec_failures,
+        #            max_iters_main, max_iters_init, tol)
+
+        parms = new PMD_params(d1, d2, 1, t, 1,
+                               spatial_thresh, temporal_thresh,
+                               max_components, consec_failures,
+                               max_iters_main, max_iters_init, tol,
+                               NULL, True, True)
+        result = pmd(&Y[0], NULL, &U[0], &V[0], parms)
+        del parms
+        return result
 
 
 cpdef size_t decimated_decompose(const int d1, 
@@ -152,10 +168,21 @@ cpdef size_t decimated_decompose(const int d1,
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
     with nogil:
-        return pmd(d1, d2, d_sub, t, t_sub, &Y[0], &Y_ds[0], &U[0], &V[0], 
-                   spatial_thresh, temporal_thresh,
-                   max_components, consec_failures, 
-                   max_iters_main, max_iters_init, tol);
+        # return pmd(d1, d2, d_sub, t, t_sub, &Y[0], &Y_ds[0], &U[0], &V[0],
+        #            spatial_thresh, temporal_thresh,
+        #            max_components, consec_failures,
+        #            max_iters_main, max_iters_init, tol);
+
+        parms = new PMD_params(d1, d2, d_sub, t, t_sub,
+                               spatial_thresh, temporal_thresh,
+                               max_components, consec_failures,
+                               max_iters_main, max_iters_init, tol,
+                               NULL, True, True)
+        result = pmd(&Y[0], &Y_ds[0], &U[0], &V[0], parms)
+        del parms
+        return result
+
+
 
 # -----------------------------------------------------------------------------#
 # --------------------------- Multi-Block Wrappers ----------------------------#
