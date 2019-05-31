@@ -459,14 +459,25 @@ double update_spatial_init(const MKL_INT d,
  * normed difference between the updated spatial component and the 
  * previous iterate (used to monitor convergence).
  */
-double update_spatial(const MKL_INT d1,
-                      const MKL_INT d2,
-                      const MKL_INT t,
-                      const double *R_k,
+//double update_spatial(const MKL_INT d1,
+//                      const MKL_INT d2,
+//                      const MKL_INT t,
+//                      const double *R_k,
+//                      double* u_k,
+//                      const double* v_k,
+//                      double *lambda_tv)
+
+double update_spatial(const double *R_k,
                       double* u_k,
                       const double* v_k,
-                      double *lambda_tv)
+                      double *lambda_tv,
+                      PMD_params *pars)
 {
+    MKL_INT d1 = pars->get_bheight();
+    MKL_INT d2 = pars->get_bwidth();
+    MKL_INT t = pars->get_t();
+    bool enable_spatial_denoiser = pars->get_enable_spatial_denoiser();
+
     /* Declare & Allocate For Internal Vars */
     MKL_INT d = d1*d2;
     double delta_u;
@@ -479,7 +490,9 @@ double update_spatial(const MKL_INT d1,
     regress_spatial(d, t, R_k, u_k, v_k);
 
     /* u_{k+1} <- argmin_u ||u_{k+1} - u||_2^2 + 2* lambda_tv ||u||_TV */
-    constrained_denoise_spatial(d1, d2, u_k, lambda_tv);  // enable to skip this step
+    if (enable_spatial_denoiser) {
+        constrained_denoise_spatial(d1, d2, u_k, lambda_tv);  // enable to skip this step
+    }
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, u__);
@@ -597,15 +610,27 @@ double update_temporal_init(const MKL_INT d,
  * normed difference between the updated temporal component and the 
  * previous iterate (used to monitor convergence).
  */
+//double update_temporal(const MKL_INT d,
+//                       const MKL_INT t,
+//                       const double* R_k,
+//                       const double* u_k,
+//                       double* v_k,
+//                       double* z_k,
+//                       double* lambda_tf,
+//                       void* FFT)
+
 double update_temporal(const MKL_INT d,
-                       const MKL_INT t,
-                       const double* R_k, 
+                       const double* R_k,
                        const double* u_k,
                        double* v_k,
                        double* z_k,
                        double* lambda_tf,
-                       void* FFT)
+                       PMD_params *pars)
 {
+    MKL_INT t = pars->get_t();
+    void* FFT = pars->get_FFT();
+    bool enable_temporal_denoiser = pars->get_enable_temporal_denoiser();
+
     /* Declare & Allocate For Internal Vars */
     double delta_v;
     double* v__ = (double *) malloc(t * sizeof(double));
@@ -617,7 +642,9 @@ double update_temporal(const MKL_INT d,
     regress_temporal(d, t, R_k, u_k, v_k);
 
     /* v_{k+1} <- argmin_v ||v||_TF s.t. ||v_{k+1} - v||_2^2 <= T * delta */
-    denoise_temporal(t, v_k, z_k, lambda_tf, FFT); // enable to skip
+    if (enable_temporal_denoiser) {
+        denoise_temporal(t, v_k, z_k, lambda_tf, FFT);
+    }
 
     /* return ||v_{k+1} - v_{k}||_2 */
     delta_v = distance_inplace(t, v_k, v__);
@@ -816,8 +843,8 @@ int rank_one_decomposition(const double* R_k,
     for (iters = 0; iters < max_iters_main; iters++){
         
         /* Update Components: Regression, Denoising, & Normalization */
-        delta_u = update_spatial(d1, d2, t, R_k, u_k, v_k, &lambda_tv);
-        delta_v = update_temporal(d, t, R_k, u_k, v_k, z_k, &lambda_tf, FFT);
+        delta_u = update_spatial(R_k, u_k, v_k, &lambda_tv, pars);
+        delta_v = update_temporal(d, R_k, u_k, v_k, z_k, &lambda_tf, pars);
 
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol){    

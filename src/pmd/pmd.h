@@ -103,13 +103,19 @@ double update_spatial_init(const MKL_INT d,
                            double* u_k,
                            const double* v_k);
 
-double update_spatial(const MKL_INT d1,
-                      const MKL_INT d2,
-                      const MKL_INT t,
-                      const double *R_k,
+//double update_spatial(const MKL_INT d1,
+//                      const MKL_INT d2,
+//                      const MKL_INT t,
+//                      const double *R_k,
+//                      double* u_k,
+//                      const double* v_k,
+//                      double* lambda_tv);
+
+double update_spatial(const double *R_k,
                       double* u_k,
                       const double* v_k,
-                      double* lambda_tv);
+                      double *lambda_tv,
+                      PMD_params *pars);
 
 void regress_temporal(const MKL_INT d,
                       const MKL_INT t,
@@ -133,14 +139,22 @@ double update_temporal_init(const MKL_INT d,
                             const double* u_k,
                             double* v_k);
 
+//double update_temporal(const MKL_INT d,
+//                       const MKL_INT t,
+//                       const double* R_k,
+//                       const double* u_k,
+//                       double* v_k,
+//                       double* z_k,
+//                       double* lambda_tf,
+//                       void* FFT=NULL);
+
 double update_temporal(const MKL_INT d,
-                       const MKL_INT t,
-                       const double* R_k, 
+                       const double* R_k,
                        const double* u_k,
                        double* v_k,
                        double* z_k,
                        double* lambda_tf,
-                       void* FFT=NULL);
+                       PMD_params *pars);
 
 double spatial_test_statistic(const MKL_INT d1,
                               const MKL_INT d2,
