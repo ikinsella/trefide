@@ -737,24 +737,43 @@ void init_dual_from_primal(const MKL_INT t, const double* v,double* z){
  *      1: If we reject the null hypothesis that u_k is noise 
  *     -1: If we accept the null hypothesis that u_k is noise
  */
-int rank_one_decomposition(const MKL_INT d1, 
-                           const MKL_INT d2, 
-                           const MKL_INT d_sub,
-                           const MKL_INT t,
-                           const MKL_INT t_sub,
-                           const double* R_k, 
-                           const double* R_init, 
-                           double* u_k, 
-                           double* u_init, 
+//int rank_one_decomposition(const MKL_INT d1,
+//                           const MKL_INT d2,
+//                           const MKL_INT d_sub,
+//                           const MKL_INT t,
+//                           const MKL_INT t_sub,
+//                           const double* R_k,
+//                           const double* R_init,
+//                           double* u_k,
+//                           double* u_init,
+//                           double* v_k,
+//                           double* v_init,
+//                           const double spatial_thresh,
+//                           const double temporal_thresh,
+//                           const MKL_INT max_iters_main,
+//                           const MKL_INT max_iters_init,
+//                           const double tol,
+//                           void* FFT)
+
+int rank_one_decomposition(const double* R_k,
+                           const double* R_init,
+                           double* u_k,
+                           double* u_init,
                            double* v_k,
                            double* v_init,
-                           const double spatial_thresh,
-                           const double temporal_thresh,
-                           const MKL_INT max_iters_main,
-                           const MKL_INT max_iters_init,
-                           const double tol,
-                           void* FFT)
+                           PMD_params *pars)
 {
+    MKL_INT d1 = pars->get_bheight();
+    MKL_INT d2 = pars->get_bwidth();
+    MKL_INT d_sub = pars->get_d_sub();
+    MKL_INT t = pars->get_t();
+    MKL_INT t_sub = pars->get_t_sub();
+    double spatial_thresh = pars->get_spatial_thresh();
+    double temporal_thresh = pars->get_temporal_thresh();
+    size_t max_iters_main = pars->get_max_iters_main();
+    size_t max_iters_init = pars->get_max_iters_init();
+    double tol = pars->get_tol();
+    void* FFT = pars->get_FFT();
  
     /* Declare, Allocate, & Initialize Internal Vars */
     MKL_INT iters; 
@@ -909,18 +928,25 @@ size_t pmd(double* R,
         /* U[:,k] <- u_k, V[k,:] <- v_k' : 
          *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
          */
-        keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, d_sub, 
-                                                                t, t_sub, 
-                                                                R, R_init, 
-                                                                U + good*d, 
+//        keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, d_sub,
+//                                                                t, t_sub,
+//                                                                R, R_init,
+//                                                                U + good*d,
+//                                                                u_init,
+//                                                                V + good*t,
+//                                                                v_init,
+//                                                                spatial_thresh,
+//                                                                temporal_thresh,
+//                                                                max_iters_main,
+//                                                                max_iters_init,
+//                                                                tol, FFT);
+
+        keep_flag[k % consec_failures] = rank_one_decomposition(R, R_init,
+                                                                U + good*d,
                                                                 u_init,
-                                                                V + good*t, 
-                                                                v_init, 
-                                                                spatial_thresh, 
-                                                                temporal_thresh,
-                                                                max_iters_main, 
-                                                                max_iters_init,
-                                                                tol, FFT);
+                                                                V + good*t,
+                                                                v_init,
+                                                                pars);
 
         /* Check Component Quality: Terminate if we're fitting noise */
         if (keep_flag[k % consec_failures] < 0){
