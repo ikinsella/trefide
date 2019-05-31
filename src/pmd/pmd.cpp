@@ -84,7 +84,7 @@ void PMD_params::set_enable_temporal_denoiser(bool _enable_temporal_denoiser) {
 }
 
 bool PMD_params::get_enable_spatial_denoiser() {
-    return this->enable_temporal_denoiser;
+    return this->enable_spatial_denoiser;
 }
 
 void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser) {
