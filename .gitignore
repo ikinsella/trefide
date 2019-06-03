@@ -25,3 +25,4 @@ experiments/
 trefide.egg*
 profiling/*/
 NIPS/
+.idea
