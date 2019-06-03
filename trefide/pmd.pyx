@@ -49,23 +49,6 @@ cdef extern from "trefide.h":
             void *_FFT,
             bool _enable_temporal_denoiser,
             bool _enable_spatial_denoiser) nogil
-    
-    # size_t pmd(const int d1,
-    #            const int d2,
-    #            int d_sub,
-    #            const int t,
-    #            int t_sub,
-    #            double* R,
-    #            double* R_ds,
-    #            double* U,
-    #            double* V,
-    #            const double spatial_thresh,
-    #            const double temporal_thresh,
-    #            const size_t max_components,
-    #            const size_t consec_failures,
-    #            const int max_iters_main,
-    #            const int max_iters_init,
-    #            const double tol) nogil
 
     size_t pmd(
             double* R,
@@ -73,25 +56,6 @@ cdef extern from "trefide.h":
             double* U,
             double* V,
             PMD_params *pars) nogil
-
-    # void batch_pmd(const int bheight,
-    #                const int bwidth,
-    #                int d_sub,
-    #                const int t,
-    #                int t_sub,
-    #                const int b,
-    #                double** Rpt,
-    #                double** Rpt_ds,
-    #                double** Upt,
-    #                double** Vpt,
-    #                size_t* Kpt,
-    #                const double spatial_thresh,
-    #                const double temporal_thresh,
-    #                const size_t max_components,
-    #                const size_t consec_failures,
-    #                const size_t max_iters_main,
-    #                const size_t max_iters_init,
-    #                const double tol) nogil
 
     void batch_pmd(
                double** Rpt,
@@ -128,7 +92,9 @@ cpdef size_t decompose(const int d1,
                        const size_t consec_failures,
                        const size_t max_iters_main,
                        const size_t max_iters_init,
-                       const double tol) nogil:
+                       const double tol,
+                       bool enable_temporal_denoiser = True,
+                       bool enable_spatial_denoiser = True) nogil:
     """ Wrap the single patch cpp PMD functions """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
@@ -142,7 +108,9 @@ cpdef size_t decompose(const int d1,
                                spatial_thresh, temporal_thresh,
                                max_components, consec_failures,
                                max_iters_main, max_iters_init, tol,
-                               NULL, True, True)
+                               NULL,
+                               enable_temporal_denoiser,
+                               enable_spatial_denoiser)
         result = pmd(&Y[0], NULL, &U[0], &V[0], parms)
         del parms
         return result
@@ -163,7 +131,9 @@ cpdef size_t decimated_decompose(const int d1,
                                  const size_t consec_failures,
                                  const int max_iters_main,
                                  const int max_iters_init,
-                                 const double tol) nogil:
+                                 const double tol,
+                                 bool enable_temporal_denoiser = True,
+                                 bool enable_spatial_denoiser = True) nogil:
     """ Wrap the single patch cpp PMD functions """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
@@ -177,7 +147,9 @@ cpdef size_t decimated_decompose(const int d1,
                                spatial_thresh, temporal_thresh,
                                max_components, consec_failures,
                                max_iters_main, max_iters_init, tol,
-                               NULL, True, True)
+                               NULL,
+                               enable_temporal_denoiser,
+                               enable_spatial_denoiser)
         result = pmd(&Y[0], &Y_ds[0], &U[0], &V[0], parms)
         del parms
         return result
@@ -202,7 +174,9 @@ cpdef batch_decompose(const int d1,
                       const size_t max_iters_init,
                       const double tol,
                       int d_sub = 1,
-                      int t_sub = 1):
+                      int t_sub = 1,
+                      bool enable_temporal_denoiser = True,
+                      bool enable_spatial_denoiser = True):
     """ Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
      factor_patch with OpenMP directives to parallelize batch processing."""
 
@@ -273,10 +247,12 @@ cpdef batch_decompose(const int d1,
         #           max_iters_main, max_iters_init, tol)
 
         parms = new PMD_params(bheight, bwidth, d_sub, t, t_sub,
-                             spatial_thresh, temporal_thresh,
-                             max_components, consec_failures,
-                             max_iters_main, max_iters_init, tol,
-                             NULL, True, True)
+                               spatial_thresh, temporal_thresh,
+                               max_components, consec_failures,
+                               max_iters_main, max_iters_init, tol,
+                               NULL,
+                               enable_temporal_denoiser,
+                               enable_spatial_denoiser)
         batch_pmd(Rp, Rp_ds, Up, Vp, &K[0], num_blocks, parms)
         del parms
         
@@ -390,7 +366,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                   const size_t max_iters_init,
                                   const double tol,
                                   int d_sub=1,
-                                  int t_sub=1):
+                                  int t_sub=1,
+                                  bool enable_temporal_denoiser = True,
+                                  bool enable_spatial_denoiser = True):
     """ 4x batch denoiser """
 
     # Assert Even Blockdims
@@ -450,7 +428,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                            spatial_thresh,temporal_thresh,
                                            max_components, consec_failures, 
                                            max_iters_main, max_iters_init, 
-                                           tol, d_sub=d_sub, t_sub=t_sub)
+                                           tol, d_sub, t_sub,
+                                           enable_temporal_denoiser,
+                                           enable_spatial_denoiser)
  
     # ---------- Vertical Skew -----------
     # Full Blocks
@@ -463,7 +443,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures,
                                              max_iters_main, max_iters_init,
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # wide half blocks
     U['vert_skew']['half'],\
@@ -476,7 +458,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init,
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
     
     # --------------Horizontal Skew---------- 
     # Full Blocks
@@ -489,7 +473,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init,
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # tall half blocks
     U['horz_skew']['half'],\
@@ -502,7 +488,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # -------------Diagonal Skew---------- 
     # Full Blocks
@@ -516,7 +504,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # tall half blocks
     U['diag_skew']['thalf'],\
@@ -531,7 +521,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                              enable_temporal_denoiser,
+                                              enable_spatial_denoiser)
 
     # wide half blocks
     U['diag_skew']['whalf'],\
@@ -548,7 +540,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures,
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub) 
+                                             tol, d_sub, t_sub,
+                                              enable_temporal_denoiser,
+                                              enable_spatial_denoiser)
 
     # Corners
     U['diag_skew']['quarter'],\
@@ -573,7 +567,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                                 spatial_thresh, temporal_thresh,
                                                 max_components, consec_failures, 
                                                 max_iters_main, max_iters_init, 
-                                                tol, d_sub=d_sub, t_sub=t_sub)
+                                                tol, d_sub, t_sub,
+                                                enable_temporal_denoiser,
+                                                enable_spatial_denoiser)
 
     # Return Weighting Matrix For Reconstruction
     return U, V, K, I, W
@@ -1000,8 +996,12 @@ def determine_thresholds(mov_dims,
                          num_components,
                          max_iters_main, max_iters_init, tol, 
                          d_sub, t_sub,
-                         conf, plot):
-    
+                         conf, plot,
+                         enable_temporal_denoiser = True,
+                         enable_spatial_denoiser = True):
+
+    print("in new version code")
+
     # Simulate Noise Movie
     noise_mov = np.ascontiguousarray(np.reshape(np.random.randn(np.prod(mov_dims)), mov_dims))
     
@@ -1014,7 +1014,9 @@ def determine_thresholds(mov_dims,
                                     1e3, 1e3,
                                     num_components, num_components,
                                     max_iters_main, max_iters_init, tol,
-                                    d_sub=d_sub, t_sub=t_sub)
+                                    d_sub, t_sub,
+                                    enable_temporal_denoiser,
+                                    enable_spatial_denoiser)
     
     # Gather Test Statistics
     spatial_stat = []
@@ -1067,7 +1069,9 @@ cpdef pmd_batch_decompose(const int d1,
                           const double tol,
                           int d_sub = 1,
                           int t_sub = 1,
-                          int overlap = 0):
+                          int overlap = 0,
+                          bool enable_temporal_denoiser = True,
+                          bool enable_spatial_denoiser = True):
     if not overlap:
         return (batch_decompose(d1,
                       d2,
@@ -1083,7 +1087,9 @@ cpdef pmd_batch_decompose(const int d1,
                       max_iters_init,
                       tol,
                       d_sub,
-                      t_sub))
+                      t_sub,
+                                enable_temporal_denoiser,
+                                enable_spatial_denoiser))
     else:
         return (overlapping_batch_decompose(d1,
                       d2,
@@ -1099,4 +1105,6 @@ cpdef pmd_batch_decompose(const int d1,
                       max_iters_init,
                       tol,
                       d_sub,
-                      t_sub))
+                      t_sub,
+                                            enable_temporal_denoiser,
+                                            enable_spatial_denoiser))
