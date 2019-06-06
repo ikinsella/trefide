@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module trefide.reformat</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="trefide.html"><font color="#ffffff">trefide</font></a>.reformat</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/reformat.py">/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/reformat.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-overlapping_component_reformat"><strong>overlapping_component_reformat</strong></a>(d1, d2, t, bheight, bwidth, U, V, K, I, W)</dt><dd><tt>4x&nbsp;batch&nbsp;denoiser<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bheight:&nbsp;height&nbsp;of&nbsp;video&nbsp;block<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;width&nbsp;of&nbsp;video&nbsp;block<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
+&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;compoent&nbsp;matrix<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U_full:&nbsp;expanded&nbsp;spatial&nbsp;components&nbsp;(video&nbsp;height&nbsp;x&nbsp;video&nbsp;width&nbsp;x&nbsp;total&nbsp;ranks)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V_full:&nbsp;expanded&nbsp;temporal&nbsp;components&nbsp;(total&nbsp;ranks&nbsp;x&nbsp;frames)</tt></dd></dl>
+ <dl><dt><a name="-weighted_component_reformat"><strong>weighted_component_reformat</strong></a>(U, V, K, indices, W)</dt><dd><tt>Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;decomposed&nbsp;spatial&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;decomposed&nbsp;temporal&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indices:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;component&nbsp;matrix<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U_full:&nbsp;expanded&nbsp;spatial&nbsp;components&nbsp;(video&nbsp;height&nbsp;x&nbsp;video&nbsp;width&nbsp;x&nbsp;total&nbsp;ranks)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V_full:&nbsp;expanded&nbsp;temporal&nbsp;components&nbsp;(total&nbsp;ranks&nbsp;x&nbsp;frames)</tt></dd></dl>
+</td></tr></table>
+</body></html>

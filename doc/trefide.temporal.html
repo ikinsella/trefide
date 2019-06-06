@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module trefide.temporal</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="trefide.html"><font color="#ffffff">trefide</font></a>.temporal</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/temporal.cpython-36m-x86_64-linux-gnu.so">/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/temporal.cpython-36m-x86_64-linux-gnu.so</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="builtins.html">builtins</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="trefide.temporal.html#TrendFilter">TrendFilter</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TrendFilter">class <strong>TrendFilter</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Temporal&nbsp;denoising&nbsp;class,&nbsp;implement&nbsp;L1&nbsp;trend&nbsp;filtering<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TrendFilter-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="TrendFilter-__reduce__"><strong>__reduce__</strong></a> = __reduce_cython__(...)</dt></dl>
+
+<dl><dt><a name="TrendFilter-__setstate__"><strong>__setstate__</strong></a> = __setstate_cython__(...)</dt></dl>
+
+<dl><dt><a name="TrendFilter-denoise"><strong>denoise</strong></a>(...)</dt><dd><tt>Denoise&nbsp;an&nbsp;input&nbsp;signal,&nbsp;default&nbsp;to&nbsp;constrained&nbsp;l1tf</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>T</strong></dt>
+</dl>
+<dl><dt><strong>delta</strong></dt>
+</dl>
+<dl><dt><strong>lambda_</strong></dt>
+</dl>
+<dl><dt><strong>warm_start</strong></dt>
+</dl>
+<dl><dt><strong>weights</strong></dt>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__pyx_vtable__</strong> = &lt;capsule object NULL&gt;</dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-cps_cpdas"><strong>cps_cpdas</strong></a>(...)</dt><dd><tt>Shallow&nbsp;wrapper&nbsp;to&nbsp;call&nbsp;libtrefide&nbsp;solver</tt></dd></dl>
+ <dl><dt><a name="-lpdas"><strong>lpdas</strong></a>(...)</dt><dd><tt>Handle&nbsp;to&nbsp;weighted&nbsp;pdas&nbsp;solver&nbsp;allowing&nbsp;warm&nbsp;start&nbsp;intialization</tt></dd></dl>
+ <dl><dt><a name="-psd_noise_estimate"><strong>psd_noise_estimate</strong></a>(...)</dt><dd><tt>Estimates&nbsp;the&nbsp;variance&nbsp;of&nbsp;the&nbsp;(assumed&nbsp;to&nbsp;be&nbsp;gaussian)&nbsp;noise<br>
+contaminating&nbsp;an&nbsp;input&nbsp;signal&nbsp;by&nbsp;averaging&nbsp;over&nbsp;the&nbsp;high&nbsp;frequency&nbsp;<br>
+components&nbsp;of&nbsp;Welch's&nbsp;PSD&nbsp;Estimate&nbsp;<br>
+________<br>
+Input:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signal:&nbsp;(nchan,&nbsp;nsamp)&nbsp;np.ndarray&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Noise&nbsp;contaminated&nbsp;temporal&nbsp;signal&nbsp;(required)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(TODO:&nbsp;modify&nbsp;cpp&nbsp;implementation&nbsp;allowing&nbsp;different&nbsp;PSD&nbsp;params)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(TODO:&nbsp;modify&nbsp;cpp&nbsp;implementation&nbsp;to&nbsp;allow&nbsp;different&nbsp;types&nbsp;of&nbsp;averaging)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(TODO:&nbsp;modify&nbsp;cpp&nbsp;implementation&nbsp;to&nbsp;allow&nbsp;input&nbsp;of&nbsp;different&nbsp;freq&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ranges&nbsp;for&nbsp;averaging&nbsp;...&nbsp;currently&nbsp;[.25,.5])&nbsp;<br>
+________<br>
+Output:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vars:&nbsp;(nchan_signal,)&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Estimates&nbsp;of&nbsp;the&nbsp;noise&nbsp;variance&nbsp;contaminating&nbsp;each&nbsp;input&nbsp;channel</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__test__</strong> = {}</td></tr></table>
+</body></html>

@@ -8,6 +8,129 @@
 #include "../utils/welch.h"
 #include <proxtv.h>
 #include <algorithm>
+#include "pmd.h"
+
+
+/*----------------------------------------------------------------------------*
+ *--------------------------- Generic PMD Parameter PKG ----------------------*
+ *----------------------------------------------------------------------------*/
+
+
+PMD_params::PMD_params(
+        const MKL_INT _bheight,
+        const MKL_INT _bwidth,
+        MKL_INT _d_sub,
+        const MKL_INT _t,
+        MKL_INT _t_sub,
+        const double _spatial_thresh,
+        const double _temporal_thresh,
+        const size_t _max_components,
+        const size_t _consec_failures,
+        const size_t _max_iters_main,
+        const size_t _max_iters_init,
+        const double _tol,
+        void* _FFT,
+        bool _enable_temporal_denoiser,
+        bool _enable_spatial_denoiser) :
+
+        bheight(_bheight),
+        bwidth(_bwidth),
+        t(_t),
+        spatial_thresh(_spatial_thresh),
+        temporal_thresh(_temporal_thresh),
+        max_components(_max_components),
+        consec_failures(_consec_failures),
+        max_iters_main(_max_iters_main),
+        max_iters_init(_max_iters_init),
+        tol(_tol) {
+
+    this->d_sub = _d_sub;
+    this->t_sub = _t_sub;
+    this->FFT = _FFT;
+    this->enable_temporal_denoiser = _enable_temporal_denoiser;
+    this->enable_spatial_denoiser = _enable_spatial_denoiser;
+}
+
+MKL_INT PMD_params::get_bheight() {
+    return this->bheight;
+}
+
+MKL_INT PMD_params::get_bwidth() {
+    return this->bwidth;
+}
+
+MKL_INT PMD_params::get_d_sub() {
+    return this->d_sub;
+}
+
+void PMD_params::set_d_sub(MKL_INT _d_sub) {
+    this->d_sub = _d_sub;
+}
+
+MKL_INT PMD_params::get_t() {
+    return this->t;
+}
+
+MKL_INT PMD_params::get_t_sub() {
+    return this->t_sub;
+}
+
+void PMD_params::set_t_sub(MKL_INT _t_sub) {
+    this->t_sub = _t_sub;
+}
+
+double PMD_params::get_spatial_thresh() {
+    return this->spatial_thresh;
+}
+
+double PMD_params::get_temporal_thresh() {
+    return this->temporal_thresh;
+}
+
+size_t PMD_params::get_max_components() {
+    return this->max_components;
+}
+
+size_t PMD_params::get_consec_failures() {
+    return this->consec_failures;
+}
+
+size_t PMD_params::get_max_iters_main() {
+    return this->max_iters_main;
+}
+
+size_t PMD_params::get_max_iters_init() {
+    return this->max_iters_init;
+}
+
+double PMD_params::get_tol() {
+    return this->tol;
+}
+
+void* PMD_params::get_FFT() {
+    return this->FFT;
+}
+
+void PMD_params::set_FFT(void *_FFT) {
+    this->FFT = _FFT;
+}
+
+bool PMD_params::get_enable_temporal_denoiser() {
+    return this->enable_temporal_denoiser;
+}
+
+void PMD_params::set_enable_temporal_denoiser(bool _enable_temporal_denoiser) {
+    this->enable_temporal_denoiser = _enable_temporal_denoiser;
+}
+
+bool PMD_params::get_enable_spatial_denoiser() {
+    return this->enable_spatial_denoiser;
+}
+
+void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser) {
+    this->enable_spatial_denoiser = _enable_spatial_denoiser;
+}
+
 
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic Helper Funcs ---------------------------*
@@ -376,14 +499,25 @@ double update_spatial_init(const MKL_INT d,
  * normed difference between the updated spatial component and the 
  * previous iterate (used to monitor convergence).
  */
-double update_spatial(const MKL_INT d1,
-                      const MKL_INT d2,
-                      const MKL_INT t,
-                      const double *R_k,
+//double update_spatial(const MKL_INT d1,
+//                      const MKL_INT d2,
+//                      const MKL_INT t,
+//                      const double *R_k,
+//                      double* u_k,
+//                      const double* v_k,
+//                      double *lambda_tv)
+
+double update_spatial(const double *R_k,
                       double* u_k,
                       const double* v_k,
-                      double *lambda_tv)
+                      double *lambda_tv,
+                      PMD_params *pars)
 {
+    MKL_INT d1 = pars->get_bheight();
+    MKL_INT d2 = pars->get_bwidth();
+    MKL_INT t = pars->get_t();
+    bool enable_spatial_denoiser = pars->get_enable_spatial_denoiser();
+
     /* Declare & Allocate For Internal Vars */
     MKL_INT d = d1*d2;
     double delta_u;
@@ -396,7 +530,9 @@ double update_spatial(const MKL_INT d1,
     regress_spatial(d, t, R_k, u_k, v_k);
 
     /* u_{k+1} <- argmin_u ||u_{k+1} - u||_2^2 + 2* lambda_tv ||u||_TV */
-    constrained_denoise_spatial(d1, d2, u_k, lambda_tv); 
+    if (enable_spatial_denoiser) {
+        constrained_denoise_spatial(d1, d2, u_k, lambda_tv);  // enable to skip this step
+    }
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, u__);
@@ -436,7 +572,7 @@ void denoise_temporal(const MKL_INT t,
                       double* v_k,
                       double* z_k,
                       double* lambda_tf,
-                      void* FFT=NULL)
+                      void* FFT)
 {
     /* Declare & Allocate Local Variables */
     int iters;
@@ -514,15 +650,27 @@ double update_temporal_init(const MKL_INT d,
  * normed difference between the updated temporal component and the 
  * previous iterate (used to monitor convergence).
  */
+//double update_temporal(const MKL_INT d,
+//                       const MKL_INT t,
+//                       const double* R_k,
+//                       const double* u_k,
+//                       double* v_k,
+//                       double* z_k,
+//                       double* lambda_tf,
+//                       void* FFT)
+
 double update_temporal(const MKL_INT d,
-                       const MKL_INT t,
-                       const double* R_k, 
+                       const double* R_k,
                        const double* u_k,
                        double* v_k,
                        double* z_k,
                        double* lambda_tf,
-                       void* FFT=NULL)
+                       PMD_params *pars)
 {
+    MKL_INT t = pars->get_t();
+    void* FFT = pars->get_FFT();
+    bool enable_temporal_denoiser = pars->get_enable_temporal_denoiser();
+
     /* Declare & Allocate For Internal Vars */
     double delta_v;
     double* v__ = (double *) malloc(t * sizeof(double));
@@ -534,7 +682,9 @@ double update_temporal(const MKL_INT d,
     regress_temporal(d, t, R_k, u_k, v_k);
 
     /* v_{k+1} <- argmin_v ||v||_TF s.t. ||v_{k+1} - v||_2^2 <= T * delta */
-    denoise_temporal(t, v_k, z_k, lambda_tf, FFT);
+    if (enable_temporal_denoiser) {
+        denoise_temporal(t, v_k, z_k, lambda_tf, FFT);
+    }
 
     /* return ||v_{k+1} - v_{k}||_2 */
     delta_v = distance_inplace(t, v_k, v__);
@@ -654,24 +804,43 @@ void init_dual_from_primal(const MKL_INT t, const double* v,double* z){
  *      1: If we reject the null hypothesis that u_k is noise 
  *     -1: If we accept the null hypothesis that u_k is noise
  */
-int rank_one_decomposition(const MKL_INT d1, 
-                           const MKL_INT d2, 
-                           const MKL_INT d_sub,
-                           const MKL_INT t,
-                           const MKL_INT t_sub,
-                           const double* R_k, 
-                           const double* R_init, 
-                           double* u_k, 
-                           double* u_init, 
+//int rank_one_decomposition(const MKL_INT d1,
+//                           const MKL_INT d2,
+//                           const MKL_INT d_sub,
+//                           const MKL_INT t,
+//                           const MKL_INT t_sub,
+//                           const double* R_k,
+//                           const double* R_init,
+//                           double* u_k,
+//                           double* u_init,
+//                           double* v_k,
+//                           double* v_init,
+//                           const double spatial_thresh,
+//                           const double temporal_thresh,
+//                           const MKL_INT max_iters_main,
+//                           const MKL_INT max_iters_init,
+//                           const double tol,
+//                           void* FFT)
+
+int rank_one_decomposition(const double* R_k,
+                           const double* R_init,
+                           double* u_k,
+                           double* u_init,
                            double* v_k,
                            double* v_init,
-                           const double spatial_thresh,
-                           const double temporal_thresh,
-                           const MKL_INT max_iters_main,
-                           const MKL_INT max_iters_init,
-                           const double tol,
-                           void* FFT=NULL)
+                           PMD_params *pars)
 {
+    MKL_INT d1 = pars->get_bheight();
+    MKL_INT d2 = pars->get_bwidth();
+    MKL_INT d_sub = pars->get_d_sub();
+    MKL_INT t = pars->get_t();
+    MKL_INT t_sub = pars->get_t_sub();
+    double spatial_thresh = pars->get_spatial_thresh();
+    double temporal_thresh = pars->get_temporal_thresh();
+    size_t max_iters_main = pars->get_max_iters_main();
+    size_t max_iters_init = pars->get_max_iters_init();
+    double tol = pars->get_tol();
+    void* FFT = pars->get_FFT();
  
     /* Declare, Allocate, & Initialize Internal Vars */
     MKL_INT iters; 
@@ -714,8 +883,8 @@ int rank_one_decomposition(const MKL_INT d1,
     for (iters = 0; iters < max_iters_main; iters++){
         
         /* Update Components: Regression, Denoising, & Normalization */
-        delta_u = update_spatial(d1, d2, t, R_k, u_k, v_k, &lambda_tv);
-        delta_v = update_temporal(d, t, R_k, u_k, v_k, z_k, &lambda_tf, FFT);
+        delta_u = update_spatial(R_k, u_k, v_k, &lambda_tv, pars);
+        delta_v = update_temporal(d, R_k, u_k, v_k, z_k, &lambda_tf, pars);
 
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol){    
@@ -755,24 +924,44 @@ int rank_one_decomposition(const MKL_INT d1,
 /* Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a (d1*d2)xT
  * column major formatted video into sptial and temporal components.
  */
-size_t pmd(const MKL_INT d1, 
-           const MKL_INT d2, 
-           MKL_INT d_sub, 
-           const MKL_INT t,
-           MKL_INT t_sub,
-           double* R, 
+//size_t pmd(const MKL_INT d1,
+//           const MKL_INT d2,
+//           MKL_INT d_sub,
+//           const MKL_INT t,
+//           MKL_INT t_sub,
+//           double* R,
+//           double* R_ds,
+//           double* U,
+//           double* V,
+//           const double spatial_thresh,
+//           const double temporal_thresh,
+//           const size_t max_components,
+//           const size_t consec_failures,
+//           const MKL_INT max_iters_main,
+//           const MKL_INT max_iters_init,
+//           const double tol,
+//           void* FFT)/* Handle Provided For Threadsafe FFT */
+
+size_t pmd(double* R,
            double* R_ds,
            double* U,
            double* V,
-           const double spatial_thresh,
-           const double temporal_thresh,
-           const size_t max_components,
-           const size_t consec_failures,
-           const MKL_INT max_iters_main,
-           const MKL_INT max_iters_init,
-           const double tol,
-           void* FFT=NULL)/* Handle Provided For Threadsafe FFT */
+           PMD_params *pars)
 {
+    MKL_INT d1 = pars->get_bheight();
+    MKL_INT d2 = pars->get_bwidth();
+    MKL_INT d_sub = pars->get_d_sub();
+    MKL_INT t = pars->get_t();
+    MKL_INT t_sub = pars->get_t_sub();
+    double spatial_thresh = pars->get_spatial_thresh();
+    double temporal_thresh = pars->get_temporal_thresh();
+    size_t max_components = pars->get_max_components();
+    size_t consec_failures = pars->get_consec_failures();
+    size_t max_iters_main = pars->get_max_iters_main();
+    size_t max_iters_init = pars->get_max_iters_init();
+    double tol = pars->get_tol();
+    void* FFT = pars->get_FFT();
+
     /* Declare & Intialize Internal Vars */
     int* keep_flag = (int *) malloc(consec_failures*sizeof(int));
     int max_keep_flag;
@@ -806,18 +995,25 @@ size_t pmd(const MKL_INT d1,
         /* U[:,k] <- u_k, V[k,:] <- v_k' : 
          *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
          */
-        keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, d_sub, 
-                                                                t, t_sub, 
-                                                                R, R_init, 
-                                                                U + good*d, 
+//        keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, d_sub,
+//                                                                t, t_sub,
+//                                                                R, R_init,
+//                                                                U + good*d,
+//                                                                u_init,
+//                                                                V + good*t,
+//                                                                v_init,
+//                                                                spatial_thresh,
+//                                                                temporal_thresh,
+//                                                                max_iters_main,
+//                                                                max_iters_init,
+//                                                                tol, FFT);
+
+        keep_flag[k % consec_failures] = rank_one_decomposition(R, R_init,
+                                                                U + good*d,
                                                                 u_init,
-                                                                V + good*t, 
-                                                                v_init, 
-                                                                spatial_thresh, 
-                                                                temporal_thresh,
-                                                                max_iters_main, 
-                                                                max_iters_init,
-                                                                tol, FFT);
+                                                                V + good*t,
+                                                                v_init,
+                                                                pars);
 
         /* Check Component Quality: Terminate if we're fitting noise */
         if (keep_flag[k % consec_failures] < 0){
@@ -871,33 +1067,55 @@ size_t pmd(const MKL_INT d1,
     }
     free(keep_flag);
     return good; 
-    return k;
+//    return k;
 }
 
 
 /* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable parallel, 
  * block-wiseprocessing of large datasets in shared memory.
  */
-void batch_pmd(const MKL_INT bheight,
-               const MKL_INT bwidth, 
-               MKL_INT d_sub,
-               const MKL_INT t,
-               MKL_INT t_sub,
-               const int b,
-               double** Rp, 
-               double** Rp_ds, 
-               double** Up,
-               double** Vp,
-               size_t* K,
-               const double spatial_thresh,
-               const double temporal_thresh,
-               const size_t max_components,
-               const size_t consec_failures,
-               const size_t max_iters_main,
-               const size_t max_iters_init,
-               const double tol)
+//void batch_pmd(const MKL_INT bheight,
+//               const MKL_INT bwidth,
+//               MKL_INT d_sub,
+//               const MKL_INT t,
+//               MKL_INT t_sub,
+//               const int b, // number of batches(?)
+//               double** Rp,
+//               double** Rp_ds,
+//               double** Up,
+//               double** Vp,
+//               size_t* K,
+//               const double spatial_thresh,
+//               const double temporal_thresh,
+//               const size_t max_components,
+//               const size_t consec_failures,
+//               const size_t max_iters_main,
+//               const size_t max_iters_init,
+//               const double tol)
+
+void batch_pmd(
+        double** Rp,
+        double** Rp_ds,
+        double** Up,
+        double** Vp,
+        size_t* K,
+        const int b,
+        PMD_params *pars)
 {
-    // Create FFT Handle So It can Be Shared Aross Threads
+//    MKL_INT bheight = pars->get_bheight();
+//    MKL_INT bwidth = pars->get_bwidth();
+//    MKL_INT d_sub = pars->get_d_sub();
+//    MKL_INT t = pars->get_t();
+//    MKL_INT t_sub = pars->get_t_sub();
+//    double spatial_thresh = pars->get_spatial_thresh();
+//    double temporal_thresh = pars->get_temporal_thresh();
+//    size_t max_components = pars->get_max_components();
+//    size_t consec_failures = pars->get_consec_failures();
+//    size_t max_iters_main = pars->get_max_iters_main();
+//    size_t max_iters_init = pars->get_max_iters_init();
+//    double tol = pars->get_tol();
+
+    // Create FFT Handle So It can Be Shared Across Threads
     DFTI_DESCRIPTOR_HANDLE FFT;
     MKL_LONG status;
     MKL_LONG L = 256;  /* Size Of Subsamples in welch estimator */
@@ -909,14 +1127,17 @@ void batch_pmd(const MKL_INT bheight,
 
     // Loop Over All Patches In Parallel
     int m;
+    pars->set_FFT((void *) &FFT);
     #pragma omp parallel for shared(FFT) schedule(guided)
     for (m = 0; m < b; m++){
         //Use dummy vars for decomposition  
-        K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
-                   Rp[m], Rp_ds[m], Up[m], Vp[m], 
-                   spatial_thresh, temporal_thresh,
-                   max_components, consec_failures,
-                   max_iters_main, max_iters_init, tol, &FFT);
+//        K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
+//                   Rp[m], Rp_ds[m], Up[m], Vp[m],
+//                   spatial_thresh, temporal_thresh,
+//                   max_components, consec_failures,
+//                   max_iters_main, max_iters_init, tol, &FFT);
+
+        K[m] = pmd(Rp[m], Rp_ds[m], Up[m], Vp[m], pars);
     }
 
     // Free MKL FFT Handle
@@ -924,3 +1145,4 @@ void batch_pmd(const MKL_INT bheight,
     if (status != 0)
         fprintf(stderr, "Error while deallocating MKL_FFT Handle: %ld\n", status);
 }
+

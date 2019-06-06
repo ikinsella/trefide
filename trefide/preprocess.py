@@ -15,6 +15,17 @@ def flag_outliers(signal,
         The first gives the indices to be deleted.
         The second gives the indices of locations in the new signal which
         will potentially have discontinuities due to fluroescence reset.
+
+    Parameter:
+        signal:
+        thresh_stdv: threshold standard deviation
+        buffer:
+        visualize: whether to visualize flagged outliers
+
+    Return:
+        del_idx:
+        disc_idx:
+
     """
 
     # z-score to locate outliers
@@ -66,6 +77,18 @@ def _get_knots(stim,
                followup=100,
                spacing=250):
 
+    """
+
+    Parameter:
+        stim:
+        k:
+        followup:
+        spacing:
+
+    Return:
+
+    """
+
     # Locate transition indices
     trans_idx = np.argwhere(filt.convolve1d(stim > 0, np.array([1, -1])))
     # Repeat knots and add transition extras
@@ -101,9 +124,21 @@ def _get_spline_trend(data,
                       axis=-1,
                       robust=True,
                       disc_idx=None):
-    """
-    Fits an adaptive b-spline to an input dataset in order to remove slow
+    """Fits an adaptive b-spline to an input dataset in order to remove slow
     trend and features due to application of step and ramp stimuli.
+
+    Parameter:
+        data:
+        stim:
+        order:
+        followup:
+        spacing:
+        q:
+        axis:
+        robust:
+        disc_idx:
+
+    Return:
     TODO: docs
     """
     # get knots from stim
@@ -147,6 +182,21 @@ def detrend(mov,
             visualize=None):
     """ Detrends Q-state video via stim & discontinuity spline fit. 
     Removes potential discontinuity artifacts afterwards
+
+    Parameter:
+        mov:
+        stim:
+        disc_idx:
+        order:
+        followup:
+        spacing:
+        q:
+        axis:
+        robust:
+        visualize:
+
+    Return:
+
     TODO: docs
     """
     # Adaptive spline fit
@@ -193,8 +243,16 @@ def retrend(trend_components,
             disc_idx,
             stim,
             all_quad=False):
-    """ Refit the raw data with trend after removing photobleach trend from 
-        each stim onset
+    """ Refit the raw data with trend after removing photobleach trend from
+    each stim onset.
+
+    Parameter:
+        trend_components:
+        disc_idx:
+        stim:
+        all_quad:
+
+    Return:
     """
     bleach_trend, del_idx = _get_photobleach_trend(trend_components,
                                                    disc_idx,
@@ -212,7 +270,15 @@ def retrend(trend_components,
 
 def _get_photobleach_trend(trend_components, disc_idx, stim, all_quad=False):
     """ Fit trend to samples where stim was off in each segment to remove
-        photobleach related fluorescence decay
+    photobleach related fluorescence decay
+
+    Parameter:
+        trend_components:
+        disc_idx:
+        stim:
+        all_quad:
+
+    Return:
     """
     disc_idx = np.setdiff1d(disc_idx, np.argwhere(
         scipy.ndimage.filters.convolve(stim > 0, np.array([1, -1]))))
@@ -271,6 +337,17 @@ def _get_photobleach_trend(trend_components, disc_idx, stim, all_quad=False):
 
 
 def thresh_mad(mov, x=3, axis=-1):
+    """
+
+    Parameter:
+        mov:
+        x:
+        axis:
+
+    Return:
+    """
+
+
     mov = mov.copy()
     med_image = np.median(mov, axis=-1)
     mad_image = np.median(np.abs(mov - med_image[:, :, np.newaxis]), axis=-1)

@@ -15,6 +15,8 @@ from cython.parallel import parallel, prange
 from libc.stdlib cimport abort, calloc, malloc, free
 from sklearn.utils.extmath import randomized_svd as svd
 from functools import partial
+import matplotlib.pyplot as plt
+from libcpp cimport bool
 
 FOV_BHEIGHT_WARNING = "Input FOV height must be an evenly divisible by block height."
 FOV_BWIDTH_WARNING = "Input FOV width must be evenly divisible by block width." 
@@ -29,42 +31,40 @@ TSUB_FRAMES_WARNING = "Num Frames must be evenly divisible by temporal downsampl
 
 
 cdef extern from "trefide.h":
-    
-    size_t pmd(const int d1, 
-               const int d2, 
-               int d_sub, 
-               const int t,
-               int t_sub,
-               double* R, 
-               double* R_ds,
-               double* U,
-               double* V,
-               const double spatial_thresh,
-               const double temporal_thresh,
-               const size_t max_components,
-               const size_t consec_failures,
-               const int max_iters_main,
-               const int max_iters_init,
-               const double tol) nogil
 
-    void batch_pmd(const int bheight,
-                   const int bwidth, 
-                   int d_sub,
-                   const int t,
-                   int t_sub,
-                   const int b,
-                   double** Rpt, 
-                   double** Rpt_ds, 
-                   double** Upt,
-                   double** Vpt,
-                   size_t* Kpt,
-                   const double spatial_thresh,
-                   const double temporal_thresh,
-                   const size_t max_components,
-                   const size_t consec_failures,
-                   const size_t max_iters_main,
-                   const size_t max_iters_init,
-                   const double tol) nogil
+    cdef cppclass PMD_params:
+        PMD_params(
+            const int _bheight,
+            const int _bwidth,
+            int _d_sub,
+            const int _t,
+            int _t_sub,
+            const double _spatial_thresh,
+            const double _temporal_thresh,
+            const size_t _max_components,
+            const size_t _consec_failures,
+            const size_t _max_iters_main,
+            const size_t _max_iters_init,
+            const double _tol,
+            void *_FFT,
+            bool _enable_temporal_denoiser,
+            bool _enable_spatial_denoiser) nogil
+
+    size_t pmd(
+            double* R,
+            double* R_ds,
+            double* U,
+            double* V,
+            PMD_params *pars) nogil
+
+    void batch_pmd(
+               double** Rpt,
+               double** Rpt_ds,
+               double** Upt,
+               double** Vpt,
+               size_t* Kpt,
+               const int b,
+               PMD_params *pars) nogil
 
     void downsample_3d(const int d1, 
                        const int d2, 
@@ -73,6 +73,7 @@ cdef extern from "trefide.h":
                        const int t_sub, 
                        const double *Y, 
                        double *Y_ds) nogil
+
 
 # -----------------------------------------------------------------------------#
 # -------------------------- Single-Block Wrapper -----------------------------#
@@ -91,15 +92,46 @@ cpdef size_t decompose(const int d1,
                        const size_t consec_failures,
                        const size_t max_iters_main,
                        const size_t max_iters_init,
-                       const double tol) nogil:
-    """ Wrap the single patch cpp PMD functions """
+                       const double tol,
+                       bool enable_temporal_denoiser = True,
+                       bool enable_spatial_denoiser = True) nogil:
+    """Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a
+    column major formatted video into spatial and temporal components.
+    
+    Parameter:
+        d1: height of video
+        d2: width of video
+        t: frames of video
+        Y: video data of shape (d1 x d2) x t
+        U: decomposed spatial component matrix
+        V: decomposed temporal component matrix
+        spatial_thresh: spatial threshold
+        temporal_thresh: temporal threshold
+        max_components: maximum number of components
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initialization
+        tol: convergence tolerence
+        enable_temporal_denoiser: whether enable temporal denoiser, True by default 
+        enable_spatial_denoiser: whether enable spatial denoiser, True by default
+    
+    Return:
+        result: rank of the compressed video/patch
+    
+    """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
     with nogil:
-        return pmd(d1, d2, 1, t, 1, &Y[0], NULL, &U[0], &V[0], 
-                   spatial_thresh, temporal_thresh,
-                   max_components, consec_failures, 
-                   max_iters_main, max_iters_init, tol)
+        parms = new PMD_params(d1, d2, 1, t, 1,
+                               spatial_thresh, temporal_thresh,
+                               max_components, consec_failures,
+                               max_iters_main, max_iters_init, tol,
+                               NULL,
+                               enable_temporal_denoiser,
+                               enable_spatial_denoiser)
+        result = pmd(&Y[0], NULL, &U[0], &V[0], parms)
+        del parms
+        return result
 
 
 cpdef size_t decimated_decompose(const int d1, 
@@ -117,20 +149,54 @@ cpdef size_t decimated_decompose(const int d1,
                                  const size_t consec_failures,
                                  const int max_iters_main,
                                  const int max_iters_init,
-                                 const double tol) nogil:
-    """ Wrap the single patch cpp PMD functions """
+                                 const double tol,
+                                 bool enable_temporal_denoiser = True,
+                                 bool enable_spatial_denoiser = True) nogil:
+    """ Apply decimated TF/TV Penalized Matrix Decomposition (PMD) to factor a
+    column major formatted video into spatial and temporal components.
+    
+    Parameters:
+        d1: height of video 
+        d2: width of video
+        d_sub: spatial downsampling factor
+        t: frames of video
+        t_sub: temporal downsampling factor
+        Y: video data of shape (d1 x d2) x t
+        Y_ds: downsampled video data
+        U: decomposed spatial matrix
+        V: decomposed temporal matrix
+        spatial_thresh: spatial threshold,
+        temporal_thresh: temporal threshold,
+        max_components: maximum number of components,
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initialization
+        tol: convergence tolerence
+        enable_temporal_denoiser: whether enable temporal denoiser, True by default
+        enable_spatial_denoiser: whether enable spatial denoiser, True by default
+        
+    Return:
+        result: rank of the compressed video/patch
+    
+    """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
     with nogil:
-        return pmd(d1, d2, d_sub, t, t_sub, &Y[0], &Y_ds[0], &U[0], &V[0], 
-                   spatial_thresh, temporal_thresh,
-                   max_components, consec_failures, 
-                   max_iters_main, max_iters_init, tol);
+        parms = new PMD_params(d1, d2, d_sub, t, t_sub,
+                               spatial_thresh, temporal_thresh,
+                               max_components, consec_failures,
+                               max_iters_main, max_iters_init, tol,
+                               NULL,
+                               enable_temporal_denoiser,
+                               enable_spatial_denoiser)
+        result = pmd(&Y[0], &Y_ds[0], &U[0], &V[0], parms)
+        del parms
+        return result
+
 
 # -----------------------------------------------------------------------------#
 # --------------------------- Multi-Block Wrappers ----------------------------#
 # -----------------------------------------------------------------------------#
-
 
 cpdef batch_decompose(const int d1, 
                       const int d2, 
@@ -146,9 +212,41 @@ cpdef batch_decompose(const int d1,
                       const size_t max_iters_init,
                       const double tol,
                       int d_sub = 1,
-                      int t_sub = 1):
-    """ Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
-     factor_patch with OpenMP directives to parallelize batch processing."""
+                      int t_sub = 1,
+                      bool enable_temporal_denoiser = True,
+                      bool enable_spatial_denoiser = True):
+    """ Apply TF/TV Penalized Matrix Decomposition (PMD) in batch to factor a
+    column major formatted video into spatial and temporal components.
+    
+    Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
+    factor_patch with OpenMP directives to parallelize batch processing.
+    
+    Parameters:
+        d1: height of video 
+        d2: width of video
+        t: frames of video
+        Y: video data of shape (d1 x d2) x t
+        bheight: height of video block
+        bwidth: width of video block
+        spatial_thresh: spatial threshold,
+        temporal_thresh: temporal threshold,
+        max_components: maximum number of components,
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initializatio
+        tol: convergence tolerence
+        d_sub: spatial downsampling factor
+        t_sub: temporal downsampling factor
+        enable_temporal_denoiser: whether enable temporal denoiser, True by default
+        enable_spatial_denoiser: whether enable spatial denoiser, True by default
+    
+    Return:
+        U: spatial components matrix
+        V: temporal components matrix
+        K: rank of each patch
+        indices: location/index inside of patch grid
+        
+    """
 
     # Assert Evenly Divisible FOV/Block Dimensions
     assert d1 % bheight == 0 , FOV_BHEIGHT_WARNING
@@ -210,11 +308,21 @@ cpdef batch_decompose(const int d1,
                 Rp_ds[b] = NULL
 
         # Factor Blocks In Parallel
-        batch_pmd(bheight, bwidth, d_sub, t, t_sub, num_blocks, 
-                  Rp, Rp_ds, Up, Vp, &K[0], 
-                  spatial_thresh, temporal_thresh,
-                  max_components, consec_failures, 
-                  max_iters_main, max_iters_init, tol)
+        # batch_pmd(bheight, bwidth, d_sub, t, t_sub, num_blocks,
+        #           Rp, Rp_ds, Up, Vp, &K[0],
+        #           spatial_thresh, temporal_thresh,
+        #           max_components, consec_failures,
+        #           max_iters_main, max_iters_init, tol)
+
+        parms = new PMD_params(bheight, bwidth, d_sub, t, t_sub,
+                               spatial_thresh, temporal_thresh,
+                               max_components, consec_failures,
+                               max_iters_main, max_iters_init, tol,
+                               NULL,
+                               enable_temporal_denoiser,
+                               enable_spatial_denoiser)
+        batch_pmd(Rp, Rp_ds, Up, Vp, &K[0], num_blocks, parms)
+        del parms
         
         # Free Allocated Memory
         for b in range(num_blocks):
@@ -237,7 +345,18 @@ cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U,
                                       double[:,:,::1] V, 
                                       size_t[::1] K, 
                                       size_t[:,:] indices):
-    """ Reconstruct A Denoised Movie """
+    """ Reconstruct A Denoised Movie from components returned by batch_decompose.
+    
+    Parameter:
+        U: spatial component matrix
+        V: temporal component matrix
+        K: rank of each patch
+        indices: location/index inside of patch grid
+    
+    Return:
+        Yd: denoised video data
+        
+    """
 
     # Get Block Size Info From Spatial
     cdef size_t num_blocks = U.shape[0]
@@ -279,7 +398,18 @@ cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U,
                                          size_t[:] K, 
                                          size_t[:,:] indices,
                                          double[:,:] W):
-    """ Reconstruct A Denoised Movie """
+    """ Reconstruct A Denoised Movie from components returned by batch_decompose.
+    
+    Parameter:
+        U: spatial component matrix
+        V: temporal component matrix
+        K: rank of each patch
+        indices: location/index inside of patch grid
+        W: weighting component matrix
+        
+    Return:
+        Yd: denoised video data
+    """
 
     # Get Block Size Info From Spatial
     cdef size_t num_blocks = U.shape[0]
@@ -326,8 +456,43 @@ cpdef overlapping_batch_decompose(const int d1,
                                   const size_t max_iters_init,
                                   const double tol,
                                   int d_sub=1,
-                                  int t_sub=1):
-    """ 4x batch denoiser """
+                                  int t_sub=1,
+                                  bool enable_temporal_denoiser = True,
+                                  bool enable_spatial_denoiser = True):
+    """ 4x batch denoiser. Apply TF/TV Penalized Matrix Decomposition (PMD) in 
+    batch to factor a column major formatted video into spatial and temporal 
+    components.
+    
+    Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
+    factor_patch with OpenMP directives to parallelize batch processing.
+    
+    Parameter:
+        d1: height of video 
+        d2: width of video
+        t: frames of video
+        Y: video data of shape (d1 x d2) x t
+        bheight: height of video block
+        bwidth: width of video block
+        spatial_thresh: spatial threshold,
+        temporal_thresh: temporal threshold,
+        max_components: maximum number of components,
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initializatio
+        tol: convergence tolerence
+        d_sub: spatial downsampling factor
+        t_sub: temporal downsampling factor
+        enable_temporal_denoiser: whether enable temporal denoiser, True by default
+        enable_spatial_denoiser: whether enable spatial denoiser, True by default
+    
+    Return:
+        U: spatial components matrix
+        V: temporal components matrix
+        K: rank of each patch
+        I: location/index inside of patch grid
+        W: weighting components matrix
+    
+    """
 
     # Assert Even Blockdims
     assert bheight % 2 == 0 , "Block height must be an even integer."
@@ -386,7 +551,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                            spatial_thresh,temporal_thresh,
                                            max_components, consec_failures, 
                                            max_iters_main, max_iters_init, 
-                                           tol, d_sub=d_sub, t_sub=t_sub)
+                                           tol, d_sub, t_sub,
+                                           enable_temporal_denoiser,
+                                           enable_spatial_denoiser)
  
     # ---------- Vertical Skew -----------
     # Full Blocks
@@ -399,7 +566,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures,
                                              max_iters_main, max_iters_init,
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # wide half blocks
     U['vert_skew']['half'],\
@@ -412,7 +581,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init,
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
     
     # --------------Horizontal Skew---------- 
     # Full Blocks
@@ -425,7 +596,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init,
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # tall half blocks
     U['horz_skew']['half'],\
@@ -438,7 +611,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # -------------Diagonal Skew---------- 
     # Full Blocks
@@ -452,7 +627,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                             enable_temporal_denoiser,
+                                             enable_spatial_denoiser)
 
     # tall half blocks
     U['diag_skew']['thalf'],\
@@ -467,7 +644,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures, 
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub)
+                                             tol, d_sub, t_sub,
+                                              enable_temporal_denoiser,
+                                              enable_spatial_denoiser)
 
     # wide half blocks
     U['diag_skew']['whalf'],\
@@ -484,7 +663,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures,
                                              max_iters_main, max_iters_init, 
-                                             tol, d_sub=d_sub, t_sub=t_sub) 
+                                             tol, d_sub, t_sub,
+                                              enable_temporal_denoiser,
+                                              enable_spatial_denoiser)
 
     # Corners
     U['diag_skew']['quarter'],\
@@ -509,7 +690,9 @@ cpdef overlapping_batch_decompose(const int d1,
                                                 spatial_thresh, temporal_thresh,
                                                 max_components, consec_failures, 
                                                 max_iters_main, max_iters_init, 
-                                                tol, d_sub=d_sub, t_sub=t_sub)
+                                                tol, d_sub, t_sub,
+                                                enable_temporal_denoiser,
+                                                enable_spatial_denoiser)
 
     # Return Weighting Matrix For Reconstruction
     return U, V, K, I, W
@@ -522,7 +705,24 @@ cpdef overlapping_batch_recompose(const int d1,
                                   const int bheight,
                                   const int bwidth,
                                   U, V, K, I, W):
-    """ 4x batch denoiser """
+    """ 4x batch denoiser. Reconstruct A Denoised Movie from components 
+    returned by batch_decompose.
+    
+    Parameter:
+        d1: height of video
+        d2: width of video
+        t: time frames of video
+        bheight: block height
+        bwidth: block width
+        U: spatial components matrix
+        V: temporal components matrix
+        K: rank of each patch
+        I: location/index inside of patch grid
+        W: weighting components matrix
+    
+    Return:
+        Yd: recomposed video data matrix
+    """
    
     # Assert Even Blockdims
     assert bheight % 2 == 0 , "Block height must be an even integer."
@@ -699,7 +899,27 @@ cpdef pca_decompose(const int d1,
                     const size_t max_components,
                     const size_t consec_failures):
     """ Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function
-     factor_patch with OpenMP directives to parallelize batch processing."""
+    factor_patch with OpenMP directives to parallelize batch processing.
+    
+    Parameter:
+        d1: height of video 
+        d2: width of video
+        t: frames of video
+        Y: video data of shape (d1 x d2) x t 
+        bheight: block height
+        bwidth: block width
+        spatial_thresh: spatial threshold,
+        temporal_thresh: temporal threshold,
+        max_components: maximum number of components,
+        consec_failures: number of failures before stopping
+    
+    Return:
+        U: decomposed spatial matrix
+        V: decomposed temporal matrix
+        K: rank of each patch
+        indices: location/index inside of patch grid
+        
+    """
 
     # Assert Evenly Divisible FOV/Block Dimensions
     assert d1 % bheight == 0 , FOV_BHEIGHT_WARNING
@@ -758,7 +978,26 @@ cpdef overlapping_pca_decompose(const int d1,
                                   const double temporal_thresh,
                                   const size_t max_components,
                                   const size_t consec_failures):
-    """ 4x batch denoiser """
+    """4x batch denoiser 
+    
+    Parameter:
+        d1: height of video 
+        d2: width of video
+        t: frames of video
+        Y: video data of shape (d1 x d2) x t
+        spatial_thresh: spatial threshold,
+        temporal_thresh: temporal threshold,
+        max_components: maximum number of components,
+        consec_failures:
+        
+    Return:
+        U: spatial components matrix
+        V: temporal components matrix
+        K: rank of each patch
+        I: location/index inside of patch grid
+        W: weighting components matrix
+        
+    """
 
     # Assert Even Blockdims
     assert bheight % 2 == 0 , "Block height must be an even integer."
@@ -928,13 +1167,40 @@ cpdef overlapping_pca_decompose(const int d1,
     return U, V, K, I, W
 
 
-# Temporary TODO: Optimize, streamline, & add more options (multiple simulations when block size large relative to FOV)
-import matplotlib.pyplot as plt
+# Temporary TODO: Optimize, streamline, & add more options (multiple simulations when block
+#  size large relative to FOV)
 
-def determine_thresholds(mov_dims, block_dims, num_components,
+def determine_thresholds(mov_dims,
+                         block_dims,
+                         num_components,
                          max_iters_main, max_iters_init, tol, 
-                         d_sub, t_sub, conf, plot):
-    
+                         d_sub, t_sub,
+                         conf, plot,
+                         enable_temporal_denoiser = True,
+                         enable_spatial_denoiser = True):
+
+    """Determine spatial and temporal threshold.
+
+    Parameter:
+        mov_dims: dimension of video (height x width x frames)
+        block_dims: dimension of each block (height x width)
+        num_components: number of components
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initializatio
+        tol: convergence tolerence
+        d_sub: spatial downsampling factor
+        t_sub: temporal downsampling factor
+        conf: confidence level to determine threshold for the summary statistics
+        plot: whether plot
+        enable_temporal_denoiser: whether enable temporal denoiser, True by default
+        enable_spatial_denoiser: whether enable spatial denoiser, True by default
+
+    Return:
+        spatial_thresh: spatial threshold
+        temporal_thresh: temporal threshold
+
+    """
+
     # Simulate Noise Movie
     noise_mov = np.ascontiguousarray(np.reshape(np.random.randn(np.prod(mov_dims)), mov_dims))
     
@@ -947,7 +1213,9 @@ def determine_thresholds(mov_dims, block_dims, num_components,
                                     1e3, 1e3,
                                     num_components, num_components,
                                     max_iters_main, max_iters_init, tol,
-                                    d_sub=d_sub, t_sub=t_sub)
+                                    d_sub, t_sub,
+                                    enable_temporal_denoiser,
+                                    enable_spatial_denoiser)
     
     # Gather Test Statistics
     spatial_stat = []
@@ -976,3 +1244,4 @@ def determine_thresholds(mov_dims, block_dims, num_components,
         plt.show()
     
     return spatial_thresh, temporal_thresh
+

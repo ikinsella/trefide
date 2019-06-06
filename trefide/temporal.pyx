@@ -13,7 +13,7 @@ from trefide.utils import psd_noise_estimate
 np.import_array()
 
 cdef class TrendFilter:
-    """ """
+    """Temporal denoising class, implement L1 trend filtering """
     
     
     def __cinit__(self, size_t T, size_t maxiter=2000, int verbose=0):

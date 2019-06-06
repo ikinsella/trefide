@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module trefide.filter</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="trefide.html"><font color="#ffffff">trefide</font></a>.filter</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/filter.py">/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/filter.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="scipy.ndimage.html">scipy.ndimage</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="scipy.signal.html">scipy.signal</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-butter_highpass"><strong>butter_highpass</strong></a>(signals, cutoff, fs, order=6, axis=-1)</dt><dd><tt>Forward-backward&nbsp;filter&nbsp;inpute&nbsp;signals&nbsp;with&nbsp;butterworth&nbsp;kernel<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signals:&nbsp;singnal&nbsp;matrix&nbsp;(number&nbsp;of&nbsp;channels&nbsp;by&nbsp;frames)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cutoff:&nbsp;cutoff&nbsp;frequecy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fs:&nbsp;sampling&nbsp;rate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;order:&nbsp;order&nbsp;of&nbsp;filter<br>
+&nbsp;&nbsp;&nbsp;&nbsp;axis:&nbsp;axis&nbsp;along&nbsp;which&nbsp;to&nbsp;filter<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;filtered&nbsp;signal</tt></dd></dl>
+ <dl><dt><a name="-detrend"><strong>detrend</strong></a>(signals, degree=2)</dt><dd><tt>Substracts&nbsp;the&nbsp;order&nbsp;k&nbsp;trend&nbsp;from&nbsp;each&nbsp;input&nbsp;pixel<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signals:&nbsp;signal&nbsp;matrix&nbsp;(number&nbsp;of&nbsp;channels&nbsp;by&nbsp;frames)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;degree:&nbsp;degree&nbsp;of&nbsp;polynomial&nbsp;used&nbsp;to&nbsp;fit&nbsp;the&nbsp;trend<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signal&nbsp;minus&nbsp;trend</tt></dd></dl>
+ <dl><dt><a name="-gaussian_bandpass"><strong>gaussian_bandpass</strong></a>(signals, kernel_len, kernel_sigma, axis=-1)</dt><dd><tt>Convolve&nbsp;inputs&nbsp;signals&nbsp;with&nbsp;0&nbsp;mean&nbsp;gaussian&nbsp;kernel<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signals:&nbsp;signal&nbsp;matrix&nbsp;(number&nbsp;of&nbsp;channels&nbsp;by&nbsp;frames)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;kernel_len:&nbsp;filter&nbsp;kernel&nbsp;length<br>
+&nbsp;&nbsp;&nbsp;&nbsp;kernel_sigma:&nbsp;filter&nbsp;kernel&nbsp;sigma&nbsp;(std)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;axis:&nbsp;axis&nbsp;along&nbsp;which&nbsp;to&nbsp;filter<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;filtered&nbsp;signal</tt></dd></dl>
+ <dl><dt><a name="-gaussian_kernel"><strong>gaussian_kernel</strong></a>(length, sigma)</dt><dd><tt>Returns&nbsp;a&nbsp;1D&nbsp;gaussian&nbsp;filter&nbsp;of&nbsp;specified&nbsp;length&nbsp;and&nbsp;stdv&nbsp;for&nbsp;convolution<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;length:&nbsp;kernel&nbsp;length<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sigma:&nbsp;kernel&nbsp;width&nbsp;(std)<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gaussian&nbsp;kernel</tt></dd></dl>
+</td></tr></table>
+</body></html>

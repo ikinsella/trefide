@@ -65,7 +65,17 @@ cdef extern from "trefide.h":
 cpdef double[::1] downsample_signal(const int t, 
                                       const int ds,
                                       double[::1] V):
-    """ Downsample Image In Each Dimension By Factor Of ds """
+    """ Downsample Image In Each Dimension By Factor Of ds 
+    
+    Parameter:
+    	t: frames of video
+    	ds: downsampling factor
+        V: signal data
+    
+    Return:
+        V_ds: downsmapled signal data    
+    
+    """
 
     # Assert Dimensions Match
     assert t % ds == 0, "Signal length must be divisible by downsampling factor."
@@ -87,7 +97,18 @@ cpdef double[::1,:] downsample_image(const int d1,
                                      const int d2, 
                                      const int ds,
                                      double[::1,:] U):
-    """ Downsample Image In Each Dimension By Factor Of ds """
+    """ Downsample Image In Each Dimension By Factor Of ds 
+    
+    Parameter:
+        d1: height of video
+        d2: width of video
+        ds: downsampling factor
+        U: image data of shape (d1 x d2)
+    
+    Return:
+        U_ds: downsampled video data
+    
+    """
 
     # Assert Dimensions Match
     assert d1 % ds == 0, "Height of image must be divisible by downsampling factor."
@@ -113,7 +134,20 @@ cpdef double[::1,:,:] downsample_video(const int d1,
                                        const int t, 
                                        const int t_sub, 
                                        double[::1,:,:] Y):
-    """ Downsample (d1xd2xt) movie in row-major order """
+    """ Downsample (d1xd2xt) movie in row-major order 
+    
+    Parameter:
+        d1: height of video
+        d2: width of video
+        d_sub: spatial downsampling factor
+        t: frames of video
+        t_sub: temporal downsampling factor
+        Y: video data of shape (d1 x d2) x t
+    
+    Return:
+        Y_ds: downsampled video data
+    
+    """
 
     # Assert Dimensions Match
     assert d1 % d_sub == 0, "Height of FOV must be divisible by spatial downsampling factor."
@@ -143,7 +177,17 @@ cpdef double[::1,:,:] downsample_video(const int d1,
 cpdef double[::1] upsample_signal(const int t, 
                                   const int ds,
                                   double[::1] V_ds):
-    """ Downsample Image In Each Dimension By Factor Of ds """
+    """ Downsample Image In Each Dimension By Factor Of ds 
+    
+    Parameter:
+        t: frames of video
+        ds: downsampling factor
+        V_ds: downsmapled signal data
+    
+    Return:
+        V: upsampled signal data
+    
+    """
 
     # Assert Dimensions Match
     assert t % ds == 0, "Signal length must be divisible by downsampling factor."
@@ -162,7 +206,18 @@ cpdef double[::1,:] upsample_image(const int d1,
                                    const int d2, 
                                    const int ds,
                                    double[::1,:] U_ds):
-    """ Downsample Image In Each Dimension By Factor Of ds """
+    """ Downsample Image In Each Dimension By Factor Of ds 
+    
+    Parameter:
+        d1: height of video
+        d2: width of video
+        ds: downsampling factor
+        U_ds: downsampled video data
+    
+    Return:
+        U: upsampled video data
+    
+    """
 
     # Assert Dimensions Match
     assert d1 % ds == 0, "Height of image must be divisible by downsampling factor."

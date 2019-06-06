@@ -1,7 +1,20 @@
 import numpy as np
 
 def weighted_component_reformat(U, V, K, indices, W):
-    """ Reconstruct A Denoised Movie """
+    """ Reconstruct A Denoised Movie
+
+    Parameter:
+        U: decomposed spatial matrix
+        V: decomposed temporal matrix
+        K:
+        indices:
+        W: weighting component matrix
+
+    Return:
+        U_full: expanded spatial components (video height x video width x total ranks)
+        V_full: expanded temporal components (total ranks x frames)
+
+    """
 
     # Get Block Size Info From Spatial
     num_blocks = U.shape[0]
@@ -45,7 +58,25 @@ def overlapping_component_reformat(d1,
                                    bheight,
                                    bwidth,
                                    U, V, K, I, W):
-    """ 4x batch denoiser """
+    """ 4x batch denoiser
+
+    Parameter:
+        d1: height of video
+        d2: width of video
+        t: frames of video
+        bheight: height of video block
+        bwidth: width of video block
+        U: spatial components matrix
+        V: temporal components matrix
+        K: rank of each patch
+        I: location/index inside of patch grid
+        W: weighting compoent matrix
+
+    Return:
+        U_full: expanded spatial components (video height x video width x total ranks)
+        V_full: expanded temporal components (total ranks x frames)
+
+    """
    
     # Assert Even Blockdims
     assert bheight % 2 == 0 , "Block height must be an even integer."

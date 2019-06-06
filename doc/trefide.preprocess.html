@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module trefide.preprocess</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="trefide.html"><font color="#ffffff">trefide</font></a>.preprocess</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/preprocess.py">/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/preprocess.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="scipy.ndimage.filters.html">scipy.ndimage.filters</a><br>
+<a href="scipy.interpolate.html">scipy.interpolate</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top><a href="scipy.html">scipy</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-detrend"><strong>detrend</strong></a>(mov, stim, disc_idx, order=3, followup=100, spacing=200, q=0.05, axis=-1, robust=True, visualize=None)</dt><dd><tt>Detrends&nbsp;Q-state&nbsp;video&nbsp;via&nbsp;stim&nbsp;&amp;&nbsp;discontinuity&nbsp;spline&nbsp;fit.&nbsp;<br>
+Removes&nbsp;potential&nbsp;discontinuity&nbsp;artifacts&nbsp;afterwards<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mov:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;stim:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;disc_idx:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;order:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;followup:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;spacing:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;q:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;axis:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;robust:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;visualize:<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;<br>
+TODO:&nbsp;docs</tt></dd></dl>
+ <dl><dt><a name="-flag_outliers"><strong>flag_outliers</strong></a>(signal, thresh_stdv=4, buffer=10, visualize=False)</dt><dd><tt>Flag&nbsp;outliers&nbsp;based&nbsp;on&nbsp;median&nbsp;abs&nbsp;deviation.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Returns&nbsp;two&nbsp;arrays&nbsp;of&nbsp;indices.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;first&nbsp;gives&nbsp;the&nbsp;indices&nbsp;to&nbsp;be&nbsp;deleted.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;second&nbsp;gives&nbsp;the&nbsp;indices&nbsp;of&nbsp;locations&nbsp;in&nbsp;the&nbsp;new&nbsp;signal&nbsp;which<br>
+&nbsp;&nbsp;&nbsp;&nbsp;will&nbsp;potentially&nbsp;have&nbsp;discontinuities&nbsp;due&nbsp;to&nbsp;fluroescence&nbsp;reset.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signal:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;thresh_stdv:&nbsp;threshold&nbsp;standard&nbsp;deviation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;buffer:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;visualize:&nbsp;whether&nbsp;to&nbsp;visualize&nbsp;flagged&nbsp;outliers<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;del_idx:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;disc_idx:</tt></dd></dl>
+ <dl><dt><a name="-retrend"><strong>retrend</strong></a>(trend_components, disc_idx, stim, all_quad=False)</dt><dd><tt>Refit&nbsp;the&nbsp;raw&nbsp;data&nbsp;with&nbsp;trend&nbsp;after&nbsp;removing&nbsp;photobleach&nbsp;trend&nbsp;from<br>
+each&nbsp;stim&nbsp;onset.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;trend_components:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;disc_idx:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;stim:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;all_quad:<br>
+&nbsp;<br>
+Return:</tt></dd></dl>
+ <dl><dt><a name="-thresh_mad"><strong>thresh_mad</strong></a>(mov, x=3, axis=-1)</dt><dd><tt>Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mov:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;axis:<br>
+&nbsp;<br>
+Return:</tt></dd></dl>
+</td></tr></table>
+</body></html>
