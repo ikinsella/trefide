@@ -16,14 +16,14 @@ def pixelwise_ranks(rank_vec,
     """ rank_vec should be column major ordered
 
     Parameter:
-        rank_vec:
-        fov_height:
-        fov_width:
+        rank_vec:  rank of each patch
+        fov_height: height of field of view
+        fov_width: width of field of view
         num_frames: number of frames
         bheight: block height
         bwidth: block width
         figsize: fig size
-        dataset:
+        dataset: title to prepend
     """
 
     # Assert Valid Dimensions

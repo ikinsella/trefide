@@ -11,9 +11,8 @@ def weighted_component_reformat(U, V, K, indices, W):
         W: weighting component matrix
 
     Return:
-        U_full:
-        V_full:
-
+        U_full: expanded spatial components (video height x video width x total ranks)
+        V_full: expanded temporal components (total ranks x frames)
 
     """
 
@@ -69,14 +68,13 @@ def overlapping_component_reformat(d1,
         bwidth: width of video block
         U: spatial components matrix
         V: temporal components matrix
-        K:
-        I:
+        K: rank of each patch
+        I: location/index inside of patch grid
         W: weighting compoent matrix
 
     Return:
-        U_full:
-        V_full:
-        V_full:
+        U_full: expanded spatial components (video height x video width x total ranks)
+        V_full: expanded temporal components (total ranks x frames)
 
     """
    

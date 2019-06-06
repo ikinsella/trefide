@@ -108,15 +108,15 @@ cpdef size_t decompose(const int d1,
         spatial_thresh: spatial threshold
         temporal_thresh: temporal threshold
         max_components: maximum number of components
-        consec_failures: 
-        max_iters_main: 
-        max_iters_init: 
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initialization
         tol: convergence tolerence
         enable_temporal_denoiser: whether enable temporal denoiser, True by default 
         enable_spatial_denoiser: whether enable spatial denoiser, True by default
     
     Return:
-        result:
+        result: rank of the compressed video/patch
     
     """
 
@@ -168,15 +168,15 @@ cpdef size_t decimated_decompose(const int d1,
         spatial_thresh: spatial threshold,
         temporal_thresh: temporal threshold,
         max_components: maximum number of components,
-        consec_failures:
-        max_iters_main:
-        max_iters_init:
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initialization
         tol: convergence tolerence
         enable_temporal_denoiser: whether enable temporal denoiser, True by default
         enable_spatial_denoiser: whether enable spatial denoiser, True by default
         
     Return:
-        result:
+        result: rank of the compressed video/patch
     
     """
 
@@ -231,9 +231,9 @@ cpdef batch_decompose(const int d1,
         spatial_thresh: spatial threshold,
         temporal_thresh: temporal threshold,
         max_components: maximum number of components,
-        consec_failures:
-        max_iters_main:
-        max_iters_init:
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initializatio
         tol: convergence tolerence
         d_sub: spatial downsampling factor
         t_sub: temporal downsampling factor
@@ -243,8 +243,8 @@ cpdef batch_decompose(const int d1,
     Return:
         U: spatial components matrix
         V: temporal components matrix
-        K: 
-        indices: 
+        K: rank of each patch
+        indices: location/index inside of patch grid
         
     """
 
@@ -350,8 +350,8 @@ cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U,
     Parameter:
         U: spatial component matrix
         V: temporal component matrix
-        K: 
-        indices:
+        K: rank of each patch
+        indices: location/index inside of patch grid
     
     Return:
         Yd: denoised video data
@@ -403,8 +403,8 @@ cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U,
     Parameter:
         U: spatial component matrix
         V: temporal component matrix
-        K: 
-        indices:
+        K: rank of each patch
+        indices: location/index inside of patch grid
         W: weighting component matrix
         
     Return:
@@ -476,9 +476,9 @@ cpdef overlapping_batch_decompose(const int d1,
         spatial_thresh: spatial threshold,
         temporal_thresh: temporal threshold,
         max_components: maximum number of components,
-        consec_failures:
-        max_iters_main:
-        max_iters_init:
+        consec_failures: number of failures before stopping
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initializatio
         tol: convergence tolerence
         d_sub: spatial downsampling factor
         t_sub: temporal downsampling factor
@@ -488,8 +488,8 @@ cpdef overlapping_batch_decompose(const int d1,
     Return:
         U: spatial components matrix
         V: temporal components matrix
-        K: 
-        I: 
+        K: rank of each patch
+        I: location/index inside of patch grid
         W: weighting components matrix
     
     """
@@ -716,8 +716,8 @@ cpdef overlapping_batch_recompose(const int d1,
         bwidth: block width
         U: spatial components matrix
         V: temporal components matrix
-        K:
-        I:
+        K: rank of each patch
+        I: location/index inside of patch grid
         W: weighting components matrix
     
     Return:
@@ -911,13 +911,13 @@ cpdef pca_decompose(const int d1,
         spatial_thresh: spatial threshold,
         temporal_thresh: temporal threshold,
         max_components: maximum number of components,
-        consec_failures: 
+        consec_failures: number of failures before stopping
     
     Return:
         U: decomposed spatial matrix
         V: decomposed temporal matrix
-        K:
-        indices:
+        K: rank of each patch
+        indices: location/index inside of patch grid
         
     """
 
@@ -978,7 +978,7 @@ cpdef overlapping_pca_decompose(const int d1,
                                   const double temporal_thresh,
                                   const size_t max_components,
                                   const size_t consec_failures):
-    """ 4x batch denoiser 
+    """4x batch denoiser 
     
     Parameter:
         d1: height of video 
@@ -993,8 +993,8 @@ cpdef overlapping_pca_decompose(const int d1,
     Return:
         U: spatial components matrix
         V: temporal components matrix
-        K: 
-        I: 
+        K: rank of each patch
+        I: location/index inside of patch grid
         W: weighting components matrix
         
     """
@@ -1182,15 +1182,15 @@ def determine_thresholds(mov_dims,
     """Determine spatial and temporal threshold.
 
     Parameter:
-        mov_dims:
-        block_dims:
+        mov_dims: dimension of video (height x width x frames)
+        block_dims: dimension of each block (height x width)
         num_components: number of components
-        max_iters_main:
-        max_iters_init:
+        max_iters_main: maximum number of iterations refining a component
+        max_iters_init: maximum number of iterations refining a component during decimated initializatio
         tol: convergence tolerence
         d_sub: spatial downsampling factor
         t_sub: temporal downsampling factor
-        conf:
+        conf: confidence level to determine threshold for the summary statistics
         plot: whether plot
         enable_temporal_denoiser: whether enable temporal denoiser, True by default
         enable_spatial_denoiser: whether enable spatial denoiser, True by default

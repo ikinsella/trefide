@@ -7,15 +7,14 @@ def butter_highpass(signals, cutoff, fs, order=6, axis=-1):
     """ Forward-backward filter inpute signals with butterworth kernel
 
     Parameter:
-        signals:
-        cutoff:
-        fs:
-        order:
-        axis:
+        signals: singnal matrix (number of channels by frames)
+        cutoff: cutoff frequecy
+        fs: sampling rate
+        order: order of filter
+        axis: axis along which to filter
 
     Return:
-
-
+        filtered signal
 
     """
     return signal.filtfilt(*signal.butter(order,
@@ -30,13 +29,13 @@ def gaussian_bandpass(signals, kernel_len, kernel_sigma, axis=-1):
     """ Convolve inputs signals with 0 mean gaussian kernel
 
     Parameter:
-        signals:
-        kernel_len:
-        kernel_sigma:
-        axis:
+        signals: signal matrix (number of channels by frames)
+        kernel_len: filter kernel length
+        kernel_sigma: filter kernel sigma (std)
+        axis: axis along which to filter
 
     Return:
-
+        filtered signal
 
     """
 
@@ -50,11 +49,11 @@ def gaussian_kernel(length, sigma):
     """Returns a 1D gaussian filter of specified length and stdv for convolution
 
     Parameter:
-        length:
-        sigma:
+        length: kernel length
+        sigma: kernel width (std)
 
     Return:
-
+        gaussian kernel
 
     """
     n = (length - 1.) / 2.
@@ -70,11 +69,11 @@ def detrend(signals, degree=2):
     """Substracts the order k trend from each input pixel
 
     Parameter:
-        signals:
-        degree:
+        signals: signal matrix (number of channels by frames)
+        degree: degree of polynomial used to fit the trend
 
     Return:
-
+        signal minus trend
 
     """
     _, len_signal = signals.shape

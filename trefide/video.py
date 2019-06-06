@@ -25,14 +25,11 @@ def write_mpl(mov_list,
     """ Write Movies Using Matplotlib & ffmpeg
 
     Parameter:
-        mov_list:
-        filename:
-        fr:
-        horizontal:
-        titles:
-
-    Return:
-
+        mov_list: list of movies
+        filename: filename to write to
+        fr: frame rate
+        horizontal: which axis to align movies
+        titles: title of each movie
 
     """
     
@@ -113,14 +110,12 @@ def play_cv2(movie,
     """ Render Video With OpenCV3 Library's Imshow
 
     Parameter:
-        movie:
-        gain:
-        fr:
-        offset:
-        magnification:
-        repeat:
-
-    Return:
+        movie: movie matrix
+        gain: gain
+        fr: frame rate
+        offset: baseline brightness
+        magnification: magnification factor
+        repeat: whether to loop or not
 
     """
     T = movie.shape[2]
