@@ -1,5 +1,25 @@
 # TreFiDe - Trend Filter Denoising
 
+
+TreFiDe is the software package accompanying the research publication
+["Penalized matrix decomposition for denoising, compression, and improved demixing of 
+functional imaging data"](https://doi.org/10.1101/334706). TreFiDe is an imporved appproach 
+to compressing and denoising functional image data. The method is based on a spatially-localized 
+penalized matrix decomposition (PMD) of the data to separate (low-dimensional) signal from 
+(temporally-uncorrelated) noise. This approach can be applied in parallel on local spatial 
+patches and is therefore highly scalable, does not impose non-negativity constraints or require 
+stringent identifiability assumptions (leading to significantly more robust results compared to 
+NMF), and estimates all parameters directly from the data, so no hand-tuning is required. We 
+have applied the method to a wide range of functional imaging data (including one-photon, 
+two-photon, three-photon, widefield, somatic, axonal, dendritic, calcium, and voltage imaging 
+datasets): in all cases, we observe ~2-4x increases in SNR and compression rates of 20-300x 
+with minimal visible loss of signal, with no adjustment of hyperparameters; this in turn 
+facilitates the process of demixing the observed activity into contributions from individual 
+neurons. We focus on two challenging applications: dendritic calcium imaging data and voltage 
+imaging data in the context of optogenetic stimulation. In both cases, we show that our new 
+approach leads to faster and much more robust extraction of activity from the video data.
+
+
 ## Install using conda
 
 This installation method is supported and tested only on Ubuntu 18.04.
