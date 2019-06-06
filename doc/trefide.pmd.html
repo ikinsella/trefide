@@ -46,9 +46,9 @@ Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initializatio<br>
 &nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
 &nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
 &nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
@@ -58,15 +58,15 @@ Parameters:<br>
 Return:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indices:</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid</tt></dd></dl>
  <dl><dt><a name="-batch_recompose"><strong>batch_recompose</strong></a>(...)</dt><dd><tt>Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components&nbsp;returned&nbsp;by&nbsp;batch_decompose.<br>
 &nbsp;<br>
 Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;component&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;component&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indices:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
 &nbsp;<br>
 Return:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;Yd:&nbsp;denoised&nbsp;video&nbsp;data</tt></dd></dl>
@@ -86,15 +86,15 @@ Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initialization<br>
 &nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
 &nbsp;&nbsp;&nbsp;&nbsp;enable_temporal_denoiser:&nbsp;whether&nbsp;enable&nbsp;temporal&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
 &nbsp;&nbsp;&nbsp;&nbsp;enable_spatial_denoiser:&nbsp;whether&nbsp;enable&nbsp;spatial&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<br>
 Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;result:</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;result:&nbsp;rank&nbsp;of&nbsp;the&nbsp;compressed&nbsp;video/patch</tt></dd></dl>
  <dl><dt><a name="-decompose"><strong>decompose</strong></a>(...)</dt><dd><tt>Apply&nbsp;TF/TV&nbsp;Penalized&nbsp;Matrix&nbsp;Decomposition&nbsp;(PMD)&nbsp;to&nbsp;factor&nbsp;a<br>
 column&nbsp;major&nbsp;formatted&nbsp;video&nbsp;into&nbsp;spatial&nbsp;and&nbsp;temporal&nbsp;components.<br>
 &nbsp;<br>
@@ -108,27 +108,27 @@ Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold<br>
 &nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold<br>
 &nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initialization<br>
 &nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
 &nbsp;&nbsp;&nbsp;&nbsp;enable_temporal_denoiser:&nbsp;whether&nbsp;enable&nbsp;temporal&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default&nbsp;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;enable_spatial_denoiser:&nbsp;whether&nbsp;enable&nbsp;spatial&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
 &nbsp;<br>
 Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;result:</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;result:&nbsp;rank&nbsp;of&nbsp;the&nbsp;compressed&nbsp;video/patch</tt></dd></dl>
  <dl><dt><a name="-determine_thresholds"><strong>determine_thresholds</strong></a>(...)</dt><dd><tt>Determine&nbsp;spatial&nbsp;and&nbsp;temporal&nbsp;threshold.<br>
 &nbsp;<br>
 Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;mov_dims:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;block_dims:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mov_dims:&nbsp;dimension&nbsp;of&nbsp;video&nbsp;(height&nbsp;x&nbsp;width&nbsp;x&nbsp;frames)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;block_dims:&nbsp;dimension&nbsp;of&nbsp;each&nbsp;block&nbsp;(height&nbsp;x&nbsp;width)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;num_components:&nbsp;number&nbsp;of&nbsp;components<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initializatio<br>
 &nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
 &nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
 &nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
-&nbsp;&nbsp;&nbsp;&nbsp;conf:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;conf:&nbsp;confidence&nbsp;level&nbsp;to&nbsp;determine&nbsp;threshold&nbsp;for&nbsp;the&nbsp;summary&nbsp;statistics<br>
 &nbsp;&nbsp;&nbsp;&nbsp;plot:&nbsp;whether&nbsp;plot<br>
 &nbsp;&nbsp;&nbsp;&nbsp;enable_temporal_denoiser:&nbsp;whether&nbsp;enable&nbsp;temporal&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
 &nbsp;&nbsp;&nbsp;&nbsp;enable_spatial_denoiser:&nbsp;whether&nbsp;enable&nbsp;spatial&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
@@ -153,9 +153,9 @@ Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initializatio<br>
 &nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
 &nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
 &nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
@@ -165,8 +165,8 @@ Parameter:<br>
 Return:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
 &nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;components&nbsp;matrix</tt></dd></dl>
  <dl><dt><a name="-overlapping_batch_recompose"><strong>overlapping_batch_recompose</strong></a>(...)</dt><dd><tt>4x&nbsp;batch&nbsp;denoiser.&nbsp;Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components&nbsp;<br>
 returned&nbsp;by&nbsp;batch_decompose.<br>
@@ -179,8 +179,8 @@ Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;block&nbsp;width<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;I:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
 &nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;components&nbsp;matrix<br>
 &nbsp;<br>
 Return:<br>
@@ -200,8 +200,8 @@ Parameter:<br>
 Return:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
 &nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;components&nbsp;matrix</tt></dd></dl>
  <dl><dt><a name="-pca_decompose"><strong>pca_decompose</strong></a>(...)</dt><dd><tt>Wrapper&nbsp;for&nbsp;the&nbsp;.cpp&nbsp;parallel_factor_patch&nbsp;which&nbsp;wraps&nbsp;the&nbsp;.cpp&nbsp;function<br>
 factor_patch&nbsp;with&nbsp;OpenMP&nbsp;directives&nbsp;to&nbsp;parallelize&nbsp;batch&nbsp;processing.<br>
@@ -216,13 +216,13 @@ Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
 &nbsp;<br>
 Return:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;decomposed&nbsp;spatial&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;decomposed&nbsp;temporal&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indices:</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid</tt></dd></dl>
  <dl><dt><a name="-pca_patch"><strong>pca_patch</strong></a>(...)</dt></dl>
  <dl><dt><a name="-spatial_test_statistic"><strong>spatial_test_statistic</strong></a>(...)</dt></dl>
  <dl><dt><a name="-temporal_test_statistic"><strong>temporal_test_statistic</strong></a>(...)</dt></dl>
@@ -232,8 +232,8 @@ Return:<br>
 Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;component&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;component&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indices:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
 &nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;component&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<br>
 Return:<br>

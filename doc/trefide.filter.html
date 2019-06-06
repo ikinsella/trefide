@@ -30,35 +30,39 @@
 <td width="100%"><dl><dt><a name="-butter_highpass"><strong>butter_highpass</strong></a>(signals, cutoff, fs, order=6, axis=-1)</dt><dd><tt>Forward-backward&nbsp;filter&nbsp;inpute&nbsp;signals&nbsp;with&nbsp;butterworth&nbsp;kernel<br>
 &nbsp;<br>
 Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;signals:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;cutoff:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;fs:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;order:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;axis:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signals:&nbsp;singnal&nbsp;matrix&nbsp;(number&nbsp;of&nbsp;channels&nbsp;by&nbsp;frames)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cutoff:&nbsp;cutoff&nbsp;frequecy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fs:&nbsp;sampling&nbsp;rate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;order:&nbsp;order&nbsp;of&nbsp;filter<br>
+&nbsp;&nbsp;&nbsp;&nbsp;axis:&nbsp;axis&nbsp;along&nbsp;which&nbsp;to&nbsp;filter<br>
 &nbsp;<br>
-Return:</tt></dd></dl>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;filtered&nbsp;signal</tt></dd></dl>
  <dl><dt><a name="-detrend"><strong>detrend</strong></a>(signals, degree=2)</dt><dd><tt>Substracts&nbsp;the&nbsp;order&nbsp;k&nbsp;trend&nbsp;from&nbsp;each&nbsp;input&nbsp;pixel<br>
 &nbsp;<br>
 Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;signals:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;degree:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signals:&nbsp;signal&nbsp;matrix&nbsp;(number&nbsp;of&nbsp;channels&nbsp;by&nbsp;frames)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;degree:&nbsp;degree&nbsp;of&nbsp;polynomial&nbsp;used&nbsp;to&nbsp;fit&nbsp;the&nbsp;trend<br>
 &nbsp;<br>
-Return:</tt></dd></dl>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signal&nbsp;minus&nbsp;trend</tt></dd></dl>
  <dl><dt><a name="-gaussian_bandpass"><strong>gaussian_bandpass</strong></a>(signals, kernel_len, kernel_sigma, axis=-1)</dt><dd><tt>Convolve&nbsp;inputs&nbsp;signals&nbsp;with&nbsp;0&nbsp;mean&nbsp;gaussian&nbsp;kernel<br>
 &nbsp;<br>
 Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;signals:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;kernel_len:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;kernel_sigma:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;axis:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signals:&nbsp;signal&nbsp;matrix&nbsp;(number&nbsp;of&nbsp;channels&nbsp;by&nbsp;frames)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;kernel_len:&nbsp;filter&nbsp;kernel&nbsp;length<br>
+&nbsp;&nbsp;&nbsp;&nbsp;kernel_sigma:&nbsp;filter&nbsp;kernel&nbsp;sigma&nbsp;(std)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;axis:&nbsp;axis&nbsp;along&nbsp;which&nbsp;to&nbsp;filter<br>
 &nbsp;<br>
-Return:</tt></dd></dl>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;filtered&nbsp;signal</tt></dd></dl>
  <dl><dt><a name="-gaussian_kernel"><strong>gaussian_kernel</strong></a>(length, sigma)</dt><dd><tt>Returns&nbsp;a&nbsp;1D&nbsp;gaussian&nbsp;filter&nbsp;of&nbsp;specified&nbsp;length&nbsp;and&nbsp;stdv&nbsp;for&nbsp;convolution<br>
 &nbsp;<br>
 Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;length:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;sigma:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;length:&nbsp;kernel&nbsp;length<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sigma:&nbsp;kernel&nbsp;width&nbsp;(std)<br>
 &nbsp;<br>
-Return:</tt></dd></dl>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gaussian&nbsp;kernel</tt></dd></dl>
 </td></tr></table>
 </body></html>

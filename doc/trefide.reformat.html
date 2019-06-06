@@ -35,14 +35,13 @@ Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;width&nbsp;of&nbsp;video&nbsp;block<br>
 &nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;I:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
 &nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;compoent&nbsp;matrix<br>
 &nbsp;<br>
 Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U_full:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V_full:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V_full:</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;U_full:&nbsp;expanded&nbsp;spatial&nbsp;components&nbsp;(video&nbsp;height&nbsp;x&nbsp;video&nbsp;width&nbsp;x&nbsp;total&nbsp;ranks)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V_full:&nbsp;expanded&nbsp;temporal&nbsp;components&nbsp;(total&nbsp;ranks&nbsp;x&nbsp;frames)</tt></dd></dl>
  <dl><dt><a name="-weighted_component_reformat"><strong>weighted_component_reformat</strong></a>(U, V, K, indices, W)</dt><dd><tt>Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie<br>
 &nbsp;<br>
 Parameter:<br>
@@ -53,7 +52,7 @@ Parameter:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;component&nbsp;matrix<br>
 &nbsp;<br>
 Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U_full:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V_full:</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;U_full:&nbsp;expanded&nbsp;spatial&nbsp;components&nbsp;(video&nbsp;height&nbsp;x&nbsp;video&nbsp;width&nbsp;x&nbsp;total&nbsp;ranks)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V_full:&nbsp;expanded&nbsp;temporal&nbsp;components&nbsp;(total&nbsp;ranks&nbsp;x&nbsp;frames)</tt></dd></dl>
 </td></tr></table>
 </body></html>
