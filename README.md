@@ -3,7 +3,9 @@
 
 TreFiDe is the software package accompanying the research publication
 ["Penalized matrix decomposition for denoising, compression, and improved demixing of 
-functional imaging data"](https://doi.org/10.1101/334706). TreFiDe is an imporved appproach 
+functional imaging data"](https://doi.org/10.1101/334706). 
+
+TreFiDe is an imporved appproach 
 to compressing and denoising functional image data. The method is based on a spatially-localized 
 penalized matrix decomposition (PMD) of the data to separate (low-dimensional) signal from 
 (temporally-uncorrelated) noise. This approach can be applied in parallel on local spatial 
@@ -42,6 +44,9 @@ conda create -n trefide python=3.6 trefide -c jw3132 -c intel
 Download `Demo` folder. Follow the notebook scripts in `Demo` folder to try out TreFiDe.
 To learn about TreFiDe functions, please check [doc](http://htmlpreview.github.io/?https://github.com/ikinsella/trefide/blob/doc/doc/trefide.html)
 .
+
+For user that doesn't have access to Ubuntu:18.04 but is familiar with [Docker](https://www.docker.com/),
+please use Ubuntu docker image to access TreFiDe software. 
 
 
 ## Install from source
