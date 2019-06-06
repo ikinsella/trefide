@@ -22,7 +22,19 @@ def write_mpl(mov_list,
               fr=30, 
               horizontal=True, 
               titles=None):
-    """ Write Movies Using Matplotlib & ffmpeg """
+    """ Write Movies Using Matplotlib & ffmpeg
+
+    Parameter:
+        mov_list:
+        filename:
+        fr:
+        horizontal:
+        titles:
+
+    Return:
+
+
+    """
     
     # Declare & Assign Local Variables
     n_mov = len(mov_list)
@@ -98,7 +110,19 @@ def play_cv2(movie,
              offset=0, 
              magnification=1, 
              repeat=False):
-    """ Render Video With OpenCV3 Library's Imshow"""
+    """ Render Video With OpenCV3 Library's Imshow
+
+    Parameter:
+        movie:
+        gain:
+        fr:
+        offset:
+        magnification:
+        repeat:
+
+    Return:
+
+    """
     T = movie.shape[2]
     maxmov = np.max(movie)
     looping=True
