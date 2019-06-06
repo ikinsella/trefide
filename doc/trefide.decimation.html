@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module trefide.decimation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="trefide.html"><font color="#ffffff">trefide</font></a>.decimation</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/decimation.cpython-36m-x86_64-linux-gnu.so">/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/decimation.cpython-36m-x86_64-linux-gnu.so</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="builtins.html">builtins</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-downsample_image"><strong>downsample_image</strong></a>(...)</dt><dd><tt>Downsample&nbsp;Image&nbsp;In&nbsp;Each&nbsp;Dimension&nbsp;By&nbsp;Factor&nbsp;Of&nbsp;ds&nbsp;<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ds:&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;image&nbsp;data&nbsp;of&nbsp;shape&nbsp;(d1&nbsp;x&nbsp;d2)<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U_ds:&nbsp;downsampled&nbsp;video&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-downsample_signal"><strong>downsample_signal</strong></a>(...)</dt><dd><tt>Downsample&nbsp;Image&nbsp;In&nbsp;Each&nbsp;Dimension&nbsp;By&nbsp;Factor&nbsp;Of&nbsp;ds&nbsp;<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ds:&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;signal&nbsp;data<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V_ds:&nbsp;downsmapled&nbsp;signal&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-downsample_video"><strong>downsample_video</strong></a>(...)</dt><dd><tt>Downsample&nbsp;(d1xd2xt)&nbsp;movie&nbsp;in&nbsp;row-major&nbsp;order&nbsp;<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y:&nbsp;video&nbsp;data&nbsp;of&nbsp;shape&nbsp;(d1&nbsp;x&nbsp;d2)&nbsp;x&nbsp;t<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y_ds:&nbsp;downsampled&nbsp;video&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-upsample_image"><strong>upsample_image</strong></a>(...)</dt><dd><tt>Downsample&nbsp;Image&nbsp;In&nbsp;Each&nbsp;Dimension&nbsp;By&nbsp;Factor&nbsp;Of&nbsp;ds&nbsp;<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ds:&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U_ds:&nbsp;downsampled&nbsp;video&nbsp;data<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;upsampled&nbsp;video&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-upsample_signal"><strong>upsample_signal</strong></a>(...)</dt><dd><tt>Downsample&nbsp;Image&nbsp;In&nbsp;Each&nbsp;Dimension&nbsp;By&nbsp;Factor&nbsp;Of&nbsp;ds&nbsp;<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ds:&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V_ds:&nbsp;downsmapled&nbsp;signal&nbsp;data<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;upsampled&nbsp;signal&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-weighted_recompose"><strong>weighted_recompose</strong></a>(...)</dt><dd><tt>Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components&nbsp;returned&nbsp;by&nbsp;batch_decompose.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;component&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;component&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indices:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;component&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Yd:&nbsp;denoised&nbsp;video&nbsp;data</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__test__</strong> = {}</td></tr></table>
+</body></html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module trefide.utils</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="trefide.html"><font color="#ffffff">trefide</font></a>.utils</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/utils.cpython-36m-x86_64-linux-gnu.so">/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/utils.cpython-36m-x86_64-linux-gnu.so</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="builtins.html">builtins</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-psd_noise_estimate"><strong>psd_noise_estimate</strong></a>(...)</dt><dd><tt>Estimates&nbsp;the&nbsp;variance&nbsp;of&nbsp;the&nbsp;(assumed&nbsp;to&nbsp;be&nbsp;gaussian)&nbsp;noise<br>
+contaminating&nbsp;an&nbsp;input&nbsp;signal&nbsp;by&nbsp;averaging&nbsp;over&nbsp;the&nbsp;high&nbsp;frequency&nbsp;<br>
+components&nbsp;of&nbsp;Welch's&nbsp;PSD&nbsp;Estimate&nbsp;<br>
+________<br>
+Input:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signal:&nbsp;(nchan,&nbsp;nsamp)&nbsp;np.ndarray&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Noise&nbsp;contaminated&nbsp;temporal&nbsp;signal&nbsp;(required)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(TODO:&nbsp;modify&nbsp;cpp&nbsp;implementation&nbsp;allowing&nbsp;different&nbsp;PSD&nbsp;params)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(TODO:&nbsp;modify&nbsp;cpp&nbsp;implementation&nbsp;to&nbsp;allow&nbsp;different&nbsp;types&nbsp;of&nbsp;averaging)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(TODO:&nbsp;modify&nbsp;cpp&nbsp;implementation&nbsp;to&nbsp;allow&nbsp;input&nbsp;of&nbsp;different&nbsp;freq&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ranges&nbsp;for&nbsp;averaging&nbsp;...&nbsp;currently&nbsp;[.25,.5])&nbsp;<br>
+________<br>
+Output:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;vars:&nbsp;(nchan_signal,)&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Estimates&nbsp;of&nbsp;the&nbsp;noise&nbsp;variance&nbsp;contaminating&nbsp;each&nbsp;input&nbsp;channel</tt></dd></dl>
+ <dl><dt><a name="-welch_psd_estimate"><strong>welch_psd_estimate</strong></a>(...)</dt><dd><tt>Estimates&nbsp;the&nbsp;Power&nbsp;Spectral&nbsp;Density&nbsp;(PSD)&nbsp;using&nbsp;Welch's&nbsp;method&nbsp;of<br>
+controlling&nbsp;variance&nbsp;by&nbsp;averaging&nbsp;over&nbsp;lower&nbsp;resolution&nbsp;PSD&nbsp;estimates&nbsp;<br>
+from&nbsp;smaller,&nbsp;overlapping&nbsp;signal&nbsp;segments.<br>
+________<br>
+Input:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;signal:&nbsp;(nchan,&nbsp;nsamp)&nbsp;np.ndarray&nbsp;&nbsp;(required)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Noise&nbsp;contaminated&nbsp;temporal&nbsp;signal&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;nsamp_seg:&nbsp;int&nbsp;(optional)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number&nbsp;of&nbsp;samples&nbsp;in&nbsp;each&nbsp;segment&nbsp;used&nbsp;for&nbsp;individual&nbsp;PSD&nbsp;estimates<br>
+&nbsp;&nbsp;&nbsp;&nbsp;nsamp_overlap:&nbsp;int&nbsp;(optional)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number&nbsp;of&nbsp;samples&nbsp;of&nbsp;overlap&nbsp;between&nbsp;consecutive&nbsp;segments<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fs:&nbsp;double&nbsp;(optional)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sampling&nbsp;frequency&nbsp;of&nbsp;input&nbsp;signal<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(TODO:&nbsp;modify&nbsp;cpp&nbsp;implementation&nbsp;for&nbsp;more&nbsp;windowing&nbsp;options&nbsp;(currently&nbsp;Hann)<br>
+________<br>
+Output:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Pxx:&nbsp;(nchan_signal,&nbsp;floor(nsamp_seg&nbsp;/&nbsp;2)&nbsp;+&nbsp;1)&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Estimates&nbsp;of&nbsp;PSD&nbsp;coefficients&nbsp;for&nbsp;each&nbsp;input&nbsp;channel</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__test__</strong> = {}</td></tr></table>
+</body></html>
