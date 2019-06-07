@@ -241,7 +241,7 @@ cpdef lpdas(double[::1] y,
 # ---------------------------------------------------------------------------- #
 
 
-cpdef cps_cadmm(const double[::1] y,        # Observations
+cpdef cps_cadmm(double[::1] y,        # Observations
                 const double delta,         # MSE constraint
                 double[::1] w=None,         # Observation weights
                 double[::1] beta=None,      # Primal Warm Start
@@ -289,7 +289,7 @@ cpdef cps_cadmm(const double[::1] y,        # Observations
     return np.asarray(beta), np.asarray(alpha), np.asarray(u), lambda_
  
 
-cpdef ladmm(const double[::1] y,        # Observations
+cpdef ladmm(double[::1] y,        # Observations
             const double lambda_,         # MSE constraint
             double[::1] w=None,        # Observation weights
             double[::1] beta=None,
