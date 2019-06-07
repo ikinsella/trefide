@@ -1,9 +1,9 @@
 package:
   name: trefide
-  version: "1.1"
+  version: "1.2"
 
 source:
-  git_url: https://github.com/ikinsella/trefide.git
+  path: ../
 
 build:
   number: 0
