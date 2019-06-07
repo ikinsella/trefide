@@ -38,7 +38,7 @@ conda list
 Create a new environment for TreFiDe and install TreFiDe software and all of its dependencies. 
 
 ```
-conda create -n trefide python=3.6 trefide -c jw3132 -c intel
+conda create -n trefide python=3.6 trefide -c jw3132 -c intel -c menpo
 ```
 
 Download `Demo` folder. Follow the notebook scripts in `Demo` folder to try out TreFiDe.
