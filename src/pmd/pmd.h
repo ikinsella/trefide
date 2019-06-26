@@ -9,6 +9,7 @@ private:
 
     const MKL_INT bheight;
     const MKL_INT bwidth;
+    const MKL_INT nchan;
     MKL_INT d_sub;
     const MKL_INT t;
     MKL_INT t_sub;
@@ -28,6 +29,7 @@ public:
     PMD_params(
             const MKL_INT _bheight,
             const MKL_INT _bwidth,
+            const MKL_INT _nchan,
             MKL_INT _d_sub,
             const MKL_INT _t,
             MKL_INT _t_sub,
@@ -44,6 +46,7 @@ public:
 
     MKL_INT get_bheight();
     MKL_INT get_bwidth();
+    MKL_INT get_nchan();
     MKL_INT get_d_sub();
     void set_d_sub(MKL_INT _d_sub);
     MKL_INT get_t();
@@ -82,13 +85,37 @@ void regress_spatial(const MKL_INT d,
                      double* u_k, 
                      const double* v_k);
 
+double estimate_noise_tv_op(const MKL_INT d1,
+                            const MKL_INT d2,
+                            const double* u_k);
+
+double estimate_noise_mean_filter(const int rows,
+                                  const int cols,
+                                  double* image);
+
+double estimate_noise_median_filter(const int rows,
+                                    const int cols,
+                                    double* image);
+
+short cps_tv(const int d1,
+             const int d2,
+             const int nchan,
+             double* y,
+             const double delta,
+             double *x,
+             double* lambda_tv,
+             double *info,
+             double tol=5e-2);
+
 void constrained_denoise_spatial(const MKL_INT d1,
                                  const MKL_INT d2,
+                                 const MKL_INT nchan,
                                  double* u_k,
                                  double* lambda_tv);
 
 void denoise_spatial(const MKL_INT d1,
                      const MKL_INT d2,
+                     const MKL_INT nchan,
                      double* u_k,
                      double *lambda_tv);
 
@@ -102,14 +129,6 @@ double update_spatial_init(const MKL_INT d,
                            const double *R_k,
                            double* u_k,
                            const double* v_k);
-
-//double update_spatial(const MKL_INT d1,
-//                      const MKL_INT d2,
-//                      const MKL_INT t,
-//                      const double *R_k,
-//                      double* u_k,
-//                      const double* v_k,
-//                      double* lambda_tv);
 
 double update_spatial(const double *R_k,
                       double* u_k,
@@ -139,15 +158,6 @@ double update_temporal_init(const MKL_INT d,
                             const double* u_k,
                             double* v_k);
 
-//double update_temporal(const MKL_INT d,
-//                       const MKL_INT t,
-//                       const double* R_k,
-//                       const double* u_k,
-//                       double* v_k,
-//                       double* z_k,
-//                       double* lambda_tf,
-//                       void* FFT=NULL);
-
 double update_temporal(const MKL_INT d,
                        const double* R_k,
                        const double* u_k,
@@ -156,8 +166,17 @@ double update_temporal(const MKL_INT d,
                        double* lambda_tf,
                        PMD_params *pars);
 
+double tvnorm_2d(const MKL_INT d1,
+                 const MKL_INT d2,
+                 const double* u_k);
+
+double resid_dasum(const MKL_INT n,
+                   const double* x,
+                   const double* y);
+
 double spatial_test_statistic(const MKL_INT d1,
                               const MKL_INT d2,
+                              const MKL_INT nchan,
                               const double* u_k);
 
 double temporal_test_statistic(const MKL_INT t,
@@ -167,24 +186,6 @@ void init_dual_from_primal(const MKL_INT t,
                            const double* v,
                            double* z);
 
-//int rank_one_decomposition(const MKL_INT d1,
-//                           const MKL_INT d2,
-//                           const MKL_INT d_sub,
-//                           const MKL_INT t,
-//                           const MKL_INT t_sub,
-//                           const double* R_k,
-//                           const double* R_init,
-//                           double* u_k,
-//                           double* u_init,
-//                           double* v_k,
-//                           double* v_init,
-//                           const double spatial_thresh,
-//                           const double temporal_thresh,
-//                           const MKL_INT max_iters_main,
-//                           const MKL_INT max_iters_init,
-//                           const double tol,
-//                           void* FFT=NULL);
-
 int rank_one_decomposition(const double* R_k,
                            const double* R_init,
                            double* u_k,
@@ -193,48 +194,11 @@ int rank_one_decomposition(const double* R_k,
                            double* v_init,
                            PMD_params *pars);
 
-//size_t pmd(const MKL_INT d1,
-//           const MKL_INT d2,
-//           MKL_INT d_sub,
-//           const MKL_INT t,
-//           MKL_INT t_sub,
-//           double* R,
-//           double* R_ds,
-//           double* U,
-//           double* V,
-//           const double spatial_thresh,
-//           const double temporal_thresh,
-//           const size_t max_components,
-//           const size_t consec_failures,
-//           const MKL_INT max_iters_main,
-//           const MKL_INT max_iters_init,
-//           const double tol,
-//           void* FFT=NULL);
-
 size_t pmd(double* R,
            double* R_ds,
            double* U,
            double* V,
            PMD_params *pars);
-
-//void batch_pmd(const MKL_INT bheight,
-//               const MKL_INT bwidth,
-//               MKL_INT d_sub,
-//               const MKL_INT t,
-//               MKL_INT t_sub,
-//               const int b,
-//               double** Rpt,
-//               double** Rpt_ds,
-//               double** Upt,
-//               double** Vpt,
-//               size_t* K,
-//               const double spatial_thresh,
-//               const double temporal_thresh,
-//               const size_t max_components,
-//               const size_t consec_failures,
-//               const size_t max_iters,
-//               const size_t max_iters_ds,
-//               const double tol);
 
 void batch_pmd(
         double** Rp,

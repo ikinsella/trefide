@@ -19,6 +19,7 @@
 PMD_params::PMD_params(
         const MKL_INT _bheight,
         const MKL_INT _bwidth,
+        const MKL_INT _nchan,
         MKL_INT _d_sub,
         const MKL_INT _t,
         MKL_INT _t_sub,
@@ -35,6 +36,7 @@ PMD_params::PMD_params(
 
         bheight(_bheight),
         bwidth(_bwidth),
+        nchan(_nchan),
         t(_t),
         spatial_thresh(_spatial_thresh),
         temporal_thresh(_temporal_thresh),
@@ -57,6 +59,10 @@ MKL_INT PMD_params::get_bheight() {
 
 MKL_INT PMD_params::get_bwidth() {
     return this->bwidth;
+}
+
+MKL_INT PMD_params::get_nchan() {
+    return this->nchan;
 }
 
 MKL_INT PMD_params::get_d_sub() {
@@ -221,7 +227,6 @@ double estimate_noise_tv_op(const MKL_INT d1,
                             const MKL_INT d2,
                             const double* u_k)
 {
-    
     /* Declare & Initialize Internal Variables */
     int j, j1, j2, n=0;
     int num_edges = d1 * (d2 - 1) + d2 * (d1 - 1);
@@ -260,7 +265,7 @@ double estimate_noise_tv_op(const MKL_INT d1,
     std::sort(edge_diffs, edge_diffs+num_edges);
 
     /* Transform & Return */    
-    std = edge_diffs[num_edges/2]/ .954;
+    std = edge_diffs[num_edges/2] / .954;
     free(edge_diffs);
     return std * std;
 
@@ -268,7 +273,9 @@ double estimate_noise_tv_op(const MKL_INT d1,
 
 /* Estimates Image Noise Variance By Taking Median Of Local Noise Var Estimates
  * */
-double estimate_noise_mean_filter(const int rows, const int cols, double* image)
+double estimate_noise_mean_filter(const int rows,
+                                  const int cols,
+                                  double* image)
 {
     /* Internal Variables */
     int n = 5;
@@ -310,7 +317,9 @@ double estimate_noise_mean_filter(const int rows, const int cols, double* image)
 
 /* Apply Median Filter To Estimate Noise Level
  */
-double estimate_noise_median_filter(const int rows, const int cols, double* image)
+double estimate_noise_median_filter(const int rows,
+                                    const int cols,
+                                    double* image)
 {
     /* Internal Variabels */
     int n = 3;
@@ -357,29 +366,38 @@ double estimate_noise_median_filter(const int rows, const int cols, double* imag
  *
  */
 short cps_tv(const int d1, 
-             const int d2, 
+             const int d2,
+             const int nchan,
              double* y,
              const double delta, 
              double *x, 
              double* lambda_tv,
              double *info,
-             double tol=5e-2)
+             double tol)
 {
     /* Declare & allocate internal vars */
     int d = d1 * d2;
     int iters = 0;
-    double target = sqrt(d*delta);  // target norm of error
+    double target = sqrt(d*nchan*delta);  // target norm of error
     double l2_err, l2_err_prev = 0;
-    double *resid = (double *) malloc(d * sizeof(double));
+    double *resid = (double *) malloc(d * nchan * sizeof(double));
+    double lambdas[3] = {*lambda_tv, *lambda_tv, *lambda_tv};
+    double dims[3] = {1,2,3};
+    double norms[3] = {1,1,1};
+    int ns[3] = {d1,d2,nchan};
 
     while (iters < 100)
     {
         /* Evaluate Solution At Lambda */
-        DR2_TV(d1, d2, y, *lambda_tv, *lambda_tv, 1, 1, x, 1, 1, info);
+        //DR2_TV(d1, d2, y, *lambda_tv, *lambda_tv, 1, 1, x, 1, 1, info);
+        //Yang3_TV(d1, d2, nchan, y, lambda_tv, x, 0, info);
+        PD_TV(y, lambdas, norms, dims, x, info, ns, 3,3,1,0);
+        //int PDR_TV(y, lambdas, norms, dims, x, info, ns, 3,3,1,0);
+
 
         /* Compute norm of residual */
-        vdSub(d, y, x, resid);
-        l2_err = cblas_dnrm2(d, resid, 1);
+        vdSub(d*nchan, y, x, resid);
+        l2_err = cblas_dnrm2(d*nchan, resid, 1);
 
         /* Check For Convergence */
         if (fabs(target*target - l2_err*l2_err) / (target*target) < tol){
@@ -388,11 +406,14 @@ short cps_tv(const int d1,
         } else if(fabs(l2_err - l2_err_prev) < 1e-3){
             free(resid);
             return 0;  // line search stalled
-        } 
+        }
         l2_err_prev = l2_err;
 
         /* Increment Lambda */
         *lambda_tv = exp(log(*lambda_tv) + log(target) - log(l2_err));
+        lambdas[0] = *lambda_tv;
+        lambdas[1] = *lambda_tv;
+        lambdas[2] = *lambda_tv;
 
         /* Update Iteration Count */
         iters++;
@@ -407,30 +428,39 @@ short cps_tv(const int d1,
  */
 void constrained_denoise_spatial(const MKL_INT d1,
                                  const MKL_INT d2,
+                                 const MKL_INT nchan,
                                  double* u_k,
                                  double* lambda_tv)
 {
-
     /* Declar & Initialize Internal Variables */
-    short status;
-    double delta;
-    double* target = (double *) malloc(d1 * d2 * sizeof(double));
+    double* target = (double *) malloc(d1 * d2 * nchan * sizeof(double));
     double* info = (double *) malloc(3 * sizeof(double));
-    copy(d1*d2, u_k, target);
+    copy(d1*d2*nchan, u_k, target);
 
     /* Compute Noise Level */
-    delta = estimate_noise_mean_filter(d1,d2,u_k);
-    /*delta = estimate_noise_median_filter(d1,d2,u_k);*/
+    double delta = 0;
+    for (int c = 0; c < nchan; c++){
+        delta += estimate_noise_mean_filter(d1,d2,u_k);
+        /*delta += estimate_noise_median_filter(d1,d2,u_k);*/
+    }
+    delta /= nchan;
+
+    // Attempt 3D Denoise Fallback To 2D
     if (delta > 0){
         /* u_k <- argmin_u ||u_k - u|| + 2*lambda_tv ||u||TV */
-        status = cps_tv(d1, d2, target, delta, u_k, lambda_tv, info);
+        short status = cps_tv(d1, d2, nchan, target, delta, u_k, lambda_tv, info);
         if (status < 1){
             *lambda_tv = .0025;
-            DR2_TV(d1, d2, target, *lambda_tv, *lambda_tv, 1, 1, u_k, 1, 1, info);
+            for (int c = 0; c < nchan; c++){
+                DR2_TV(d1, d2, target + d1*d2*c,
+                       *lambda_tv, *lambda_tv,
+                       1, 1,
+                       u_k + d1*d2*c,
+                       1, 1, info);
+            }
         }
-        
         /* u_k /= ||u_k|| */
-        normalize(d1*d2, u_k);
+        normalize(d1*d2*nchan, u_k);
     }
     /* Free Allocated Memory */
     free(target);
@@ -443,6 +473,7 @@ void constrained_denoise_spatial(const MKL_INT d1,
  */
 void denoise_spatial(const MKL_INT d1,
                      const MKL_INT d2,
+                     const MKL_INT nchan,
                      double* u_k,
                      double* lambda_tv)
 {
@@ -499,14 +530,6 @@ double update_spatial_init(const MKL_INT d,
  * normed difference between the updated spatial component and the 
  * previous iterate (used to monitor convergence).
  */
-//double update_spatial(const MKL_INT d1,
-//                      const MKL_INT d2,
-//                      const MKL_INT t,
-//                      const double *R_k,
-//                      double* u_k,
-//                      const double* v_k,
-//                      double *lambda_tv)
-
 double update_spatial(const double *R_k,
                       double* u_k,
                       const double* v_k,
@@ -515,27 +538,28 @@ double update_spatial(const double *R_k,
 {
     MKL_INT d1 = pars->get_bheight();
     MKL_INT d2 = pars->get_bwidth();
+    MKL_INT nchan = pars->get_nchan();
     MKL_INT t = pars->get_t();
     bool enable_spatial_denoiser = pars->get_enable_spatial_denoiser();
 
     /* Declare & Allocate For Internal Vars */
     MKL_INT d = d1*d2;
     double delta_u;
-    double* u__ = (double *) malloc(d * sizeof(double));
+    double* u__ = (double *) malloc(d * nchan * sizeof(double));
 
     /* u__ <- u_k */
-    copy(d, u_k, u__);
+    copy(d*nchan, u_k, u__);
 
     /* u_{k+1} <- R_{k+1} v_k */
-    regress_spatial(d, t, R_k, u_k, v_k);
+    regress_spatial(d*nchan, t, R_k, u_k, v_k);
 
     /* u_{k+1} <- argmin_u ||u_{k+1} - u||_2^2 + 2* lambda_tv ||u||_TV */
     if (enable_spatial_denoiser) {
-        constrained_denoise_spatial(d1, d2, u_k, lambda_tv);  // enable to skip this step
+        constrained_denoise_spatial(d1, d2, nchan, u_k, lambda_tv);  // enable to skip this step
     }
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
-    delta_u = distance_inplace(d, u_k, u__);
+    delta_u = distance_inplace(d*nchan, u_k, u__);
    
     /* Free Allocated Memory */ 
     free(u__);
@@ -650,15 +674,6 @@ double update_temporal_init(const MKL_INT d,
  * normed difference between the updated temporal component and the 
  * previous iterate (used to monitor convergence).
  */
-//double update_temporal(const MKL_INT d,
-//                       const MKL_INT t,
-//                       const double* R_k,
-//                       const double* u_k,
-//                       double* v_k,
-//                       double* z_k,
-//                       double* lambda_tf,
-//                       void* FFT)
-
 double update_temporal(const MKL_INT d,
                        const double* R_k,
                        const double* u_k,
@@ -703,22 +718,19 @@ double update_temporal(const MKL_INT d,
 /* Computes the ratio of the L1 to TV norm for a spatial components in order to 
  * test against the null hypothesis that it is gaussian noise.
  */
-double spatial_test_statistic(const MKL_INT d1,
-                              const MKL_INT d2,
-                              const double* u_k)
+double tvnorm_2d(const MKL_INT d1,
+                 const MKL_INT d2,
+                 const double* u_k)
 {
-    
     /* Declare & Initialize Internal Variables */
     int j, j1, j2;
     double norm_tv = 0;
-    double norm_l1 = u_k[d1*d2-1];  // Bottom, Right Corner
 
     /* All Elements Except Union (Bottom Row, Rightmost Column) */
     for (j2 = 0; j2 < d2-1; j2++){
         for (j1 = 0; j1 < d1-1; j1++){
             j = d1 * j2 + j1;
             norm_tv += fabs(u_k[j] - u_k[j+1]) + fabs(u_k[j] - u_k[j + d1]);
-            norm_l1 += fabs(u_k[j]);
         }
     }
 
@@ -726,7 +738,6 @@ double spatial_test_statistic(const MKL_INT d1,
     j = d1 * (d2-1);
     for (j1 = 0; j1 < d1 - 1; j1++){
         norm_tv += fabs(u_k[j] - u_k[j+1]);
-        norm_l1 += fabs(u_k[j]);
         j += 1;
     }
 
@@ -734,15 +745,45 @@ double spatial_test_statistic(const MKL_INT d1,
     j = d1 - 1;
     for (j2 = 0; j2 < d2-1; j2++){
         norm_tv += fabs(u_k[j] - u_k[j + d1]);
-        norm_l1 += fabs(u_k[j]);
         j += d1;
     }
-    
-    //return norm_tv / (d1 * (d2 - 1) + d2 * (d1- 1));
-    /* Return Test Statistic */
-    if (norm_tv > 0){
-        return (norm_tv * (d1 * d2)) / (norm_l1 * (d1 * (d2-1) + d2 * (d1-1)));
 
+    return norm_tv;
+}
+
+double resid_dasum(const MKL_INT n,
+                   const double* x,
+                   const double* y)
+{
+    double sum = 0;
+    for (int idx = 0; idx < n; idx++){
+        sum += fabs(x[idx] - y[idx]);
+    }
+    return sum;
+}
+
+double spatial_test_statistic(const MKL_INT d1,
+                              const MKL_INT d2,
+                              const MKL_INT nchan,
+                              const double* u_k)
+{
+    // Compute TV Norm
+    int num_terms_tv = nchan * (d1 * (d2-1) + d2 * (d1-1)) + (nchan-1) * d1 * d2;
+    double norm_tv = 0;
+    for (int c = 0; c < nchan; c++){
+        norm_tv += tvnorm_2d(d1, d2, u_k + d1*d2*c);
+    }
+    for (int c = 0; c < nchan - 1; c++){
+        norm_tv += resid_dasum(d1*d2, u_k + d1*d2*c, u_k + d1*d2*(c+1));
+    }
+
+    // Compute L1 Norm
+    int num_terms_l1 = d1 * d2 * nchan;
+    double norm_l1 = cblas_dasum(num_terms_l1, u_k, 1);
+
+    // Compute Normalized Ratio
+    if (norm_tv > 0){
+        return (norm_tv * num_terms_l1) / (norm_l1 * num_terms_tv);
     } else{
         return 100; // Spatial component constant => garbage
     }
@@ -755,7 +796,6 @@ double spatial_test_statistic(const MKL_INT d1,
 double temporal_test_statistic(const MKL_INT t,
                                const double* v_k)
 {
-    
     /* Declare & Initialize Internal Variables */
     int i;
     double norm_tf = 0;
@@ -804,24 +844,6 @@ void init_dual_from_primal(const MKL_INT t, const double* v,double* z){
  *      1: If we reject the null hypothesis that u_k is noise 
  *     -1: If we accept the null hypothesis that u_k is noise
  */
-//int rank_one_decomposition(const MKL_INT d1,
-//                           const MKL_INT d2,
-//                           const MKL_INT d_sub,
-//                           const MKL_INT t,
-//                           const MKL_INT t_sub,
-//                           const double* R_k,
-//                           const double* R_init,
-//                           double* u_k,
-//                           double* u_init,
-//                           double* v_k,
-//                           double* v_init,
-//                           const double spatial_thresh,
-//                           const double temporal_thresh,
-//                           const MKL_INT max_iters_main,
-//                           const MKL_INT max_iters_init,
-//                           const double tol,
-//                           void* FFT)
-
 int rank_one_decomposition(const double* R_k,
                            const double* R_init,
                            double* u_k,
@@ -832,6 +854,7 @@ int rank_one_decomposition(const double* R_k,
 {
     MKL_INT d1 = pars->get_bheight();
     MKL_INT d2 = pars->get_bwidth();
+    MKL_INT nchan = pars->get_nchan();
     MKL_INT d_sub = pars->get_d_sub();
     MKL_INT t = pars->get_t();
     MKL_INT t_sub = pars->get_t_sub();
@@ -855,14 +878,14 @@ int rank_one_decomposition(const double* R_k,
     initvec(t-2, z_k, 0.0); 
 
     /* Intialize Components With Power Method Iters */
-    initvec(d_init, u_init, 1 / sqrt(d_init));
-    regress_temporal(d_init, t_init, R_init, u_init, v_init);
+    initvec(d_init*nchan, u_init, 1 / sqrt(d_init*nchan));
+    regress_temporal(d_init*nchan, t_init, R_init, u_init, v_init);
     normalize(t_init, v_init);
     for (iters = 0; iters < max_iters_init; iters++)
     {    
         /* Update Components: Regression & Normalization*/
-        delta_u = update_spatial_init(d_init, t_init, R_init, u_init, v_init);
-        delta_v = update_temporal_init(d_init, t_init, R_init, u_init, v_init);
+        delta_u = update_spatial_init(d_init*nchan, t_init, R_init, u_init, v_init);
+        delta_v = update_temporal_init(d_init*nchan, t_init, R_init, u_init, v_init);
 
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol) break;
@@ -876,7 +899,7 @@ int rank_one_decomposition(const double* R_k,
         } else {
             copy(t, v_init, v_k);
         }
-        if (d_sub > 1) initvec(d, u_k, 1 / sqrt(d));
+        if (d_sub > 1) initvec(d*nchan, u_k, 1 / sqrt(d*nchan));
     }
 
     /* Loop Until Convergence Of Spatial & Temporal Components */
@@ -884,15 +907,15 @@ int rank_one_decomposition(const double* R_k,
         
         /* Update Components: Regression, Denoising, & Normalization */
         delta_u = update_spatial(R_k, u_k, v_k, &lambda_tv, pars);
-        delta_v = update_temporal(d, R_k, u_k, v_k, z_k, &lambda_tf, pars);
+        delta_v = update_temporal(d*nchan, R_k, u_k, v_k, z_k, &lambda_tf, pars);
 
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol){    
             /* Free Allocated Memory & Test Spatial Component Against Null */
             free(z_k);
             free(v_tmp);   
-            regress_temporal(d, t, R_k, u_k, v_k); // debias
-            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) 
+            regress_temporal(d*nchan, t, R_k, u_k, v_k); // debias
+            if (spatial_test_statistic(d1, d2, nchan, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh)
                 return -1;  // Discard Component
             return 1;  // Keep Component
         }
@@ -900,8 +923,8 @@ int rank_one_decomposition(const double* R_k,
         /* Preemptive Check To See If We're Fitting Noise */
         if (iters == 5){
             copy(t, v_k, v_tmp);
-            regress_temporal(d, t, R_k, u_k, v_k);
-            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh){         
+            regress_temporal(d*nchan, t, R_k, u_k, v_k);
+            if (spatial_test_statistic(d1, d2, nchan, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh){
                 /* Free Allocated Memory & Return */
                 free(v_tmp);   
                 free(z_k); 
@@ -914,8 +937,8 @@ int rank_one_decomposition(const double* R_k,
     /* MAXITER EXCEEDED: Free Memory & Test Spatial Component Against Null */
     free(z_k);
     free(v_tmp);   
-    regress_temporal(d, t, R_k, u_k, v_k);
-    if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) 
+    regress_temporal(d*nchan, t, R_k, u_k, v_k);
+    if (spatial_test_statistic(d1, d2, nchan, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh)
         return -1;  // Discard Component
     return 1;  // Keep Component
 }
@@ -924,24 +947,6 @@ int rank_one_decomposition(const double* R_k,
 /* Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a (d1*d2)xT
  * column major formatted video into sptial and temporal components.
  */
-//size_t pmd(const MKL_INT d1,
-//           const MKL_INT d2,
-//           MKL_INT d_sub,
-//           const MKL_INT t,
-//           MKL_INT t_sub,
-//           double* R,
-//           double* R_ds,
-//           double* U,
-//           double* V,
-//           const double spatial_thresh,
-//           const double temporal_thresh,
-//           const size_t max_components,
-//           const size_t consec_failures,
-//           const MKL_INT max_iters_main,
-//           const MKL_INT max_iters_init,
-//           const double tol,
-//           void* FFT)/* Handle Provided For Threadsafe FFT */
-
 size_t pmd(double* R,
            double* R_ds,
            double* U,
@@ -950,6 +955,7 @@ size_t pmd(double* R,
 {
     MKL_INT d1 = pars->get_bheight();
     MKL_INT d2 = pars->get_bwidth();
+    MKL_INT nchan = pars->get_nchan();
     MKL_INT d_sub = pars->get_d_sub();
     MKL_INT t = pars->get_t();
     MKL_INT t_sub = pars->get_t_sub();
@@ -972,7 +978,7 @@ size_t pmd(double* R,
     double *R_init, *u_init, *v_init;
     if (R_ds && (d_sub > 1 || t_sub > 1)){
         R_init = R_ds;  
-        u_init = (double *) malloc((d / (d_sub*d_sub)) * sizeof(double));
+        u_init = (double *) malloc((d / (d_sub*d_sub)) * nchan * sizeof(double));
         v_init = (double *) malloc((t / t_sub) * sizeof(double));
     } else {
         d_sub = 1;
@@ -988,28 +994,15 @@ size_t pmd(double* R,
  
         /* Assign Init Vars If Not Using Decimation */
         if (!(d_sub > 1 || t_sub > 1)){
-            u_init = U + good*d;
+            u_init = U + good*d*nchan;
             v_init = V + good*t;
         }
 
         /* U[:,k] <- u_k, V[k,:] <- v_k' : 
          *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
          */
-//        keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, d_sub,
-//                                                                t, t_sub,
-//                                                                R, R_init,
-//                                                                U + good*d,
-//                                                                u_init,
-//                                                                V + good*t,
-//                                                                v_init,
-//                                                                spatial_thresh,
-//                                                                temporal_thresh,
-//                                                                max_iters_main,
-//                                                                max_iters_init,
-//                                                                tol, FFT);
-
         keep_flag[k % consec_failures] = rank_one_decomposition(R, R_init,
-                                                                U + good*d,
+                                                                U + good*d*nchan,
                                                                 u_init,
                                                                 V + good*t,
                                                                 v_init,
@@ -1034,16 +1027,16 @@ size_t pmd(double* R,
         /* regress_temporal(d, t, R, U + good*d, V + good*t); Debiasing moved to ROD*/
 
         /* Update Full Residual: R_k <- R_k - U[:,k] V[k,:] */
-        cblas_dger(CblasColMajor, d, t, -1.0, U + good*d, 1, V + good*t, 1, R, d);
+        cblas_dger(CblasColMajor, d*nchan, t, -1.0, U + good*d*nchan, 1, V + good*t, 1, R, d*nchan);
 
         /* Update Downsampled Residual If Using Decimated Initialization */
         if (d_sub > 1 || t_sub > 1)
         {
             /* Downsample Components If Decimating Along That Dimension */
             if (d_sub > 1){
-                downsample_2d(d1, d2, d_sub, U + good*d, u_init);
+                downsample_2d(d1, d2, d_sub, U + good*d*nchan, u_init);
             } else {
-                copy(d, U + good*d, u_init); 
+                copy(d*nchan, U + good*d*nchan, u_init);
             }
             if (t_sub > 1){
                 downsample_1d(t, t_sub, V + good*t, v_init);
@@ -1052,8 +1045,8 @@ size_t pmd(double* R,
             }
 
             /* Update Downsampled Residual: R_ds <- R_ds - u_ds v_ds' */
-            cblas_dger(CblasColMajor, d / (d_sub * d_sub), t / t_sub, -1.0, 
-                       u_init, 1, v_init, 1, R_init, d / (d_sub*d_sub));
+            cblas_dger(CblasColMajor, (d / (d_sub * d_sub))*nchan, t / t_sub, -1.0,
+                       u_init, 1, v_init, 1, R_init, (d / (d_sub*d_sub))*nchan);
         }
 
         /* Make Sure We Overwrite Failed Components */
@@ -1074,25 +1067,6 @@ size_t pmd(double* R,
 /* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable parallel, 
  * block-wiseprocessing of large datasets in shared memory.
  */
-//void batch_pmd(const MKL_INT bheight,
-//               const MKL_INT bwidth,
-//               MKL_INT d_sub,
-//               const MKL_INT t,
-//               MKL_INT t_sub,
-//               const int b, // number of batches(?)
-//               double** Rp,
-//               double** Rp_ds,
-//               double** Up,
-//               double** Vp,
-//               size_t* K,
-//               const double spatial_thresh,
-//               const double temporal_thresh,
-//               const size_t max_components,
-//               const size_t consec_failures,
-//               const size_t max_iters_main,
-//               const size_t max_iters_init,
-//               const double tol)
-
 void batch_pmd(
         double** Rp,
         double** Rp_ds,
@@ -1102,19 +1076,6 @@ void batch_pmd(
         const int b,
         PMD_params *pars)
 {
-//    MKL_INT bheight = pars->get_bheight();
-//    MKL_INT bwidth = pars->get_bwidth();
-//    MKL_INT d_sub = pars->get_d_sub();
-//    MKL_INT t = pars->get_t();
-//    MKL_INT t_sub = pars->get_t_sub();
-//    double spatial_thresh = pars->get_spatial_thresh();
-//    double temporal_thresh = pars->get_temporal_thresh();
-//    size_t max_components = pars->get_max_components();
-//    size_t consec_failures = pars->get_consec_failures();
-//    size_t max_iters_main = pars->get_max_iters_main();
-//    size_t max_iters_init = pars->get_max_iters_init();
-//    double tol = pars->get_tol();
-
     // Create FFT Handle So It can Be Shared Across Threads
     DFTI_DESCRIPTOR_HANDLE FFT;
     MKL_LONG status;
@@ -1130,13 +1091,7 @@ void batch_pmd(
     pars->set_FFT((void *) &FFT);
     #pragma omp parallel for shared(FFT) schedule(guided)
     for (m = 0; m < b; m++){
-        //Use dummy vars for decomposition  
-//        K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
-//                   Rp[m], Rp_ds[m], Up[m], Vp[m],
-//                   spatial_thresh, temporal_thresh,
-//                   max_components, consec_failures,
-//                   max_iters_main, max_iters_init, tol, &FFT);
-
+        //Use dummy vars for decomposition
         K[m] = pmd(Rp[m], Rp_ds[m], Up[m], Vp[m], pars);
     }
 
