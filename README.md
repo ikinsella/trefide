@@ -42,7 +42,7 @@ conda create -n trefide python=3.6 trefide -c jw3132 -c intel -c menpo
 ```
 
 Download `Demo` folder. Follow the notebook scripts in `Demo` folder to try out TreFiDe.
-To learn about TreFiDe functions, please check [doc](http://htmlpreview.github.io/?https://github.com/ikinsella/trefide/blob/doc/doc/trefide.html)
+To learn about TreFiDe functions, please check [doc](http://htmlpreview.github.io/?https://github.com/ikinsella/trefide/blob/master/doc/trefide.html)
 .
 
 For user that doesn't have access to Ubuntu:18.04 but is familiar with [Docker](https://www.docker.com/),
