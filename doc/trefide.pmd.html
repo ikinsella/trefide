@@ -22,8 +22,9 @@
 </td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
 <a href="os.html">os</a><br>
 </td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
-<a href="time.html">time</a><br>
-</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
 <td colspan=3 valign=bottom>&nbsp;<br>
@@ -60,16 +61,6 @@ Return:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
 &nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
 &nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid</tt></dd></dl>
- <dl><dt><a name="-batch_recompose"><strong>batch_recompose</strong></a>(...)</dt><dd><tt>Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components&nbsp;returned&nbsp;by&nbsp;batch_decompose.<br>
-&nbsp;<br>
-Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;component&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;component&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
-&nbsp;<br>
-Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Yd:&nbsp;denoised&nbsp;video&nbsp;data</tt></dd></dl>
  <dl><dt><a name="-decimated_decompose"><strong>decimated_decompose</strong></a>(...)</dt><dd><tt>Apply&nbsp;decimated&nbsp;TF/TV&nbsp;Penalized&nbsp;Matrix&nbsp;Decomposition&nbsp;(PMD)&nbsp;to&nbsp;factor&nbsp;a<br>
 column&nbsp;major&nbsp;formatted&nbsp;video&nbsp;into&nbsp;spatial&nbsp;and&nbsp;temporal&nbsp;components.<br>
 &nbsp;<br>
@@ -117,127 +108,6 @@ Parameter:<br>
 &nbsp;<br>
 Return:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;result:&nbsp;rank&nbsp;of&nbsp;the&nbsp;compressed&nbsp;video/patch</tt></dd></dl>
- <dl><dt><a name="-determine_thresholds"><strong>determine_thresholds</strong></a>(...)</dt><dd><tt>Determine&nbsp;spatial&nbsp;and&nbsp;temporal&nbsp;threshold.<br>
-&nbsp;<br>
-Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;mov_dims:&nbsp;dimension&nbsp;of&nbsp;video&nbsp;(height&nbsp;x&nbsp;width&nbsp;x&nbsp;frames)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;block_dims:&nbsp;dimension&nbsp;of&nbsp;each&nbsp;block&nbsp;(height&nbsp;x&nbsp;width)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;num_components:&nbsp;number&nbsp;of&nbsp;components<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initializatio<br>
-&nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
-&nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
-&nbsp;&nbsp;&nbsp;&nbsp;conf:&nbsp;confidence&nbsp;level&nbsp;to&nbsp;determine&nbsp;threshold&nbsp;for&nbsp;the&nbsp;summary&nbsp;statistics<br>
-&nbsp;&nbsp;&nbsp;&nbsp;plot:&nbsp;whether&nbsp;plot<br>
-&nbsp;&nbsp;&nbsp;&nbsp;enable_temporal_denoiser:&nbsp;whether&nbsp;enable&nbsp;temporal&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
-&nbsp;&nbsp;&nbsp;&nbsp;enable_spatial_denoiser:&nbsp;whether&nbsp;enable&nbsp;spatial&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
-&nbsp;<br>
-Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold<br>
-&nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold</tt></dd></dl>
- <dl><dt><a name="-overlapping_batch_decompose"><strong>overlapping_batch_decompose</strong></a>(...)</dt><dd><tt>4x&nbsp;batch&nbsp;denoiser.&nbsp;Apply&nbsp;TF/TV&nbsp;Penalized&nbsp;Matrix&nbsp;Decomposition&nbsp;(PMD)&nbsp;in&nbsp;<br>
-batch&nbsp;to&nbsp;factor&nbsp;a&nbsp;column&nbsp;major&nbsp;formatted&nbsp;video&nbsp;into&nbsp;spatial&nbsp;and&nbsp;temporal&nbsp;<br>
-components.<br>
-&nbsp;<br>
-Wrapper&nbsp;for&nbsp;the&nbsp;.cpp&nbsp;parallel_factor_patch&nbsp;which&nbsp;wraps&nbsp;the&nbsp;.cpp&nbsp;function&nbsp;<br>
-factor_patch&nbsp;with&nbsp;OpenMP&nbsp;directives&nbsp;to&nbsp;parallelize&nbsp;batch&nbsp;processing.<br>
-&nbsp;<br>
-Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Y:&nbsp;video&nbsp;data&nbsp;of&nbsp;shape&nbsp;(d1&nbsp;x&nbsp;d2)&nbsp;x&nbsp;t<br>
-&nbsp;&nbsp;&nbsp;&nbsp;bheight:&nbsp;height&nbsp;of&nbsp;video&nbsp;block<br>
-&nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;width&nbsp;of&nbsp;video&nbsp;block<br>
-&nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initializatio<br>
-&nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
-&nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
-&nbsp;&nbsp;&nbsp;&nbsp;enable_temporal_denoiser:&nbsp;whether&nbsp;enable&nbsp;temporal&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
-&nbsp;&nbsp;&nbsp;&nbsp;enable_spatial_denoiser:&nbsp;whether&nbsp;enable&nbsp;spatial&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
-&nbsp;<br>
-Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
-&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
-&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;components&nbsp;matrix</tt></dd></dl>
- <dl><dt><a name="-overlapping_batch_recompose"><strong>overlapping_batch_recompose</strong></a>(...)</dt><dd><tt>4x&nbsp;batch&nbsp;denoiser.&nbsp;Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components&nbsp;<br>
-returned&nbsp;by&nbsp;batch_decompose.<br>
-&nbsp;<br>
-Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;time&nbsp;frames&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;bheight:&nbsp;block&nbsp;height<br>
-&nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;block&nbsp;width<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
-&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
-&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;components&nbsp;matrix<br>
-&nbsp;<br>
-Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Yd:&nbsp;recomposed&nbsp;video&nbsp;data&nbsp;matrix</tt></dd></dl>
- <dl><dt><a name="-overlapping_pca_decompose"><strong>overlapping_pca_decompose</strong></a>(...)</dt><dd><tt>4x&nbsp;batch&nbsp;denoiser&nbsp;<br>
-&nbsp;<br>
-Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Y:&nbsp;video&nbsp;data&nbsp;of&nbsp;shape&nbsp;(d1&nbsp;x&nbsp;d2)&nbsp;x&nbsp;t<br>
-&nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<br>
-Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
-&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
-&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;components&nbsp;matrix</tt></dd></dl>
- <dl><dt><a name="-pca_decompose"><strong>pca_decompose</strong></a>(...)</dt><dd><tt>Wrapper&nbsp;for&nbsp;the&nbsp;.cpp&nbsp;parallel_factor_patch&nbsp;which&nbsp;wraps&nbsp;the&nbsp;.cpp&nbsp;function<br>
-factor_patch&nbsp;with&nbsp;OpenMP&nbsp;directives&nbsp;to&nbsp;parallelize&nbsp;batch&nbsp;processing.<br>
-&nbsp;<br>
-Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Y:&nbsp;video&nbsp;data&nbsp;of&nbsp;shape&nbsp;(d1&nbsp;x&nbsp;d2)&nbsp;x&nbsp;t&nbsp;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;bheight:&nbsp;block&nbsp;height<br>
-&nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;block&nbsp;width<br>
-&nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
-&nbsp;<br>
-Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;decomposed&nbsp;spatial&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;decomposed&nbsp;temporal&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid</tt></dd></dl>
- <dl><dt><a name="-pca_patch"><strong>pca_patch</strong></a>(...)</dt></dl>
- <dl><dt><a name="-spatial_test_statistic"><strong>spatial_test_statistic</strong></a>(...)</dt></dl>
- <dl><dt><a name="-temporal_test_statistic"><strong>temporal_test_statistic</strong></a>(...)</dt></dl>
- <dl><dt><a name="-tv_norm"><strong>tv_norm</strong></a>(...)</dt></dl>
- <dl><dt><a name="-weighted_recompose"><strong>weighted_recompose</strong></a>(...)</dt><dd><tt>Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components&nbsp;returned&nbsp;by&nbsp;batch_decompose.<br>
-&nbsp;<br>
-Parameter:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;component&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;component&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
-&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;component&nbsp;matrix<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<br>
-Return:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Yd:&nbsp;denoised&nbsp;video&nbsp;data</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module trefide.denoiser</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="trefide.html"><font color="#ffffff">trefide</font></a>.denoiser</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/denoiser.py">/home/jian/anaconda3/envs/trefide/lib/python3.6/site-packages/trefide/denoiser.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="trefide.pmd.html">trefide.pmd</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-batch_decompose"><strong>batch_decompose</strong></a>(d1, d2, nchan, t, Y, bheight, bwidth, spatial_thresh, temporal_thresh, max_components, consec_failures, max_iters_main, max_iters_init, tol, d_sub=1, t_sub=1, enable_temporal_denoiser=True, enable_spatial_denoiser=True)</dt><dd><tt>Apply&nbsp;TF/TV&nbsp;Penalized&nbsp;Matrix&nbsp;Decomposition&nbsp;(PMD)&nbsp;in&nbsp;batch&nbsp;to&nbsp;factor&nbsp;a<br>
+column&nbsp;major&nbsp;formatted&nbsp;video&nbsp;into&nbsp;spatial&nbsp;and&nbsp;temporal&nbsp;components.<br>
+&nbsp;<br>
+Wrapper&nbsp;of&nbsp;pmd.<a href="#-batch_decompose">batch_decompose</a>()&nbsp;function.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y:&nbsp;video&nbsp;data&nbsp;of&nbsp;shape&nbsp;(d1&nbsp;x&nbsp;d2)&nbsp;x&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bheight:&nbsp;height&nbsp;of&nbsp;video&nbsp;block<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;width&nbsp;of&nbsp;video&nbsp;block<br>
+&nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initializatio<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;enable_temporal_denoiser:&nbsp;whether&nbsp;enable&nbsp;temporal&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;enable_spatial_denoiser:&nbsp;whether&nbsp;enable&nbsp;spatial&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid</tt></dd></dl>
+ <dl><dt><a name="-batch_recompose"><strong>batch_recompose</strong></a>(denoiser_outputs, weights=None)</dt><dd><tt>Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components&nbsp;returned&nbsp;by&nbsp;batch_decompose.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;denoiser_outputs:&nbsp;a&nbsp;tuple&nbsp;of&nbsp;(U:&nbsp;spatial&nbsp;component&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;component&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;indices:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output&nbsp;from&nbsp;batch_decompose<br>
+&nbsp;&nbsp;&nbsp;&nbsp;weights:&nbsp;weights&nbsp;to&nbsp;combine&nbsp;components&nbsp;from&nbsp;different&nbsp;overlapping&nbsp;decomposition<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y_den:&nbsp;denoised&nbsp;video&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-overlapping_batch_decompose"><strong>overlapping_batch_decompose</strong></a>(d1, d2, nchan, T, Y, bheight, bwidth, spatial_thresh, temporal_thresh, max_comp, consec_failures, max_iters_main, max_iters_init, tol, d_sub=1, t_sub=1, enable_temporal_denoiser=True, enable_spatial_denoiser=True)</dt><dd><tt>4x&nbsp;batch&nbsp;denoiser.&nbsp;Apply&nbsp;TF/TV&nbsp;Penalized&nbsp;Matrix&nbsp;Decomposition&nbsp;(PMD)&nbsp;in<br>
+batch&nbsp;to&nbsp;factor&nbsp;a&nbsp;column&nbsp;major&nbsp;formatted&nbsp;video&nbsp;into&nbsp;spatial&nbsp;and&nbsp;temporal<br>
+components.<br>
+&nbsp;<br>
+Wrapper&nbsp;of&nbsp;batch_decompose&nbsp;function&nbsp;to&nbsp;parallelize&nbsp;batch&nbsp;processing.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;frames&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y:&nbsp;video&nbsp;data&nbsp;of&nbsp;shape&nbsp;(d1&nbsp;x&nbsp;d2)&nbsp;x&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bheight:&nbsp;height&nbsp;of&nbsp;video&nbsp;block<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;width&nbsp;of&nbsp;video&nbsp;block<br>
+&nbsp;&nbsp;&nbsp;&nbsp;spatial_thresh:&nbsp;spatial&nbsp;threshold,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;temporal_thresh:&nbsp;temporal&nbsp;threshold,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_components:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;components,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;consec_failures:&nbsp;number&nbsp;of&nbsp;failures&nbsp;before&nbsp;stopping<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_main:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_iters_init:&nbsp;maximum&nbsp;number&nbsp;of&nbsp;iterations&nbsp;refining&nbsp;a&nbsp;component&nbsp;during&nbsp;decimated&nbsp;initializatio<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tol:&nbsp;convergence&nbsp;tolerence<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d_sub:&nbsp;spatial&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t_sub:&nbsp;temporal&nbsp;downsampling&nbsp;factor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;enable_temporal_denoiser:&nbsp;whether&nbsp;enable&nbsp;temporal&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;enable_spatial_denoiser:&nbsp;whether&nbsp;enable&nbsp;spatial&nbsp;denoiser,&nbsp;True&nbsp;by&nbsp;default<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;outs:&nbsp;a&nbsp;list&nbsp;of&nbsp;tuples,&nbsp;with&nbsp;each&nbsp;tuples&nbsp;contains,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;U:&nbsp;spatial&nbsp;components&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V:&nbsp;temporal&nbsp;components&nbsp;matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;K:&nbsp;rank&nbsp;of&nbsp;each&nbsp;patch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I:&nbsp;location/index&nbsp;inside&nbsp;of&nbsp;patch&nbsp;grid<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W:&nbsp;weighting&nbsp;components&nbsp;matrix</tt></dd></dl>
+ <dl><dt><a name="-overlapping_batch_recompose"><strong>overlapping_batch_recompose</strong></a>(outs, d1, d2, bheight, bwidth)</dt><dd><tt>4x&nbsp;batch&nbsp;denoiser.&nbsp;Reconstruct&nbsp;A&nbsp;Denoised&nbsp;Movie&nbsp;from&nbsp;components<br>
+returned&nbsp;by&nbsp;batch_decompose.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;outs:&nbsp;decomposed&nbsp;matrix&nbsp;components,&nbsp;output&nbsp;from&nbsp;overlapping_batch_decompose<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d1:&nbsp;height&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;d2:&nbsp;width&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t:&nbsp;time&nbsp;frames&nbsp;of&nbsp;video<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bheight:&nbsp;block&nbsp;height<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bwidth:&nbsp;block&nbsp;width<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y_den:&nbsp;recomposed&nbsp;video&nbsp;data&nbsp;matrix</tt></dd></dl>
+</td></tr></table>
+</body></html>
