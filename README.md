@@ -36,10 +36,20 @@ conda list
 
 <!-- pytorch only requires nvidia driver, doesn't require to install cuda. -->
 Create a new environment for TreFiDe and install TreFiDe software and all of its dependencies. 
+TreFiDe version 2.0 supports 4D (x,y,z,T) input image data. To install the 2.0 version TreFiDe, use 
+
 
 ```
-conda create -n trefide python=3.6 trefide -c jw3132 -c intel -c menpo
+conda create -n trefide_2.0 python=3.6 trefide -c jw3132 -c intel -c menpo
 ```
+
+To install TreFiDe version 1.0, which only supports 3D (x,y,T) input image data, use
+
+
+```
+conda create -n trefide_1.0 python=3.6 trefide=1.0 -c jw3132 -c intel
+```
+
 
 Download `Demo` folder. Follow the notebook scripts in `Demo` folder to try out TreFiDe.
 To learn about TreFiDe functions, please check [doc](http://htmlpreview.github.io/?https://github.com/ikinsella/trefide/blob/master/doc/trefide.html)
