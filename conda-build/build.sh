@@ -16,4 +16,4 @@ cp ./proxtv/libproxtv.so $CONDA_PREFIX/lib/
 cp ./proxtv/proxtv.h $CONDA_PREFIX/include/
 cd ../
 
-$PYTHON setup.py install  # Python command to install the script.
+$PYTHON setup.py install --single-version-externally-managed --record=record.txt  # Python command to install the script.
