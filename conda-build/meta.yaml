@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/ikinsella/trefide/archive/{{ version }}.tar.gz
-  sha256: 6b4b48770876a885e6e1e176d6d95552310cdeae152f9f525dc9bf19566c170e
+  sha256: 7efea399870d510354fc1683d0146a9d856ae5178b92b6c5c0688d9c0f87b38a 
 
 build:
   number: 0
