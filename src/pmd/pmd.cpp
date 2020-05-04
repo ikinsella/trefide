@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include <mkl.h>
 #include "decimation.h"
@@ -133,95 +131,35 @@ void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser) {
 
 
 /*----------------------------------------------------------------------------*
- *--------------------------- Generic Helper Funcs ---------------------------*
- *----------------------------------------------------------------------------*/
-
-
-/* Compute ||x - y||_2 where x,y are len n arrs. The last array arg y is 
- * modified inplace for the difference operation prior to taking norm.
- * 
- * Optimization Notes: 
- *      Could be made inline. 
- *      vdSub suboptimal for small (n<40) arrays. 
- */
-double distance_inplace(const MKL_INT n, 
-                        const double* x,
-                        double* y)
-{
-    /* y <- x - y */
-    vdSub(n, x, y, y);
-
-    /* return ||y||_2 */
-    return cblas_dnrm2(n, y, 1);
-}
-
-
-/* Copy leading n vals of arr source leading n vals of array dest
- *
- * Optimization Notes: 
- *      Should be made inline. 
- */
-void copy(const MKL_INT n, 
-          const double* source,
-          double* dest)
-{
-    cblas_dcopy(n, source, 1, dest, 1);
-}
-
-
-/* Normlizes len n array x by ||x||_2 in place */
-void normalize(const MKL_INT n, double* x)
-{    
-    /* norm <- ||x||_2 */
-    double norm = cblas_dnrm2(n, x, 1);
-    
-    /* x /= norm */
-    if (norm > 0) {
-        cblas_dscal(n, 1 / norm, x, 1);
-    } else {
-        return ; // Array Already == 0 Everywhere
-    }
-}
-
-
-/* Intializes len n constant vector */
-void initvec(const MKL_INT n, double* x, const double val)
-{
-    MKL_INT i;
-    for(i = 0; i < n; i++)
-        x[i]= val;
-}
-
-/*----------------------------------------------------------------------------*
  *--------------------------- Spatial Helper Funcs ---------------------------*
  *----------------------------------------------------------------------------*/
 
 
-/* Updates & normalizes the spatial component u_k in place by regressing 
+/* Updates & normalizes the spatial component u_k in place by regressing
  * the current temporal component v_k against the current residual R_k
  */
 void regress_spatial(const MKL_INT d,
                      const MKL_INT t,
-                     const double* R_k, 
-                     double* u_k, 
+                     const double* R_k,
+                     double* u_k,
                      const double* v_k)
-{ 
+{
     /* u = Yv */
-    cblas_dgemv(CblasColMajor, CblasNoTrans, d, t, 1.0, R_k, d, v_k, 1, 0.0, u_k, 1); 
-    
-    /* u /= ||u||_2 */ 
+    cblas_dgemv(CblasColMajor, CblasNoTrans, d, t, 1.0, R_k, d, v_k, 1, 0.0, u_k, 1);
+
+    /* u /= ||u||_2 */
     normalize(d, u_k);  // Temporarily Removed For Constrained TV Testing
 }
 
 
-/* Computes the ratio of the L1 to TV norm for a spatial components in order to 
+/* Computes the ratio of the L1 to TV norm for a spatial components in order to
  * test against the null hypothesis that it is gaussian noise.
  */
 double estimate_noise_tv_op(const MKL_INT d1,
                             const MKL_INT d2,
                             const double* u_k)
 {
-    
+
     /* Declare & Initialize Internal Variables */
     int j, j1, j2, n=0;
     int num_edges = d1 * (d2 - 1) + d2 * (d1 - 1);
@@ -255,11 +193,11 @@ double estimate_noise_tv_op(const MKL_INT d1,
         n++;
         j += d1;
     }
-   
+
     /* Sort Differences */
     std::sort(edge_diffs, edge_diffs+num_edges);
 
-    /* Transform & Return */    
+    /* Transform & Return */
     std = edge_diffs[num_edges/2]/ .954;
     free(edge_diffs);
     return std * std;
@@ -295,7 +233,7 @@ double estimate_noise_mean_filter(const int rows, const int cols, double* image)
 
          /* Compute MSE At Pixel [r, c] */
          mean /= p;
-         err = image[r + rows * c] - mean; 
+         err = image[r + rows * c] - mean;
          mses[r + rows * c] = err * err;
       }
     }
@@ -339,7 +277,7 @@ double estimate_noise_median_filter(const int rows, const int cols, double* imag
          /* Sort Pixel Values In Window To Find Median */
          std::sort(pixel_values, pixel_values+p);
          median = pixel_values[p/2];
-         err = image[r + rows * c] - median; 
+         err = image[r + rows * c] - median;
          mses[r + rows * c] = err * err;
       }
     }
@@ -356,11 +294,11 @@ double estimate_noise_median_filter(const int rows, const int cols, double* imag
 /* Solve Constrained TV With CPS Line Search
  *
  */
-short cps_tv(const int d1, 
-             const int d2, 
+short cps_tv(const int d1,
+             const int d2,
              double* y,
-             const double delta, 
-             double *x, 
+             const double delta,
+             double *x,
              double* lambda_tv,
              double *info,
              double tol=5e-2)
@@ -388,7 +326,7 @@ short cps_tv(const int d1,
         } else if(fabs(l2_err - l2_err_prev) < 1e-3){
             free(resid);
             return 0;  // line search stalled
-        } 
+        }
         l2_err_prev = l2_err;
 
         /* Increment Lambda */
@@ -402,7 +340,7 @@ short cps_tv(const int d1,
 }
 
 
-/* Denoises and normalizes the  d1xd2 spatial component u_k using the 
+/* Denoises and normalizes the  d1xd2 spatial component u_k using the
  * proxTV douglass rachford splitting cpp implementation of TV denoising.
  */
 void constrained_denoise_spatial(const MKL_INT d1,
@@ -428,7 +366,7 @@ void constrained_denoise_spatial(const MKL_INT d1,
             *lambda_tv = .0025;
             DR2_TV(d1, d2, target, *lambda_tv, *lambda_tv, 1, 1, u_k, 1, 1, info);
         }
-        
+
         /* u_k /= ||u_k|| */
         normalize(d1*d2, u_k);
     }
@@ -438,7 +376,7 @@ void constrained_denoise_spatial(const MKL_INT d1,
 }
 
 
-/* Denoises and normalizes the  d1xd2 spatial component u_k using the 
+/* Denoises and normalizes the  d1xd2 spatial component u_k using the
  * proxTV douglass rachford splitting cpp implementation of TV denoising.
  */
 void denoise_spatial(const MKL_INT d1,
@@ -465,8 +403,8 @@ void denoise_spatial(const MKL_INT d1,
 
 
 /* Update the (possibly downsampled) spatial component by regression of the
- * temporal component against the residual followed by normalization. 
- * Returns the normed difference between the updated spatial component 
+ * temporal component against the residual followed by normalization.
+ * Returns the normed difference between the updated spatial component
  * and the previous iterate (used to monitor convergence).
  */
 double update_spatial_init(const MKL_INT d,
@@ -487,16 +425,16 @@ double update_spatial_init(const MKL_INT d,
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, u__);
-   
-    /* Free Allocated Memory */ 
+
+    /* Free Allocated Memory */
     free(u__);
     return delta_u;
 }
 
 
 /* Update spatial component by regression of temporal component against
- * the residual followed by denoising via TV prox operator. Returns the 
- * normed difference between the updated spatial component and the 
+ * the residual followed by denoising via TV prox operator. Returns the
+ * normed difference between the updated spatial component and the
  * previous iterate (used to monitor convergence).
  */
 //double update_spatial(const MKL_INT d1,
@@ -536,8 +474,8 @@ double update_spatial(const double *R_k,
 
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, u__);
-   
-    /* Free Allocated Memory */ 
+
+    /* Free Allocated Memory */
     free(u__);
     return delta_u;
 }
@@ -553,28 +491,24 @@ double update_spatial(const double *R_k,
  */
 void regress_temporal(const MKL_INT d,
                       const MKL_INT t,
-                      const double* R_k, 
-                      const double* u_k, 
+                      const double* R_k,
+                      const double* u_k,
                       double* v_k)
 {
     /* v = R_k'u */
-    cblas_dgemv(CblasColMajor, CblasTrans, d, t, 1.0, R_k, d, u_k, 1, 0.0, v_k, 1); 
-    
+    cblas_dgemv(CblasColMajor, CblasTrans, d, t, 1.0, R_k, d, u_k, 1, 0.0, v_k, 1);
+
     /* Skip Normalization */
     return ;
 }
 
 
-/* Denoises and normalizes the len t spatial component v_k using the 
+/* Denoises and normalizes the len t spatial component v_k using the
  * constrained PDAS implementation of 2nd order L1TF denoising.
  */
-void denoise_temporal(const MKL_INT t,
-                      double* v_k,
-                      double* z_k,
-                      double* lambda_tf,
-                      void* FFT)
+void denoise_temporal(const MKL_INT t, double* v_k, double* z_k, double*
+                      lambda_tf, void* FFT)
 {
-    /* Declare & Allocate Local Variables */
     int iters;
     short status;
     double scale, tau, delta;
@@ -615,13 +549,13 @@ void denoise_temporal(const MKL_INT t,
 
 
 /* Update the (possibly downsampled) temporal component by regression of the
- * spatial component against the residual followed by normalization. 
- * Returns the normed difference between the updated temporal component 
+ * spatial component against the residual followed by normalization.
+ * Returns the normed difference between the updated temporal component
  * and the previous iterate (used to monitor convergence).
  */
 double update_temporal_init(const MKL_INT d,
                             const MKL_INT t,
-                            const double* R_k, 
+                            const double* R_k,
                             const double* u_k,
                             double* v_k)
 {
@@ -635,19 +569,19 @@ double update_temporal_init(const MKL_INT d,
     /* v_{k+1} <- R_{k+1}' u_k / ||R_{k+1}' u_k||_2 */
     regress_temporal(d, t, R_k, u_k, v_k);
     normalize(t, v_k);
-    
+
     /* return ||v_{k+1} - v_{k}||_2 */
     delta_v = distance_inplace(t, v_k, v__);
-   
+
     /* Free Allocated Memory */
-    free(v__); 
+    free(v__);
     return delta_v;
 }
 
 
 /* Update temporal component by regression of spatial component against
- * the residual followed by denoising via constrained TF. Returns the 
- * normed difference between the updated temporal component and the 
+ * the residual followed by denoising via constrained TF. Returns the
+ * normed difference between the updated temporal component and the
  * previous iterate (used to monitor convergence).
  */
 //double update_temporal(const MKL_INT d,
@@ -688,9 +622,9 @@ double update_temporal(const MKL_INT d,
 
     /* return ||v_{k+1} - v_{k}||_2 */
     delta_v = distance_inplace(t, v_k, v__);
-   
+
     /* Free Allocated Memory */
-    free(v__); 
+    free(v__);
     return delta_v;
 }
 
@@ -700,14 +634,14 @@ double update_temporal(const MKL_INT d,
  *----------------------------------------------------------------------------*/
 
 
-/* Computes the ratio of the L1 to TV norm for a spatial components in order to 
+/* Computes the ratio of the L1 to TV norm for a spatial components in order to
  * test against the null hypothesis that it is gaussian noise.
  */
 double spatial_test_statistic(const MKL_INT d1,
                               const MKL_INT d2,
                               const double* u_k)
 {
-    
+
     /* Declare & Initialize Internal Variables */
     int j, j1, j2;
     double norm_tv = 0;
@@ -737,7 +671,7 @@ double spatial_test_statistic(const MKL_INT d1,
         norm_l1 += fabs(u_k[j]);
         j += d1;
     }
-    
+
     //return norm_tv / (d1 * (d2 - 1) + d2 * (d1- 1));
     /* Return Test Statistic */
     if (norm_tv > 0){
@@ -749,13 +683,13 @@ double spatial_test_statistic(const MKL_INT d1,
 }
 
 
-/* Computes the ratio of the L1 to TV norm for a spatial components in order to 
+/* Computes the ratio of the L1 to TV norm for a spatial components in order to
  * test against the null hypothesis that it is gaussian noise.
  */
 double temporal_test_statistic(const MKL_INT t,
                                const double* v_k)
 {
-    
+
     /* Declare & Initialize Internal Variables */
     int i;
     double norm_tf = 0;
@@ -763,7 +697,7 @@ double temporal_test_statistic(const MKL_INT t,
 
     /* All Elements Except Union (Bottom Row, Rightmost Column) */
     for (i = 1; i < t-1; i++){
-        norm_tf += fabs(v_k[i]+ v_k[i] - v_k[i-1] - v_k[i+1]); 
+        norm_tf += fabs(v_k[i]+ v_k[i] - v_k[i-1] - v_k[i+1]);
         norm_l1 += fabs(v_k[i]);
     }
 
@@ -779,7 +713,7 @@ double temporal_test_statistic(const MKL_INT t,
 /* Initialize A Partition Of The Dual TF Var From A Primal TF Var
  */
 void init_dual_from_primal(const MKL_INT t, const double* v,double* z){
-    
+
     /* Compute Second Order Differences */
     Dx(t, v, z);
 
@@ -792,16 +726,16 @@ void init_dual_from_primal(const MKL_INT t, const double* v,double* z){
             z[j] = -1;
         } else {
             z[j] = 0;
-        } 
+        }
     }
 }
 
 
-/* Solves: 
+/* Solves:
  *  u_k, v_k : min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
- *  
+ *
  *  Returns:
- *      1: If we reject the null hypothesis that u_k is noise 
+ *      1: If we reject the null hypothesis that u_k is noise
  *     -1: If we accept the null hypothesis that u_k is noise
  */
 //int rank_one_decomposition(const MKL_INT d1,
@@ -841,9 +775,9 @@ int rank_one_decomposition(const double* R_k,
     size_t max_iters_init = pars->get_max_iters_init();
     double tol = pars->get_tol();
     void* FFT = pars->get_FFT();
- 
+
     /* Declare, Allocate, & Initialize Internal Vars */
-    MKL_INT iters; 
+    MKL_INT iters;
     MKL_INT d = d1 * d2;
     MKL_INT d_init = d / (d_sub * d_sub);
     MKL_INT t_init = t / t_sub;
@@ -852,14 +786,14 @@ int rank_one_decomposition(const double* R_k,
     double lambda_tv = .0025;  /* First Guess For Constrained Problem */
     double *z_k = (double *) malloc((t-2) * sizeof(double));
     double *v_tmp = (double *) malloc(t * sizeof(double));
-    initvec(t-2, z_k, 0.0); 
+    initvec(t-2, z_k, 0.0);
 
     /* Intialize Components With Power Method Iters */
     initvec(d_init, u_init, 1 / sqrt(d_init));
     regress_temporal(d_init, t_init, R_init, u_init, v_init);
     normalize(t_init, v_init);
     for (iters = 0; iters < max_iters_init; iters++)
-    {    
+    {
         /* Update Components: Regression & Normalization*/
         delta_u = update_spatial_init(d_init, t_init, R_init, u_init, v_init);
         delta_v = update_temporal_init(d_init, t_init, R_init, u_init, v_init);
@@ -867,10 +801,10 @@ int rank_one_decomposition(const double* R_k,
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol) break;
     }
-    
+
     /* Upsample &/or Initialize As Needed If We Used Decimated Init */
     if (d_sub > 1 || t_sub > 1){
-        if (t_sub > 1){  
+        if (t_sub > 1){
             upsample_1d(t, t_sub, v_k, v_init);
             init_dual_from_primal(t, v_k, z_k);
         } else {
@@ -881,18 +815,18 @@ int rank_one_decomposition(const double* R_k,
 
     /* Loop Until Convergence Of Spatial & Temporal Components */
     for (iters = 0; iters < max_iters_main; iters++){
-        
+
         /* Update Components: Regression, Denoising, & Normalization */
         delta_u = update_spatial(R_k, u_k, v_k, &lambda_tv, pars);
         delta_v = update_temporal(d, R_k, u_k, v_k, z_k, &lambda_tf, pars);
 
         /* Check Convergence */
-        if (fmax(delta_u, delta_v) < tol){    
+        if (fmax(delta_u, delta_v) < tol){
             /* Free Allocated Memory & Test Spatial Component Against Null */
             free(z_k);
-            free(v_tmp);   
+            free(v_tmp);
             regress_temporal(d, t, R_k, u_k, v_k); // debias
-            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) 
+            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh)
                 return -1;  // Discard Component
             return 1;  // Keep Component
         }
@@ -901,21 +835,21 @@ int rank_one_decomposition(const double* R_k,
         if (iters == 5){
             copy(t, v_k, v_tmp);
             regress_temporal(d, t, R_k, u_k, v_k);
-            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh){         
+            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh){
                 /* Free Allocated Memory & Return */
-                free(v_tmp);   
-                free(z_k); 
+                free(v_tmp);
+                free(z_k);
                 return -1; // Discard Component
-            } 
+            }
             copy(t, v_tmp, v_k);
-        }    
+        }
     }
 
     /* MAXITER EXCEEDED: Free Memory & Test Spatial Component Against Null */
     free(z_k);
-    free(v_tmp);   
+    free(v_tmp);
     regress_temporal(d, t, R_k, u_k, v_k);
-    if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) 
+    if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh)
         return -1;  // Discard Component
     return 1;  // Keep Component
 }
@@ -967,11 +901,11 @@ size_t pmd(double* R,
     int max_keep_flag;
     size_t i, k, good = 0;
     MKL_INT d = d1 * d2;
-    
+
     /* Assign/Allocate Init Vars Based On Whether Or Not We Are Decimating */
     double *R_init, *u_init, *v_init;
     if (R_ds && (d_sub > 1 || t_sub > 1)){
-        R_init = R_ds;  
+        R_init = R_ds;
         u_init = (double *) malloc((d / (d_sub*d_sub)) * sizeof(double));
         v_init = (double *) malloc((t / t_sub) * sizeof(double));
     } else {
@@ -985,14 +919,14 @@ size_t pmd(double* R,
 
     /* Sequentially Extract Rank 1 Updates Until We Are Fitting Noise */
     for (k = 0; k < max_components; k++, good++) {
- 
+
         /* Assign Init Vars If Not Using Decimation */
         if (!(d_sub > 1 || t_sub > 1)){
             u_init = U + good*d;
             v_init = V + good*t;
         }
 
-        /* U[:,k] <- u_k, V[k,:] <- v_k' : 
+        /* U[:,k] <- u_k, V[k,:] <- v_k' :
          *    min <u_k, R_k v_k> - lambda_tv ||u_k||_TV - lambda_tf ||v_k||_TF
          */
 //        keep_flag[k % consec_failures] = rank_one_decomposition(d1, d2, d_sub,
@@ -1020,7 +954,7 @@ size_t pmd(double* R,
             max_keep_flag = -1;  // current component is a failure
             for (i=1; i < consec_failures; i++){  // check previous
                 max_keep_flag = max(max_keep_flag, keep_flag[(k+i) % consec_failures]);
-            } 
+            }
             if (max_keep_flag < 0){
                 if (d_sub > 1 || t_sub > 1){
                     free(u_init);
@@ -1043,7 +977,7 @@ size_t pmd(double* R,
             if (d_sub > 1){
                 downsample_2d(d1, d2, d_sub, U + good*d, u_init);
             } else {
-                copy(d, U + good*d, u_init); 
+                copy(d, U + good*d, u_init);
             }
             if (t_sub > 1){
                 downsample_1d(t, t_sub, V + good*t, v_init);
@@ -1052,7 +986,7 @@ size_t pmd(double* R,
             }
 
             /* Update Downsampled Residual: R_ds <- R_ds - u_ds v_ds' */
-            cblas_dger(CblasColMajor, d / (d_sub * d_sub), t / t_sub, -1.0, 
+            cblas_dger(CblasColMajor, d / (d_sub * d_sub), t / t_sub, -1.0,
                        u_init, 1, v_init, 1, R_init, d / (d_sub*d_sub));
         }
 
@@ -1066,12 +1000,12 @@ size_t pmd(double* R,
         free(v_init);
     }
     free(keep_flag);
-    return good; 
+    return good;
 //    return k;
 }
 
 
-/* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable parallel, 
+/* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable parallel,
  * block-wiseprocessing of large datasets in shared memory.
  */
 //void batch_pmd(const MKL_INT bheight,
@@ -1122,7 +1056,7 @@ void batch_pmd(
     status = DftiCreateDescriptor( &FFT, DFTI_DOUBLE, DFTI_REAL, 1, L );
     status = DftiSetValue( FFT, DFTI_PACKED_FORMAT, DFTI_PACK_FORMAT);
     status = DftiCommitDescriptor( FFT );
-    if (status != 0) 
+    if (status != 0)
         fprintf(stderr, "Error while creating MKL_FFT Handle: %ld\n", status);
 
     // Loop Over All Patches In Parallel
@@ -1130,7 +1064,7 @@ void batch_pmd(
     pars->set_FFT((void *) &FFT);
     #pragma omp parallel for shared(FFT) schedule(guided)
     for (m = 0; m < b; m++){
-        //Use dummy vars for decomposition  
+        //Use dummy vars for decomposition
 //        K[m] = pmd(bheight, bwidth, d_sub, t, t_sub,
 //                   Rp[m], Rp_ds[m], Up[m], Vp[m],
 //                   spatial_thresh, temporal_thresh,
@@ -1141,7 +1075,7 @@ void batch_pmd(
     }
 
     // Free MKL FFT Handle
-    status = DftiFreeDescriptor( &FFT ); 
+    status = DftiFreeDescriptor( &FFT );
     if (status != 0)
         fprintf(stderr, "Error while deallocating MKL_FFT Handle: %ld\n", status);
 }

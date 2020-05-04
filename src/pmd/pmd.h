@@ -64,22 +64,69 @@ public:
     void set_enable_spatial_denoiser(bool _enable_spatial_denoiser);
 };
 
-double distance_inplace(const MKL_INT n, 
-                        const double* x,
-                        double* y);
 
-void copy(const MKL_INT n, 
-          const double* source,
-          double* dest);
+/*----------------------------------------------------------------------------*
+ *--------------------------- Generic Helper Funcs ---------------------------*
+ *----------------------------------------------------------------------------*/
 
-void normalize(const MKL_INT n, double* x);
 
-void initvec(const MKL_INT n, double* x, const double val);
+/* Compute ||x - y||_2 where x,y are len n arrs. The last array arg y is
+ * modified inplace for the difference operation prior to taking norm.
+ *
+ * Optimization Notes:
+ *      Could be made inline.
+ *      vdSub suboptimal for small (n<40) arrays.
+ */
+inline double distance_inplace(const MKL_INT n, const double* x, double* y)
+{
+    /* y <- x - y */
+    vdSub(n, x, y, y);
+
+    /* return ||y||_2 */
+    return cblas_dnrm2(n, y, 1);
+}
+
+
+/* Copy leading n vals of arr source leading n vals of array dest
+ *
+ * Optimization Notes:
+ *      Should be made inline.
+ */
+inline void copy(const MKL_INT n, const double* source, double* dest)
+{
+    cblas_dcopy(n, source, 1, dest, 1);
+}
+
+
+/* Normlizes len n array x by ||x||_2 in place */
+inline void normalize(const MKL_INT n, double* x)
+{
+    /* norm <- ||x||_2 */
+    double norm = cblas_dnrm2(n, x, 1);
+
+    /* x /= norm */
+    if (norm > 0) {
+        cblas_dscal(n, 1 / norm, x, 1);
+    }
+    // Otherwise return, since Array Already == 0 Everywhere
+}
+
+
+/* Intializes len n constant vector */
+inline void initvec(const MKL_INT n, double* x, const double val)
+{
+    #pragma omp simd
+    for (MKL_INT i = 0; i < n; i++)
+        x[i] = val;
+}
+
+/* End generic helper functions */
+
 
 void regress_spatial(const MKL_INT d,
                      const MKL_INT t,
-                     const double* R_k, 
-                     double* u_k, 
+                     const double* R_k,
+                     double* u_k,
                      const double* v_k);
 
 void constrained_denoise_spatial(const MKL_INT d1,
@@ -119,12 +166,12 @@ double update_spatial(const double *R_k,
 
 void regress_temporal(const MKL_INT d,
                       const MKL_INT t,
-                      const double* R_k, 
-                      const double* u_k, 
+                      const double* R_k,
+                      const double* u_k,
                       double* v_k);
 
-double compute_scale(const MKL_INT t, 
-                     const double *y, 
+double compute_scale(const MKL_INT t,
+                     const double *y,
                      const double delta);
 
 void denoise_temporal(const MKL_INT t,
@@ -135,7 +182,7 @@ void denoise_temporal(const MKL_INT t,
 
 double update_temporal_init(const MKL_INT d,
                             const MKL_INT t,
-                            const double* R_k, 
+                            const double* R_k,
                             const double* u_k,
                             double* v_k);
 
@@ -163,7 +210,7 @@ double spatial_test_statistic(const MKL_INT d1,
 double temporal_test_statistic(const MKL_INT t,
                                const double* v_k);
 
-void init_dual_from_primal(const MKL_INT t, 
+void init_dual_from_primal(const MKL_INT t,
                            const double* v,
                            double* z);
 
