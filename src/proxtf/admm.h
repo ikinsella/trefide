@@ -2,13 +2,14 @@
 #define ADMM_H
 
 # include "../glmgen/include/cs.h"
+
 short cps_tf_admm(const int n,        // data length
                   const int degree,
                   double* x,          // data locations
                   double *y,          // data observations
                   double *w,          // data observation weights
                   cs * DktDk,         // Difference Gram
-                  const double delta, // MSE constraint (noise var estimate)	
+                  const double delta, // MSE constraint (noise var estimate)
                   double *beta,       // primal variable
                   double *alpha,
                   double *u,
@@ -23,7 +24,7 @@ short constrained_tf_admm(const int n,           // data length
                           double* x,             // data locations
                           double *y,             // data observations
                           double *w,             // data observation weights
-                          const double delta,    // MSE constraint (noise var estimate)	
+                          const double delta,    // MSE constraint (noise var estimate)
                           double *beta,          // primal variable
                           double *alpha,
                           double *u,

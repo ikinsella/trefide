@@ -3,6 +3,9 @@
 
 #include <mkl.h>
 #include <mkl_dfti.h>
+#include "../proxtf/utils.h"
+
+#define FORCEINLINE __attribute__((always_inline)) inline
 
 class PMD_params {
 private:
@@ -113,21 +116,28 @@ inline void normalize(const MKL_INT n, double* x)
 
 
 /* Intializes len n constant vector */
-inline void initvec(const MKL_INT n, double* x, const double val)
+inline void initvec(MKL_INT n, double* x, const double val)
 {
-    #pragma omp simd
-    for (MKL_INT i = 0; i < n; i++)
-        x[i] = val;
+    while (n--)
+        *x++ = val;
 }
 
 /* End generic helper functions */
 
 
-void regress_spatial(const MKL_INT d,
-                     const MKL_INT t,
-                     const double* R_k,
-                     double* u_k,
-                     const double* v_k);
+/* Updates & normalizes the spatial component u_k in place by regressing
+ * the current temporal component v_k against the current residual R_k
+ */
+inline void regress_spatial(const MKL_INT d, const MKL_INT t,
+                                 const double* R_k, double* u_k,
+                                 const double* v_k)
+{
+    /* u = Yv */
+    cblas_dgemv(CblasColMajor, CblasNoTrans, d, t, 1.0, R_k, d, v_k, 1, 0.0, u_k, 1);
+
+    /* u /= ||u||_2 */
+    normalize(d, u_k);  // Temporarily Removed For Constrained TV Testing
+}
 
 void constrained_denoise_spatial(const MKL_INT d1,
                                  const MKL_INT d2,
@@ -139,24 +149,11 @@ void denoise_spatial(const MKL_INT d1,
                      double* u_k,
                      double *lambda_tv);
 
-void constrained_denoise_spatial(const MKL_INT d1,
-                                 const MKL_INT d2,
-                                 double* u_k,
-                                 double* lambda_tv);
-
 double update_spatial_init(const MKL_INT d,
                            const MKL_INT t,
                            const double *R_k,
                            double* u_k,
                            const double* v_k);
-
-//double update_spatial(const MKL_INT d1,
-//                      const MKL_INT d2,
-//                      const MKL_INT t,
-//                      const double *R_k,
-//                      double* u_k,
-//                      const double* v_k,
-//                      double* lambda_tv);
 
 double update_spatial(const double *R_k,
                       double* u_k,
@@ -164,15 +161,24 @@ double update_spatial(const double *R_k,
                       double *lambda_tv,
                       PMD_params *pars);
 
+/* Updates the temporal component v_k in place by regressing the transpose
+ * of the current temporal component u_k against the current residual R_k'
+ */
+inline void regress_temporal(const MKL_INT d, const MKL_INT t,
+                                  const double* R_k, const double* u_k,
+                                  double* v_k)
+{
+    /* v = R_k'u */
+    cblas_dgemv(CblasColMajor, CblasTrans, d, t, 1.0, R_k, d, u_k, 1, 0.0, v_k, 1);
+
+    /* Skip Normalization */
+}
+
 void regress_temporal(const MKL_INT d,
                       const MKL_INT t,
                       const double* R_k,
                       const double* u_k,
                       double* v_k);
-
-double compute_scale(const MKL_INT t,
-                     const double *y,
-                     const double delta);
 
 void denoise_temporal(const MKL_INT t,
                       double* v_k,
@@ -186,15 +192,6 @@ double update_temporal_init(const MKL_INT d,
                             const double* u_k,
                             double* v_k);
 
-//double update_temporal(const MKL_INT d,
-//                       const MKL_INT t,
-//                       const double* R_k,
-//                       const double* u_k,
-//                       double* v_k,
-//                       double* z_k,
-//                       double* lambda_tf,
-//                       void* FFT=NULL);
-
 double update_temporal(const MKL_INT d,
                        const double* R_k,
                        const double* u_k,
@@ -207,30 +204,27 @@ double spatial_test_statistic(const MKL_INT d1,
                               const MKL_INT d2,
                               const double* u_k);
 
-double temporal_test_statistic(const MKL_INT t,
-                               const double* v_k);
+double temporal_test_statistic(const MKL_INT t, const double* v_k);
 
-void init_dual_from_primal(const MKL_INT t,
-                           const double* v,
-                           double* z);
+/* Initialize A Partition Of The Dual TF Var From A Primal TF Var
+ */
+inline void init_dual_from_primal(const MKL_INT t, const double* v,
+                                       double* z)
+{
+    /* Compute Second Order Differences */
+    Dx(t, v, z);
 
-//int rank_one_decomposition(const MKL_INT d1,
-//                           const MKL_INT d2,
-//                           const MKL_INT d_sub,
-//                           const MKL_INT t,
-//                           const MKL_INT t_sub,
-//                           const double* R_k,
-//                           const double* R_init,
-//                           double* u_k,
-//                           double* u_init,
-//                           double* v_k,
-//                           double* v_init,
-//                           const double spatial_thresh,
-//                           const double temporal_thresh,
-//                           const MKL_INT max_iters_main,
-//                           const MKL_INT max_iters_init,
-//                           const double tol,
-//                           void* FFT=NULL);
+    /* Partition Elements Based On Differences */
+    for (int j = 0; j < t-2; j++){
+        if (z[j] > 1e-5){
+            z[j] = 1;
+        } else if (z[j] < -1e-5){
+            z[j] = -1;
+        } else {
+            z[j] = 0;
+        }
+    }
+}
 
 int rank_one_decomposition(const double* R_k,
                            const double* R_init,
@@ -240,48 +234,11 @@ int rank_one_decomposition(const double* R_k,
                            double* v_init,
                            PMD_params *pars);
 
-//size_t pmd(const MKL_INT d1,
-//           const MKL_INT d2,
-//           MKL_INT d_sub,
-//           const MKL_INT t,
-//           MKL_INT t_sub,
-//           double* R,
-//           double* R_ds,
-//           double* U,
-//           double* V,
-//           const double spatial_thresh,
-//           const double temporal_thresh,
-//           const size_t max_components,
-//           const size_t consec_failures,
-//           const MKL_INT max_iters_main,
-//           const MKL_INT max_iters_init,
-//           const double tol,
-//           void* FFT=NULL);
-
 size_t pmd(double* R,
            double* R_ds,
            double* U,
            double* V,
            PMD_params *pars);
-
-//void batch_pmd(const MKL_INT bheight,
-//               const MKL_INT bwidth,
-//               MKL_INT d_sub,
-//               const MKL_INT t,
-//               MKL_INT t_sub,
-//               const int b,
-//               double** Rpt,
-//               double** Rpt_ds,
-//               double** Upt,
-//               double** Vpt,
-//               size_t* K,
-//               const double spatial_thresh,
-//               const double temporal_thresh,
-//               const size_t max_components,
-//               const size_t consec_failures,
-//               const size_t max_iters,
-//               const size_t max_iters_ds,
-//               const double tol);
 
 void batch_pmd(
         double** Rp,

@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from libcpp cimport bool
 
 FOV_BHEIGHT_WARNING = "Input FOV height must be an evenly divisible by block height."
-FOV_BWIDTH_WARNING = "Input FOV width must be evenly divisible by block width." 
+FOV_BWIDTH_WARNING = "Input FOV width must be evenly divisible by block width."
 DSUB_BHEIGHT_WARNING = "Block height must be evenly divisible by spatial downsampling factor."
 DSUB_BWIDTH_WARNING = "Block width must be evenly divisible by spatial downsampling factor."
 TSUB_FRAMES_WARNING = "Num Frames must be evenly divisible by temporal downsampling factor."
@@ -66,12 +66,12 @@ cdef extern from "trefide.h":
                const int b,
                PMD_params *pars) nogil
 
-    void downsample_3d(const int d1, 
-                       const int d2, 
-                       const int d_sub, 
-                       const int t, 
-                       const int t_sub, 
-                       const double *Y, 
+    void downsample_3d(const int d1,
+                       const int d2,
+                       const int d_sub,
+                       const int t,
+                       const int t_sub,
+                       const double *Y,
                        double *Y_ds) nogil
 
 
@@ -80,10 +80,10 @@ cdef extern from "trefide.h":
 # -----------------------------------------------------------------------------#
 
 
-cpdef size_t decompose(const int d1, 
-                       const int d2, 
+cpdef size_t decompose(const int d1,
+                       const int d2,
                        const int t,
-                       double[::1] Y, 
+                       double[::1] Y,
                        double[::1] U,
                        double[::1] V,
                        const double spatial_thresh,
@@ -97,7 +97,7 @@ cpdef size_t decompose(const int d1,
                        bool enable_spatial_denoiser = True) nogil:
     """Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a
     column major formatted video into spatial and temporal components.
-    
+
     Parameter:
         d1: height of video
         d2: width of video
@@ -112,12 +112,12 @@ cpdef size_t decompose(const int d1,
         max_iters_main: maximum number of iterations refining a component
         max_iters_init: maximum number of iterations refining a component during decimated initialization
         tol: convergence tolerence
-        enable_temporal_denoiser: whether enable temporal denoiser, True by default 
+        enable_temporal_denoiser: whether enable temporal denoiser, True by default
         enable_spatial_denoiser: whether enable spatial denoiser, True by default
-    
+
     Return:
         result: rank of the compressed video/patch
-    
+
     """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
@@ -134,13 +134,13 @@ cpdef size_t decompose(const int d1,
         return result
 
 
-cpdef size_t decimated_decompose(const int d1, 
-                                 const int d2, 
+cpdef size_t decimated_decompose(const int d1,
+                                 const int d2,
                                  int d_sub,
                                  const int t,
                                  int t_sub,
-                                 double[::1] Y, 
-                                 double[::1] Y_ds, 
+                                 double[::1] Y,
+                                 double[::1] Y_ds,
                                  double[::1] U,
                                  double[::1] V,
                                  const double spatial_thresh,
@@ -154,9 +154,9 @@ cpdef size_t decimated_decompose(const int d1,
                                  bool enable_spatial_denoiser = True) nogil:
     """ Apply decimated TF/TV Penalized Matrix Decomposition (PMD) to factor a
     column major formatted video into spatial and temporal components.
-    
+
     Parameters:
-        d1: height of video 
+        d1: height of video
         d2: width of video
         d_sub: spatial downsampling factor
         t: frames of video
@@ -174,10 +174,10 @@ cpdef size_t decimated_decompose(const int d1,
         tol: convergence tolerence
         enable_temporal_denoiser: whether enable temporal denoiser, True by default
         enable_spatial_denoiser: whether enable spatial denoiser, True by default
-        
+
     Return:
         result: rank of the compressed video/patch
-    
+
     """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
@@ -198,10 +198,10 @@ cpdef size_t decimated_decompose(const int d1,
 # --------------------------- Multi-Block Wrappers ----------------------------#
 # -----------------------------------------------------------------------------#
 
-cpdef batch_decompose(const int d1, 
-                      const int d2, 
+cpdef batch_decompose(const int d1,
+                      const int d2,
                       const int t,
-                      double[:, :, ::1] Y, 
+                      double[:, :, ::1] Y,
                       const int bheight,
                       const int bwidth,
                       const double spatial_thresh,
@@ -217,12 +217,12 @@ cpdef batch_decompose(const int d1,
                       bool enable_spatial_denoiser = True):
     """ Apply TF/TV Penalized Matrix Decomposition (PMD) in batch to factor a
     column major formatted video into spatial and temporal components.
-    
-    Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
+
+    Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function
     factor_patch with OpenMP directives to parallelize batch processing.
-    
+
     Parameters:
-        d1: height of video 
+        d1: height of video
         d2: width of video
         t: frames of video
         Y: video data of shape (d1 x d2) x t
@@ -239,13 +239,13 @@ cpdef batch_decompose(const int d1,
         t_sub: temporal downsampling factor
         enable_temporal_denoiser: whether enable temporal denoiser, True by default
         enable_spatial_denoiser: whether enable spatial denoiser, True by default
-    
+
     Return:
         U: spatial components matrix
         V: temporal components matrix
         K: rank of each patch
         indices: location/index inside of patch grid
-        
+
     """
 
     # Assert Evenly Divisible FOV/Block Dimensions
@@ -253,17 +253,17 @@ cpdef batch_decompose(const int d1,
     assert d2 % bwidth == 0 , FOV_BWIDTH_WARNING
     assert bheight % d_sub == 0 , DSUB_BHEIGHT_WARNING
     assert bwidth % d_sub == 0 , DSUB_BWIDTH_WARNING
-    assert t % t_sub == 0 , TSUB_FRAMES_WARNING    
-    
+    assert t % t_sub == 0 , TSUB_FRAMES_WARNING
+
     # Initialize Counters
-    cdef size_t iu, ku
+    # cdef size_t iu, ku
     cdef int i, j, k, b, bi, bj
     cdef int nbi = int(d1/bheight)
     cdef int nbj = int(d2/bwidth)
     cdef int num_blocks = nbi * nbj
-    cdef int bheight_ds = bheight / d_sub
-    cdef int bwidth_ds = bwidth / d_sub
-    cdef int t_ds = t / t_sub
+    # cdef int bheight_ds = bheight / d_sub
+    # cdef int bwidth_ds = bwidth / d_sub
+    # cdef int t_ds = t / t_sub
 
     # Compute block-start indices and spatial cutoff
     indices = np.transpose([np.tile(range(nbi), nbj), np.repeat(range(nbj), nbi)])
@@ -286,7 +286,7 @@ cpdef batch_decompose(const int d1,
         for b in range(num_blocks):
             Rp[b] = <double *> malloc(bheight * bwidth * t * sizeof(double))
             Up[b] = &U[b,0]
-            Vp[b] = &V[b,0] 
+            Vp[b] = &V[b,0]
 
         # Copy Contents Of Raw Blocks Into Residual Pointers
         for bj in range(nbj):
@@ -296,13 +296,13 @@ cpdef batch_decompose(const int d1,
                         for i in range(bheight):
                             Rp[bi + (bj * nbi)][i + (j * bheight) + (k * bheight * bwidth)] =\
                                     Y[(bi * bheight) + i, (bj * bwidth) + j, k]
-        
+
         # Decimate Raw Blocks
-        if t_sub > 1 or d_sub > 1: 
+        if t_sub > 1 or d_sub > 1:
             for b in range(num_blocks):
                 Rp_ds[b] = <double *> malloc((bheight / d_sub) * (bwidth / d_sub) * (t / t_sub) * sizeof(double))
             for b in prange(num_blocks, schedule='guided'):
-                downsample_3d(bheight, bwidth, d_sub, t, t_sub, Rp[b], Rp_ds[b]) 
+                downsample_3d(bheight, bwidth, d_sub, t, t_sub, Rp[b], Rp_ds[b])
         else:
             for b in range(num_blocks):
                 Rp_ds[b] = NULL
@@ -323,43 +323,43 @@ cpdef batch_decompose(const int d1,
                                enable_spatial_denoiser)
         batch_pmd(Rp, Rp_ds, Up, Vp, &K[0], num_blocks, parms)
         del parms
-        
+
         # Free Allocated Memory
         for b in range(num_blocks):
             free(Rp[b])
-        if t_sub > 1 or d_sub > 1: 
+        if t_sub > 1 or d_sub > 1:
             for b in range(num_blocks):
                 free(Rp_ds[b])
         free(Rp)
         free(Rp_ds)
         free(Up)
         free(Vp)
-            
+
     # Format Components & Return To Numpy Array
-    return (np.asarray(U).reshape((num_blocks, bheight, bwidth, max_components), order='F'), 
-            np.asarray(V).reshape((num_blocks, max_components, t), order='C'), 
+    return (np.asarray(U).reshape((num_blocks, bheight, bwidth, max_components), order='F'),
+            np.asarray(V).reshape((num_blocks, max_components, t), order='C'),
             np.asarray(K), indices.astype(np.uint64))
 
 
-cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U, 
-                                      double[:,:,::1] V, 
-                                      size_t[::1] K, 
+cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U,
+                                      double[:,:,::1] V,
+                                      size_t[::1] K,
                                       size_t[:,:] indices):
     """ Reconstruct A Denoised Movie from components returned by batch_decompose.
-    
+
     Parameter:
         U: spatial component matrix
         V: temporal component matrix
         K: rank of each patch
         indices: location/index inside of patch grid
-    
+
     Return:
         Yd: denoised video data
-        
+
     """
 
     # Get Block Size Info From Spatial
-    cdef size_t num_blocks = U.shape[0]
+    # cdef size_t num_blocks = U.shape[0]
     cdef size_t bheight = U.shape[1]
     cdef size_t bwidth = U.shape[2]
     cdef size_t t = V.shape[2]
@@ -375,7 +375,7 @@ cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U,
     Yd = np.zeros(d1*d2*t, dtype=np.float64).reshape((d1,d2,t))
 
     # Loop Over Blocks
-    cdef size_t bdx, idx, jdx, kdx
+    cdef size_t bdx, idx, jdx #, kdx
     for bdx in range(nbi*nbj):
         idx = indices[bdx,0] * bheight
         jdx = indices[bdx,1] * bwidth
@@ -393,26 +393,26 @@ cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U,
 # -----------------------------------------------------------------------------#
 
 
-cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U, 
-                                         double[:,:,:] V, 
-                                         size_t[:] K, 
+cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U,
+                                         double[:,:,:] V,
+                                         size_t[:] K,
                                          size_t[:,:] indices,
                                          double[:,:] W):
     """ Reconstruct A Denoised Movie from components returned by batch_decompose.
-    
+
     Parameter:
         U: spatial component matrix
         V: temporal component matrix
         K: rank of each patch
         indices: location/index inside of patch grid
         W: weighting component matrix
-        
+
     Return:
         Yd: denoised video data
     """
 
     # Get Block Size Info From Spatial
-    cdef size_t num_blocks = U.shape[0]
+    # cdef size_t num_blocks = U.shape[0]
     cdef size_t bheight = U.shape[1]
     cdef size_t bwidth = U.shape[2]
     cdef size_t t = V.shape[2]
@@ -430,7 +430,7 @@ cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U,
     Yd = np.zeros(d1*d2*t, dtype=np.float64).reshape((d1,d2,t))
 
     # Loop Over Blocks
-    cdef size_t bdx, idx, jdx, kdx
+    cdef size_t bdx, idx, jdx #, kdx
     for bdx in range(nbi*nbj):
         idx = (indices[bdx,0] - idx_offset) * bheight
         jdx = (indices[bdx,1] - jdx_offset) * bwidth
@@ -438,14 +438,14 @@ cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U,
                 np.dot(U[bdx,:,:,:K[bdx]],
                        V[bdx,:K[bdx],:]),
                 (bheight,bwidth,t),
-                order='F') * np.asarray(W[:,:,None]) 
+                order='F') * np.asarray(W[:,:,None])
     return np.asarray(Yd)
 
 
-cpdef overlapping_batch_decompose(const int d1, 
-                                  const int d2, 
+cpdef overlapping_batch_decompose(const int d1,
+                                  const int d2,
                                   const int t,
-                                  double[:, :, ::1] Y, 
+                                  double[:, :, ::1] Y,
                                   const int bheight,
                                   const int bwidth,
                                   const double spatial_thresh,
@@ -459,15 +459,15 @@ cpdef overlapping_batch_decompose(const int d1,
                                   int t_sub=1,
                                   bool enable_temporal_denoiser = True,
                                   bool enable_spatial_denoiser = True):
-    """ 4x batch denoiser. Apply TF/TV Penalized Matrix Decomposition (PMD) in 
-    batch to factor a column major formatted video into spatial and temporal 
+    """ 4x batch denoiser. Apply TF/TV Penalized Matrix Decomposition (PMD) in
+    batch to factor a column major formatted video into spatial and temporal
     components.
-    
-    Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function 
+
+    Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function
     factor_patch with OpenMP directives to parallelize batch processing.
-    
+
     Parameter:
-        d1: height of video 
+        d1: height of video
         d2: width of video
         t: frames of video
         Y: video data of shape (d1 x d2) x t
@@ -484,33 +484,33 @@ cpdef overlapping_batch_decompose(const int d1,
         t_sub: temporal downsampling factor
         enable_temporal_denoiser: whether enable temporal denoiser, True by default
         enable_spatial_denoiser: whether enable spatial denoiser, True by default
-    
+
     Return:
         U: spatial components matrix
         V: temporal components matrix
         K: rank of each patch
         I: location/index inside of patch grid
         W: weighting components matrix
-    
+
     """
 
     # Assert Even Blockdims
     assert bheight % 2 == 0 , "Block height must be an even integer."
     assert bwidth % 2 == 0 , "Block width must be an even integer."
-    
+
     # Assert Even Blockdims
     assert d1 % bheight == 0 , "Input FOV height must be an evenly divisible by block height."
     assert d2 % bwidth == 0 , "Input FOV width must be evenly divisible by block width."
-    
+
     # Declare internal vars
     cdef int i,j
     cdef int hbheight = bheight/2
     cdef int hbwidth = bwidth/2
-    cdef int nbrow = d1/bheight
-    cdef int nbcol = d2/bwidth
+    # cdef int nbrow = d1/bheight
+    # cdef int nbcol = d2/bwidth
 
     # -------------------- Construct Combination Weights ----------------------#
-    
+
     # Generate Single Quadrant Weighting matrix
     cdef double[:,:] ul_weights = np.empty((hbheight, hbwidth), dtype=np.float64)
     for i in range(hbheight):
@@ -520,7 +520,7 @@ cpdef overlapping_batch_decompose(const int d1,
     # Compute Cumulative Overlapped Weights (Normalizing Factor)
     cdef double[:,:] cum_weights = np.asarray(ul_weights) +\
             np.fliplr(ul_weights) + np.flipud(ul_weights) +\
-            np.fliplr(np.flipud(ul_weights)) 
+            np.fliplr(np.flipud(ul_weights))
 
     # Normalize By Cumulative Weights
     for i in range(hbheight):
@@ -529,17 +529,17 @@ cpdef overlapping_batch_decompose(const int d1,
 
 
     # Construct Full Weighting Matrix From Normalize Quadrant
-    cdef double[:,:] W = np.hstack([np.vstack([ul_weights, 
+    cdef double[:,:] W = np.hstack([np.vstack([ul_weights,
                                                np.flipud(ul_weights)]),
-                                    np.vstack([np.fliplr(ul_weights), 
-                                               np.fliplr(np.flipud(ul_weights))])]) 
+                                    np.vstack([np.fliplr(ul_weights),
+                                               np.fliplr(np.flipud(ul_weights))])])
 
     # Initialize Outputs
     cdef dict U = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
     cdef dict V = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
     cdef dict K = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
     cdef dict I = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
-    
+
     # ---------------- Handle Blocks Overlays One At A Time --------------#
 
     # ----------- Original Overlay -----------
@@ -549,20 +549,20 @@ cpdef overlapping_batch_decompose(const int d1,
     K['no_skew']['full'],\
     I['no_skew']['full'] = batch_decompose(d1, d2, t, Y, bheight, bwidth,
                                            spatial_thresh,temporal_thresh,
-                                           max_components, consec_failures, 
-                                           max_iters_main, max_iters_init, 
+                                           max_components, consec_failures,
+                                           max_iters_main, max_iters_init,
                                            tol, d_sub, t_sub,
                                            enable_temporal_denoiser,
                                            enable_spatial_denoiser)
- 
+
     # ---------- Vertical Skew -----------
     # Full Blocks
     U['vert_skew']['full'],\
     V['vert_skew']['full'],\
     K['vert_skew']['full'],\
-    I['vert_skew']['full'] = batch_decompose(d1 - bheight, d2, t, 
-                                             Y[hbheight:d1-hbheight,:,:], 
-                                             bheight, bwidth, 
+    I['vert_skew']['full'] = batch_decompose(d1 - bheight, d2, t,
+                                             Y[hbheight:d1-hbheight,:,:],
+                                             bheight, bwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures,
                                              max_iters_main, max_iters_init,
@@ -574,27 +574,27 @@ cpdef overlapping_batch_decompose(const int d1,
     U['vert_skew']['half'],\
     V['vert_skew']['half'],\
     K['vert_skew']['half'],\
-    I['vert_skew']['half'] = batch_decompose(bheight, d2, t, 
-                                             np.vstack([Y[:hbheight,:,:], 
+    I['vert_skew']['half'] = batch_decompose(bheight, d2, t,
+                                             np.vstack([Y[:hbheight,:,:],
                                                         Y[d1-hbheight:,:,:]]),
-                                             hbheight, bwidth, 
+                                             hbheight, bwidth,
                                              spatial_thresh, temporal_thresh,
-                                             max_components, consec_failures, 
+                                             max_components, consec_failures,
                                              max_iters_main, max_iters_init,
                                              tol, d_sub, t_sub,
                                              enable_temporal_denoiser,
                                              enable_spatial_denoiser)
-    
-    # --------------Horizontal Skew---------- 
+
+    # --------------Horizontal Skew----------
     # Full Blocks
     U['horz_skew']['full'],\
     V['horz_skew']['full'],\
     K['horz_skew']['full'],\
-    I['horz_skew']['full'] = batch_decompose(d1, d2 - bwidth, t, 
-                                             Y[:, hbwidth:d2-hbwidth,:], 
-                                             bheight, bwidth, 
+    I['horz_skew']['full'] = batch_decompose(d1, d2 - bwidth, t,
+                                             Y[:, hbwidth:d2-hbwidth,:],
+                                             bheight, bwidth,
                                              spatial_thresh, temporal_thresh,
-                                             max_components, consec_failures, 
+                                             max_components, consec_failures,
                                              max_iters_main, max_iters_init,
                                              tol, d_sub, t_sub,
                                              enable_temporal_denoiser,
@@ -604,29 +604,29 @@ cpdef overlapping_batch_decompose(const int d1,
     U['horz_skew']['half'],\
     V['horz_skew']['half'],\
     K['horz_skew']['half'],\
-    I['horz_skew']['half'] = batch_decompose(d1, bwidth, t, 
+    I['horz_skew']['half'] = batch_decompose(d1, bwidth, t,
                                              np.hstack([Y[:,:hbwidth,:],
                                                         Y[:,d2-hbwidth:,:]]),
-                                             bheight, hbwidth, 
+                                             bheight, hbwidth,
                                              spatial_thresh, temporal_thresh,
-                                             max_components, consec_failures, 
-                                             max_iters_main, max_iters_init, 
+                                             max_components, consec_failures,
+                                             max_iters_main, max_iters_init,
                                              tol, d_sub, t_sub,
                                              enable_temporal_denoiser,
                                              enable_spatial_denoiser)
 
-    # -------------Diagonal Skew---------- 
+    # -------------Diagonal Skew----------
     # Full Blocks
     U['diag_skew']['full'],\
     V['diag_skew']['full'],\
     K['diag_skew']['full'],\
-    I['diag_skew']['full'] = batch_decompose(d1 - bheight, d2 - bwidth, t, 
+    I['diag_skew']['full'] = batch_decompose(d1 - bheight, d2 - bwidth, t,
                                              Y[hbheight:d1-hbheight,
-                                               hbwidth:d2-hbwidth, :], 
-                                             bheight, bwidth, 
+                                               hbwidth:d2-hbwidth, :],
+                                             bheight, bwidth,
                                              spatial_thresh, temporal_thresh,
-                                             max_components, consec_failures, 
-                                             max_iters_main, max_iters_init, 
+                                             max_components, consec_failures,
+                                             max_iters_main, max_iters_init,
                                              tol, d_sub, t_sub,
                                              enable_temporal_denoiser,
                                              enable_spatial_denoiser)
@@ -635,15 +635,15 @@ cpdef overlapping_batch_decompose(const int d1,
     U['diag_skew']['thalf'],\
     V['diag_skew']['thalf'],\
     K['diag_skew']['thalf'],\
-    I['diag_skew']['thalf'] = batch_decompose(d1 - bheight, bwidth, t, 
+    I['diag_skew']['thalf'] = batch_decompose(d1 - bheight, bwidth, t,
                                              np.hstack([Y[hbheight:d1-hbheight,
                                                           :hbwidth, :],
                                                         Y[hbheight:d1-hbheight,
                                                           d2-hbwidth:, :]]),
-                                             bheight, hbwidth, 
+                                             bheight, hbwidth,
                                              spatial_thresh, temporal_thresh,
-                                             max_components, consec_failures, 
-                                             max_iters_main, max_iters_init, 
+                                             max_components, consec_failures,
+                                             max_iters_main, max_iters_init,
                                              tol, d_sub, t_sub,
                                               enable_temporal_denoiser,
                                               enable_spatial_denoiser)
@@ -652,17 +652,17 @@ cpdef overlapping_batch_decompose(const int d1,
     U['diag_skew']['whalf'],\
     V['diag_skew']['whalf'],\
     K['diag_skew']['whalf'],\
-    I['diag_skew']['whalf'] = batch_decompose(bheight, d2 - bwidth, t, 
-                                             np.vstack([Y[:hbheight, 
+    I['diag_skew']['whalf'] = batch_decompose(bheight, d2 - bwidth, t,
+                                             np.vstack([Y[:hbheight,
                                                           hbwidth:d2-hbwidth,
-                                                          :], 
+                                                          :],
                                                         Y[d1-hbheight:,
                                                           hbwidth:d2-hbwidth,
                                                           :]]),
                                              hbheight, bwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures,
-                                             max_iters_main, max_iters_init, 
+                                             max_iters_main, max_iters_init,
                                              tol, d_sub, t_sub,
                                               enable_temporal_denoiser,
                                               enable_spatial_denoiser)
@@ -671,25 +671,25 @@ cpdef overlapping_batch_decompose(const int d1,
     U['diag_skew']['quarter'],\
     V['diag_skew']['quarter'],\
     K['diag_skew']['quarter'],\
-    I['diag_skew']['quarter'] = batch_decompose(bheight, bwidth, t, 
+    I['diag_skew']['quarter'] = batch_decompose(bheight, bwidth, t,
                                                 np.hstack([
                                                     np.vstack([Y[:hbheight,
                                                                  :hbwidth,
-                                                                 :], 
+                                                                 :],
                                                                Y[d1-hbheight:,
                                                                  :hbwidth,
                                                                  :]]),
                                                     np.vstack([Y[:hbheight,
                                                                  d2-hbwidth:,
-                                                                 :], 
+                                                                 :],
                                                                Y[d1-hbheight:,
                                                                  d2-hbwidth:,
                                                                  :]])
                                                                ]),
                                                 hbheight, hbwidth,
                                                 spatial_thresh, temporal_thresh,
-                                                max_components, consec_failures, 
-                                                max_iters_main, max_iters_init, 
+                                                max_components, consec_failures,
+                                                max_iters_main, max_iters_init,
                                                 tol, d_sub, t_sub,
                                                 enable_temporal_denoiser,
                                                 enable_spatial_denoiser)
@@ -700,14 +700,14 @@ cpdef overlapping_batch_decompose(const int d1,
 
 
 cpdef overlapping_batch_recompose(const int d1,
-                                  const int d2, 
+                                  const int d2,
                                   const int t,
                                   const int bheight,
                                   const int bwidth,
                                   U, V, K, I, W):
-    """ 4x batch denoiser. Reconstruct A Denoised Movie from components 
+    """ 4x batch denoiser. Reconstruct A Denoised Movie from components
     returned by batch_decompose.
-    
+
     Parameter:
         d1: height of video
         d2: width of video
@@ -719,19 +719,19 @@ cpdef overlapping_batch_recompose(const int d1,
         K: rank of each patch
         I: location/index inside of patch grid
         W: weighting components matrix
-    
+
     Return:
         Yd: recomposed video data matrix
     """
-   
+
     # Assert Even Blockdims
     assert bheight % 2 == 0 , "Block height must be an even integer."
     assert bwidth % 2 == 0 , "Block width must be an even integer."
-    
+
     # Assert Even Blockdims
     assert d1 % bheight == 0 , "Input FOV height must be an evenly divisible by block height."
     assert d2 % bwidth == 0 , "Input FOV width must be evenly divisible by block width."
-    
+
     # Declare internal vars
     cdef int i,j
     cdef int hbheight = bheight/2
@@ -747,17 +747,17 @@ cpdef overlapping_batch_recompose(const int d1,
     # ----------- Original Overlay --------------
     # Only Need To Process Full-Size Blocks
     Yd += weighted_recompose(U['no_skew']['full'],
-                             V['no_skew']['full'], 
-                             K['no_skew']['full'], 
-                             I['no_skew']['full'], 
+                             V['no_skew']['full'],
+                             K['no_skew']['full'],
+                             I['no_skew']['full'],
                              W)
- 
+
     # ---------- Vertical Skew --------------
     # Full Blocks
     Yd[hbheight:d1-hbheight,:,:] += weighted_recompose(U['vert_skew']['full'],
                                                        V['vert_skew']['full'],
-                                                       K['vert_skew']['full'], 
-                                                       I['vert_skew']['full'], 
+                                                       K['vert_skew']['full'],
+                                                       I['vert_skew']['full'],
                                                        W)
     # wide half blocks
     Yd[:hbheight,:,:] += weighted_recompose(U['vert_skew']['half'][::2],
@@ -770,19 +770,19 @@ cpdef overlapping_batch_recompose(const int d1,
                                                K['vert_skew']['half'][1::2],
                                                I['vert_skew']['half'][1::2],
                                                W[:hbheight, :])
-    
+
     # --------------Horizontal Skew--------------
     # Full Blocks
     Yd[:, hbwidth:d2-hbwidth,:] += weighted_recompose(U['horz_skew']['full'],
                                                       V['horz_skew']['full'],
                                                       K['horz_skew']['full'],
-                                                      I['horz_skew']['full'], 
+                                                      I['horz_skew']['full'],
                                                       W)
     # tall half blocks
     Yd[:,:hbwidth,:] += weighted_recompose(U['horz_skew']['half'][:nbrow],
-                                           V['horz_skew']['half'][:nbrow], 
-                                           K['horz_skew']['half'][:nbrow], 
-                                           I['horz_skew']['half'][:nbrow],  
+                                           V['horz_skew']['half'][:nbrow],
+                                           K['horz_skew']['half'][:nbrow],
+                                           I['horz_skew']['half'][:nbrow],
                                            W[:, hbwidth:])
     Yd[:,d2-hbwidth:,:] += weighted_recompose(U['horz_skew']['half'][nbrow:],
                                               V['horz_skew']['half'][nbrow:],
@@ -799,25 +799,25 @@ cpdef overlapping_batch_recompose(const int d1,
                                                                           W)
     # tall half blocks
     Yd[hbheight:d1-hbheight,:hbwidth,:] += weighted_recompose(U['diag_skew']['thalf'][:nbrow-1],
-                                                              V['diag_skew']['thalf'][:nbrow-1], 
-                                                              K['diag_skew']['thalf'][:nbrow-1], 
-                                                              I['diag_skew']['thalf'][:nbrow-1],  
+                                                              V['diag_skew']['thalf'][:nbrow-1],
+                                                              K['diag_skew']['thalf'][:nbrow-1],
+                                                              I['diag_skew']['thalf'][:nbrow-1],
                                                               W[:, hbwidth:])
-    Yd[hbheight:d1-hbheight,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['thalf'][nbrow-1:], 
-                                                                 V['diag_skew']['thalf'][nbrow-1:], 
-                                                                 K['diag_skew']['thalf'][nbrow-1:], 
-                                                                 I['diag_skew']['thalf'][nbrow-1:], 
+    Yd[hbheight:d1-hbheight,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['thalf'][nbrow-1:],
+                                                                 V['diag_skew']['thalf'][nbrow-1:],
+                                                                 K['diag_skew']['thalf'][nbrow-1:],
+                                                                 I['diag_skew']['thalf'][nbrow-1:],
                                                                  W[:, :hbwidth])
     # wide half blocks
-    Yd[:hbheight,hbwidth:d2-hbwidth,:] += weighted_recompose(U['diag_skew']['whalf'][::2], 
-                                                             V['diag_skew']['whalf'][::2], 
-                                                             K['diag_skew']['whalf'][::2], 
-                                                             I['diag_skew']['whalf'][::2],  
+    Yd[:hbheight,hbwidth:d2-hbwidth,:] += weighted_recompose(U['diag_skew']['whalf'][::2],
+                                                             V['diag_skew']['whalf'][::2],
+                                                             K['diag_skew']['whalf'][::2],
+                                                             I['diag_skew']['whalf'][::2],
                                                              W[hbheight:, :])
-    Yd[d1-hbheight:,hbwidth:d2-hbwidth,:] += weighted_recompose(U['diag_skew']['whalf'][1::2], 
-                                                                V['diag_skew']['whalf'][1::2], 
-                                                                K['diag_skew']['whalf'][1::2], 
-                                                                I['diag_skew']['whalf'][1::2], 
+    Yd[d1-hbheight:,hbwidth:d2-hbwidth,:] += weighted_recompose(U['diag_skew']['whalf'][1::2],
+                                                                V['diag_skew']['whalf'][1::2],
+                                                                K['diag_skew']['whalf'][1::2],
+                                                                I['diag_skew']['whalf'][1::2],
                                                                 W[:hbheight, :])
     # Corners
     Yd[:hbheight,:hbwidth,:] += weighted_recompose(U['diag_skew']['quarter'][:1],
@@ -830,15 +830,15 @@ cpdef overlapping_batch_recompose(const int d1,
                                                       K['diag_skew']['quarter'][1:2],
                                                       I['diag_skew']['quarter'][1:2],
                                                       W[:hbheight, hbwidth:])
-    Yd[:hbheight,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['quarter'][2:3], 
-                                                      V['diag_skew']['quarter'][2:3], 
-                                                      K['diag_skew']['quarter'][2:3], 
-                                                      I['diag_skew']['quarter'][2:3],  
+    Yd[:hbheight,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['quarter'][2:3],
+                                                      V['diag_skew']['quarter'][2:3],
+                                                      K['diag_skew']['quarter'][2:3],
+                                                      I['diag_skew']['quarter'][2:3],
                                                       W[hbheight:, :hbwidth])
-    Yd[d1-hbheight:,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['quarter'][3:], 
-                                                         V['diag_skew']['quarter'][3:], 
-                                                         K['diag_skew']['quarter'][3:], 
-                                                         I['diag_skew']['quarter'][3:],  
+    Yd[d1-hbheight:,d2-hbwidth:,:] += weighted_recompose(U['diag_skew']['quarter'][3:],
+                                                         V['diag_skew']['quarter'][3:],
+                                                         K['diag_skew']['quarter'][3:],
+                                                         I['diag_skew']['quarter'][3:],
                                                          W[:hbheight:, :hbwidth])
     return np.asarray(Yd)
 
@@ -856,10 +856,10 @@ cpdef temporal_test_statistic(signal):
     return np.sum(np.abs(signal[2:] + signal[:-2] - 2*signal[1:-1])) / np.sum(np.abs(signal))
 
 
-cpdef pca_patch(R, bheight=None, bwidth=None, num_frames=None, spatial_thresh=None, temporal_thresh=None, 
+cpdef pca_patch(R, bheight=None, bwidth=None, num_frames=None, spatial_thresh=None, temporal_thresh=None,
                 max_components=50, consec_failures=3, n_iter=7):
     """ """
-    
+
     # Preallocate Space For Outputs
     U = np.zeros((bheight*bwidth, max_components), dtype=np.float64)
     V = np.zeros((max_components, num_frames), dtype=np.float64)
@@ -900,25 +900,25 @@ cpdef pca_decompose(const int d1,
                     const size_t consec_failures):
     """ Wrapper for the .cpp parallel_factor_patch which wraps the .cpp function
     factor_patch with OpenMP directives to parallelize batch processing.
-    
+
     Parameter:
-        d1: height of video 
+        d1: height of video
         d2: width of video
         t: frames of video
-        Y: video data of shape (d1 x d2) x t 
+        Y: video data of shape (d1 x d2) x t
         bheight: block height
         bwidth: block width
         spatial_thresh: spatial threshold,
         temporal_thresh: temporal threshold,
         max_components: maximum number of components,
         consec_failures: number of failures before stopping
-    
+
     Return:
         U: decomposed spatial matrix
         V: decomposed temporal matrix
         K: rank of each patch
         indices: location/index inside of patch grid
-        
+
     """
 
     # Assert Evenly Divisible FOV/Block Dimensions
@@ -950,11 +950,11 @@ cpdef pca_decompose(const int d1,
     # Process In Parallel
     try:
         pool = multiprocessing.Pool(multiprocessing.cpu_count())
-        results = pool.map(partial(pca_patch, 
+        results = pool.map(partial(pca_patch,
                                    bheight=bheight, bwidth=bwidth, num_frames=t,
-                                   spatial_thresh=spatial_thresh, 
+                                   spatial_thresh=spatial_thresh,
                                    temporal_thresh=temporal_thresh,
-                                   max_components=max_components, 
+                                   max_components=max_components,
                                    consec_failures=consec_failures),
                            R)
     finally:
@@ -963,25 +963,25 @@ cpdef pca_decompose(const int d1,
 
 
     # Format Components & Return To Numpy Array
-    U, V, K = zip(*results) 
+    U, V, K = zip(*results)
     return (np.array(U).reshape((num_blocks, bheight, bwidth, max_components), order='F'),
             np.array(V), np.array(K).astype(np.uint64), indices.astype(np.uint64))
 
-    
-cpdef overlapping_pca_decompose(const int d1, 
-                                  const int d2, 
+
+cpdef overlapping_pca_decompose(const int d1,
+                                  const int d2,
                                   const int t,
-                                  double[:, :, ::1] Y, 
+                                  double[:, :, ::1] Y,
                                   const int bheight,
                                   const int bwidth,
                                   const double spatial_thresh,
                                   const double temporal_thresh,
                                   const size_t max_components,
                                   const size_t consec_failures):
-    """4x batch denoiser 
-    
+    """4x batch denoiser
+
     Parameter:
-        d1: height of video 
+        d1: height of video
         d2: width of video
         t: frames of video
         Y: video data of shape (d1 x d2) x t
@@ -989,33 +989,33 @@ cpdef overlapping_pca_decompose(const int d1,
         temporal_thresh: temporal threshold,
         max_components: maximum number of components,
         consec_failures:
-        
+
     Return:
         U: spatial components matrix
         V: temporal components matrix
         K: rank of each patch
         I: location/index inside of patch grid
         W: weighting components matrix
-        
+
     """
 
     # Assert Even Blockdims
     assert bheight % 2 == 0 , "Block height must be an even integer."
     assert bwidth % 2 == 0 , "Block width must be an even integer."
-    
+
     # Assert Even Blockdims
     assert d1 % bheight == 0 , "Input FOV height must be an evenly divisible by block height."
     assert d2 % bwidth == 0 , "Input FOV width must be evenly divisible by block width."
-    
+
     # Declare internal vars
     cdef int i,j
     cdef int hbheight = bheight/2
     cdef int hbwidth = bwidth/2
-    cdef int nbrow = d1/bheight
-    cdef int nbcol = d2/bwidth
+    # cdef int nbrow = d1/bheight
+    # cdef int nbcol = d2/bwidth
 
     # -------------------- Construct Combination Weights ----------------------#
-    
+
     # Generate Single Quadrant Weighting matrix
     cdef double[:,:] ul_weights = np.empty((hbheight, hbwidth), dtype=np.float64)
     for i in range(hbheight):
@@ -1025,7 +1025,7 @@ cpdef overlapping_pca_decompose(const int d1,
     # Compute Cumulative Overlapped Weights (Normalizing Factor)
     cdef double[:,:] cum_weights = np.asarray(ul_weights) +\
             np.fliplr(ul_weights) + np.flipud(ul_weights) +\
-            np.fliplr(np.flipud(ul_weights)) 
+            np.fliplr(np.flipud(ul_weights))
 
     # Normalize By Cumulative Weights
     for i in range(hbheight):
@@ -1034,17 +1034,17 @@ cpdef overlapping_pca_decompose(const int d1,
 
 
     # Construct Full Weighting Matrix From Normalize Quadrant
-    cdef double[:,:] W = np.hstack([np.vstack([ul_weights, 
+    cdef double[:,:] W = np.hstack([np.vstack([ul_weights,
                                                np.flipud(ul_weights)]),
-                                    np.vstack([np.fliplr(ul_weights), 
-                                               np.fliplr(np.flipud(ul_weights))])]) 
+                                    np.vstack([np.fliplr(ul_weights),
+                                               np.fliplr(np.flipud(ul_weights))])])
 
     # Initialize Outputs
     cdef dict U = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
     cdef dict V = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
     cdef dict K = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
     cdef dict I = {'no_skew':{}, 'vert_skew':{}, 'horz_skew':{}, 'diag_skew':{}}
-    
+
     # ---------------- Handle Blocks Overlays One At A Time --------------#
 
     # ----------- Original Overlay -----------
@@ -1055,15 +1055,15 @@ cpdef overlapping_pca_decompose(const int d1,
     I['no_skew']['full'] = pca_decompose(d1, d2, t, Y, bheight, bwidth,
                                            spatial_thresh,temporal_thresh,
                                            max_components, consec_failures)
- 
+
     # ---------- Vertical Skew -----------
     # Full Blocks
     U['vert_skew']['full'],\
     V['vert_skew']['full'],\
     K['vert_skew']['full'],\
-    I['vert_skew']['full'] = pca_decompose(d1 - bheight, d2, t, 
-                                             Y[hbheight:d1-hbheight,:,:], 
-                                             bheight, bwidth, 
+    I['vert_skew']['full'] = pca_decompose(d1 - bheight, d2, t,
+                                             Y[hbheight:d1-hbheight,:,:],
+                                             bheight, bwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures)
 
@@ -1071,21 +1071,21 @@ cpdef overlapping_pca_decompose(const int d1,
     U['vert_skew']['half'],\
     V['vert_skew']['half'],\
     K['vert_skew']['half'],\
-    I['vert_skew']['half'] = pca_decompose(bheight, d2, t, 
-                                             np.vstack([Y[:hbheight,:,:], 
+    I['vert_skew']['half'] = pca_decompose(bheight, d2, t,
+                                             np.vstack([Y[:hbheight,:,:],
                                                         Y[d1-hbheight:,:,:]]),
-                                             hbheight, bwidth, 
+                                             hbheight, bwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures)
-    
-    # --------------Horizontal Skew---------- 
+
+    # --------------Horizontal Skew----------
     # Full Blocks
     U['horz_skew']['full'],\
     V['horz_skew']['full'],\
     K['horz_skew']['full'],\
-    I['horz_skew']['full'] = pca_decompose(d1, d2 - bwidth, t, 
-                                             Y[:, hbwidth:d2-hbwidth,:], 
-                                             bheight, bwidth, 
+    I['horz_skew']['full'] = pca_decompose(d1, d2 - bwidth, t,
+                                             Y[:, hbwidth:d2-hbwidth,:],
+                                             bheight, bwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures)
 
@@ -1093,22 +1093,22 @@ cpdef overlapping_pca_decompose(const int d1,
     U['horz_skew']['half'],\
     V['horz_skew']['half'],\
     K['horz_skew']['half'],\
-    I['horz_skew']['half'] = pca_decompose(d1, bwidth, t, 
+    I['horz_skew']['half'] = pca_decompose(d1, bwidth, t,
                                              np.hstack([Y[:,:hbwidth,:],
                                                         Y[:,d2-hbwidth:,:]]),
-                                             bheight, hbwidth, 
+                                             bheight, hbwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures)
 
-    # -------------Diagonal Skew---------- 
+    # -------------Diagonal Skew----------
     # Full Blocks
     U['diag_skew']['full'],\
     V['diag_skew']['full'],\
     K['diag_skew']['full'],\
-    I['diag_skew']['full'] = pca_decompose(d1 - bheight, d2 - bwidth, t, 
+    I['diag_skew']['full'] = pca_decompose(d1 - bheight, d2 - bwidth, t,
                                              Y[hbheight:d1-hbheight,
-                                               hbwidth:d2-hbwidth, :], 
-                                             bheight, bwidth, 
+                                               hbwidth:d2-hbwidth, :],
+                                             bheight, bwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures)
 
@@ -1116,12 +1116,12 @@ cpdef overlapping_pca_decompose(const int d1,
     U['diag_skew']['thalf'],\
     V['diag_skew']['thalf'],\
     K['diag_skew']['thalf'],\
-    I['diag_skew']['thalf'] = pca_decompose(d1 - bheight, bwidth, t, 
+    I['diag_skew']['thalf'] = pca_decompose(d1 - bheight, bwidth, t,
                                              np.hstack([Y[hbheight:d1-hbheight,
                                                           :hbwidth, :],
                                                         Y[hbheight:d1-hbheight,
                                                           d2-hbwidth:, :]]),
-                                             bheight, hbwidth, 
+                                             bheight, hbwidth,
                                              spatial_thresh, temporal_thresh,
                                              max_components, consec_failures)
 
@@ -1129,32 +1129,32 @@ cpdef overlapping_pca_decompose(const int d1,
     U['diag_skew']['whalf'],\
     V['diag_skew']['whalf'],\
     K['diag_skew']['whalf'],\
-    I['diag_skew']['whalf'] = pca_decompose(bheight, d2 - bwidth, t, 
-                                             np.vstack([Y[:hbheight, 
+    I['diag_skew']['whalf'] = pca_decompose(bheight, d2 - bwidth, t,
+                                             np.vstack([Y[:hbheight,
                                                           hbwidth:d2-hbwidth,
-                                                          :], 
+                                                          :],
                                                         Y[d1-hbheight:,
                                                           hbwidth:d2-hbwidth,
                                                           :]]),
                                              hbheight, bwidth,
                                              spatial_thresh, temporal_thresh,
-                                             max_components, consec_failures) 
+                                             max_components, consec_failures)
 
     # Corners
     U['diag_skew']['quarter'],\
     V['diag_skew']['quarter'],\
     K['diag_skew']['quarter'],\
-    I['diag_skew']['quarter'] = pca_decompose(bheight, bwidth, t, 
+    I['diag_skew']['quarter'] = pca_decompose(bheight, bwidth, t,
                                                 np.hstack([
                                                     np.vstack([Y[:hbheight,
                                                                  :hbwidth,
-                                                                 :], 
+                                                                 :],
                                                                Y[d1-hbheight:,
                                                                  :hbwidth,
                                                                  :]]),
                                                     np.vstack([Y[:hbheight,
                                                                  d2-hbwidth:,
-                                                                 :], 
+                                                                 :],
                                                                Y[d1-hbheight:,
                                                                  d2-hbwidth:,
                                                                  :]])
@@ -1173,7 +1173,7 @@ cpdef overlapping_pca_decompose(const int d1,
 def determine_thresholds(mov_dims,
                          block_dims,
                          num_components,
-                         max_iters_main, max_iters_init, tol, 
+                         max_iters_main, max_iters_init, tol,
                          d_sub, t_sub,
                          conf, plot,
                          enable_temporal_denoiser = True,
@@ -1225,12 +1225,20 @@ def determine_thresholds(mov_dims,
             spatial_stat.append(spatial_test_statistic(spatial_components[block_idx,:,:,k]))
             temporal_stat.append(temporal_test_statistic(temporal_components[block_idx,k,:]))
 
+    """
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+        spatial_stat = pool.map(spatial_test_statistic, [spatial_components[block_idx,:,:,k] for block_idx in range(num_blocks) for k in range(int(block_ranks[block_idx]))])
+
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+        temporal_stat = pool.map(temporal_test_statistic, [temporal_components[block_idx,k,:] for block_idx in range(num_blocks) for k in range(int(block_ranks[block_idx]))])
+    """
+
     # Compute Thresholds
     spatial_thresh =  np.percentile(spatial_stat, conf)
     temporal_thresh = np.percentile(temporal_stat, conf)
 
     if plot:
-        fig, ax = plt.subplots(2,2,figsize=(8,8))
+        _, ax = plt.subplots(2, 2, figsize=(8,8))
         ax[0,0].scatter(spatial_stat, temporal_stat, marker='x', c='r', alpha = .2)
         ax[0,0].axvline(spatial_thresh)
         ax[0,0].axhline(temporal_thresh)

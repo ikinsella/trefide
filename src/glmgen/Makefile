@@ -23,26 +23,28 @@ ifeq ($(detected_OS),Linux)
 endif
 
 # Project Structure Dependent Variables
-OBJ=obj/*.o
-IDIR=../include/
-TARGET=lib/libglmgen${EXT}
+OBJ = obj/*.o
+IDIR = ../include/
+TARGET = lib/libglmgen${EXT}
 
-# Compiler Dependent Environment Variables 
+# Compiler Dependent Environment Variables
 ifneq ($(CC),)
     CC = gcc
 endif
-CFLAGS=-O3 -Wall -Wextra -ansi -std=c89 -pedantic
-CFLAGS2=-O3
+
+CFLAGS = -O3 -Wall -Wextra -ansi -std=c89 -pedantic
 
 # Recipes
+.PHONY: all
 all:
 	mkdir -p lib
 	mkdir -p obj
-	cd obj; ${CC} ${CLFAGS2} -c -fPIC ../src/csparse/*.c -I${IDIR}
+	cd obj; ${CC} ${CLFAGS} -c -fPIC ../src/csparse/*.c -I${IDIR}
 	cd obj; ${CC} ${CFLAGS}  -c -fPIC ../src/utils/*.c -I${IDIR}
 	cd obj; ${CC} ${CFLAGS}  -c -fPIC ../src/tf/*.c -I${IDIR}
 	${CC} ${LDFLAGS} -o ${TARGET} ${OBJ}
 
+.PHONY: clean
 clean:
 	rm -rf lib
 	rm -rf obj

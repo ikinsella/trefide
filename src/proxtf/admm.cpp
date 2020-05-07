@@ -1,38 +1,21 @@
-#include <stdlib.h>
 #include <math.h>
 #include <mkl.h>
-#include <glmgen.h>
 #include "line_search.h"
-
-short cps_tf_admm(const int n,        // data length
-                  const int degree,
-                  double* x,          // data locations
-                  double *y,          // data observations
-                  double *w,          // data observation weights
-                  cs * DktDk,         // Difference Gram
-                  const double delta, // MSE constraint (noise var estimate)	
-                  double *beta,       // primal variable
-                  double *alpha,
-                  double *u,
-                  double *lambda,     // initial regularization parameter
-                  double rho,
-                  int *iters,         // pointer to iter # (so we can return it)
-                  const double tol,   // relative difference from target MSE
-                  const int verbose);
-
+#include "glmgen.h"
+#include "admm.h"
 
 short constrained_tf_admm(const int n,           // data length
                           double* x,             // data locations
                           double *y,             // data observations
                           double *w,             // data observation weights
-                          const double delta,    // MSE constraint (noise var estimate)	
+                          const double delta,    // MSE constraint (noise var estimate)
                           double *beta,          // primal variable
                           double *alpha,
                           double *u,
                           double *lambda,        // initial regularization parameter
                           int *iters,            // pointer to iter # (so we can return it)
-                          const double tol=5e-2, // relative difference from target MSE
-                          const int verbose=0)
+                          const double tol, // relative difference from target MSE
+                          const int verbose)
 {
     /* Trend Filtering Constants */
     int DEGREE = 1;
@@ -42,9 +25,11 @@ short constrained_tf_admm(const int n,           // data length
     int i;
     double scale, rho = 1;
     double * temp_n = (double *) malloc(n * sizeof(double));
-    for(i = 0; i < n; i++) temp_n[i] = 1/sqrt(w[i]); // Assume w does not have zeros 
-    
-    /* Declare & Init Sparse Matrix Objects */ 
+    for (i = 0; i < n; i++) {
+        temp_n[i] = 1.0 / sqrt(w[i]); // Assume w does not have zeros
+    }
+
+    /* Declare & Init Sparse Matrix Objects */
     cs * D = tf_calc_dk(n, DEGREE+1, x);
     cs * Dt = cs_transpose(D, 1);
     diag_times_sparse(Dt, temp_n); /* Dt = W^{-1/2} Dt */
@@ -62,11 +47,11 @@ short constrained_tf_admm(const int n,           // data length
         *lambda = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
         /* Initialize search from maximum lambda */
         //*lambda = tf_maxlam(n, y, Dt_qr, w);
-        
+
         /* Initialize Primal At beta_max */
         //calc_beta_max(y, w, n, Dt_qr, Dt, temp_n, beta);
 
-        /* Check if beta = weighted mean(y) is better than beta_max */ 
+        /* Check if beta = weighted mean(y) is better than beta_max */
         //double yc = weighted_mean(y,w,n);
         //for (i = 0; i < n; i++) temp_n[i] = yc;
         //double obj1 = tf_obj(x,y,w,n,DEGREE,*lambda,FAMILY_GAUSSIAN,beta,alpha);
@@ -76,19 +61,21 @@ short constrained_tf_admm(const int n,           // data length
         /* initalize alpha at alpha_max */
         //tf_dxtil(x, n, DEGREE, beta, alpha);
 
-        /* intialize u at u_max */ 
+        /* intialize u at u_max */
         //for (i = 0; i < n; i++) u[i] = w[i] * (beta[i] - y[i]) / (rho * lambda[0]);
         //glmgen_qrsol (Dkt_qr, u);
     }
-   
-    /* Compute Rho From Data Locations */ 
-    rho = rho * pow((x[n-1] - x[0])/n, (double)DEGREE);
 
-    /* if lambda is too small, return a trivial solution */  
-    if (*lambda <= 1e-10 * l1norm(y,n)/n) {
-        for (i=0; i<n; i++) beta[i] = y[i];
+    /* Compute Rho From Data Locations */
+    rho *= pow((x[n-1] - x[0])/n, (double)DEGREE);
+
+    /* if lambda is too small, return a trivial solution */
+    if (*lambda <= 1e-10 * l1norm(y,n) / n) {
+        for (i = 0; i < n; i++) {
+            beta[i] = y[i];
+        }
+
         *lambda = 0;
-
         cs_spfree(D);
         cs_spfree(Dt);
         cs_spfree(Dk);
@@ -117,14 +104,13 @@ short constrained_tf_admm(const int n,           // data length
     return status;
 }
 
-
 short cps_tf_admm(const int n,        // data length
                   const int degree,
                   double* x,          // data locations
                   double *y,          // data observations
                   double *w,          // data observation weights
                   cs * DktDk,         // Difference Gram
-                  const double delta, // MSE constraint (noise var estimate)	
+                  const double delta, // MSE constraint (noise var estimate)
                   double *beta,       // primal variable
                   double *alpha,
                   double *u,
@@ -140,15 +126,15 @@ short cps_tf_admm(const int n,        // data length
 
     /* Declare & allocate internal admm vars */
     int df;
-    double * obj = (double *) malloc(maxiter * sizeof(double));
- 
+    double* obj = (double *) malloc(maxiter * sizeof(double));
+
     /* Declar & allocate internal line search vars */
-    double target = sqrt(n*delta);  // target norm of error
+    double target = sqrt(n * delta);  // target norm of error
     int iter;
     double l2_err, l2_err_prev = 0;
-    double * resid = (double *) malloc(n * sizeof(double));
+    double* resid = (double *) malloc(n * sizeof(double));
 
-    /* Iterate lagrangian solves over lambda; the beta, alpha, and u vectors 
+    /* Iterate lagrangian solves over lambda; the beta, alpha, and u vectors
      * get used for warm starts in each subsequent iteration.
      */
     while (*iters < maxiter * 100)
@@ -180,11 +166,12 @@ short cps_tf_admm(const int n,        // data length
             free(obj);
             free(resid);
             return 0;  // Stalled before tol reached
-        } 
+        }
         l2_err_prev = l2_err;
 
         /* Increment Lambda */
-        *lambda = exp(log(*lambda) + log(target) - log(l2_err));
+        // *lambda = exp(log(*lambda) + log(target) - log(l2_err));
+        *lambda = (*lambda) * target / l2_err;
     }
 
     /* Line Search Didn't Converge */
@@ -203,7 +190,7 @@ short langrangian_tf_admm(const int n,           // data length
                           double *alpha,
                           double *u,
                           int *iter,             // pointer to iter # (so we can return it)
-                          const int verbose=0)
+                          const int verbose)
 {
     /* Trend Filtering Constants */
     int DEGREE = 1;
@@ -214,11 +201,13 @@ short langrangian_tf_admm(const int n,           // data length
     int i, df;
     short status = 1;
     double rho = 1;
-    double * obj = (double *) malloc(maxiter * sizeof(double));
-    double * temp_n = (double *) malloc(n * sizeof(double));
-    for(i = 0; i < n; i++) temp_n[i] = 1/sqrt(w[i]); // Assume w does not have zeros 
-    
-    /* Declare & Init Sparse Matrix Objects */ 
+    double* obj = (double *) malloc(maxiter * sizeof(double));
+    double* temp_n = (double *) malloc(n * sizeof(double));
+    for (i = 0; i < n; i++) {
+        temp_n[i] = 1.0 / sqrt(w[i]); // Assume w does not have zeros
+    }
+
+    /* Declare & Init Sparse Matrix Objects */
     cs * D = tf_calc_dk(n, DEGREE+1, x);
     cs * Dt = cs_transpose(D, 1);
     diag_times_sparse(Dt, temp_n); /* Dt = W^{-1/2} Dt */
@@ -228,12 +217,15 @@ short langrangian_tf_admm(const int n,           // data length
     gqr * Dt_qr = glmgen_qr(Dt);
     gqr * Dkt_qr = glmgen_qr(Dkt);
 
-    /* Compute Rho From Data Locations */ 
-    rho = rho * pow((x[n-1] - x[0])/n, (double)DEGREE);
+    /* Compute Rho From Data Locations */
+    rho *= pow((x[n-1] - x[0])/n, (double)DEGREE);
 
-    /* if lambda is too small, return a trivial solution */  
-    if (lambda <= 1e-10 * l1norm(y,n)/n) {
-        for (i=0; i<n; i++) beta[i] = y[i];
+    /* if lambda is too small, return a trivial solution */
+    if (lambda <= 1e-10 * l1norm(y,n) / n) {
+
+        for (i = 0; i < n; i++) {
+            beta[i] = y[i];
+        }
         lambda = 0;
 
         cs_spfree(D);

@@ -25,41 +25,47 @@ endif
 # Project Structure Dependent Variables
 PROXTV = $(shell pwd)/proxtv
 LIBPROXTV = $(PROXTV)/libproxtv$(EXT)
+
 GLMGEN = $(shell pwd)/glmgen
 LIBGLMGEN = $(GLMGEN)/lib/libglmgen$(EXT)
+
 LIBTREFIDE = libtrefide$(EXT)
-LIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
+
+LDLIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
 SRCS = utils/welch.cpp proxtf/wpdas.cpp proxtf/line_search.cpp proxtf/utils.cpp proxtf/l1tf/ipm.cpp proxtf/admm.cpp pmd/pmd.cpp pmd/decimation.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-# Compiler Dependent Environment Variables 
+LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
+INCLUDES = -I$(PROXTV) -I$(GLMGEN)/include
+
+# Compiler Dependent Environment Variables
 ifeq ($(CXX),)
     CXX = g++
 endif
 ifeq ($(CXX), icpc)
-    CXXFLAGS = -mkl=sequential -qopenmp -O3 -fPIC -I$(PROXTV) -I$(GLMGEN)/include -L$(PROXTV) -L$(GLMGEN)/lib -D NOMATLAB=1
+    CXXFLAGS = -pedantic -Wall -Wextra -Weffc++ -mkl=sequential -qopenmp -O3 -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
 else
-    CXXFLAGS = -fopenmp -O3 -fPIC -I$(PROXTV) -I$(CONDA_PREFIX)/include -I$(GLMGEN)/include -L$(PROXTV) -L$(GLMGEN)/lib -L$(CONDA_PREFIX)/lib -D NOMATLAB=1
+    CXXFLAGS = -pedantic -Wall -Wextra -Weffc++ -fopenmp -O3 -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
 endif
 
 # Recipes
 .PHONY: all
-all: $(LIBPROXTV) $(LIBGLMGEN) $(LIBTREFIDE)
+all: clean $(LIBPROXTV) $(LIBGLMGEN) $(LIBTREFIDE)
 
 $(LIBPROXTV):
-	cd $(PROXTV); make;
+	$(MAKE) -C $(PROXTV);
 
 $(LIBGLMGEN):
-	cd $(GLMGEN); make;
+	$(MAKE) -C $(GLMGEN);
 
 $(LIBTREFIDE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
 
-$(SRCS:.cpp=.d) : %.d : %.cpp
+$(SRCS:.cpp=.d):%.d:%.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-.PHONY : clean 
+.PHONY: clean
 clean:
 	rm -f $(LIBTREFIDE) $(OBJS) $(SRCS:.cpp=.d)
-	cd $(PROXTV); make clean;
-	cd $(GLMGEN); make clean;
+	$(MAKE) clean -C $(PROXTV);
+	$(MAKE) clean -C $(GLMGEN);
