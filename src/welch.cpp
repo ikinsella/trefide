@@ -1,8 +1,14 @@
 #include "welch.h"
-#include <mkl.h>
+
+#include <iostream>
 #include <mkl_dfti.h>
-#include <stdio.h>
 #include <vector>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#include <mkl.h>
+#pragma GCC diagnostic pop
+
 
 void inplace_rfft(const MKL_LONG L, double* yft, void* FFT)
 {
@@ -15,7 +21,7 @@ void inplace_rfft(const MKL_LONG L, double* yft, void* FFT)
     // Assign or Create FFT Handle Depending On Context
     if (FFT) {
         /* Void FFT handle indicates operating in serial mode */
-        fft_pt = (DFTI_DESCRIPTOR_HANDLE*)FFT;
+        fft_pt = static_cast<DFTI_DESCRIPTOR_HANDLE*>(FFT);
         fft = *fft_pt;
     } else {
         status = DftiCreateDescriptor(&fft, DFTI_DOUBLE, DFTI_REAL, 1, L);
@@ -42,33 +48,30 @@ void inplace_rfft(const MKL_LONG L, double* yft, void* FFT)
 void welch(const size_t N, const MKL_INT L, const MKL_INT R,
     const double fs, const double* x, double* psd, void* FFT)
 {
-    /* Declare Local Variables */
     int k, l;
     MKL_INT K, S, P;
-    double *yft, *win;
     double scale;
 
-    /* Initialize & Allocate Mem For Local Variables */
     S = L - R; // Segment Increment
-    K = floor((N - L) / S) + 1; // Number Of Segments
-    P = floor(L / 2) + 1; // Number of Periodogram Coef
-    win = (double*)malloc(L * sizeof(double)); // Window
-    yft = (double*)malloc(L * sizeof(double)); // Windowed Signal Segment & DFT Coef
+    K = static_cast<MKL_INT>(floor((N - L) / S) + 1); // Number Of Segments
+    P = static_cast<MKL_INT>(floor(L / 2) + 1); // Number of Periodogram Coef
+    std::vector<double> win(L); // Window
+    std::vector<double> yft(L); // Windowed Signal Segment & DFT Coef
 
     /* Construct Window & Compute DFT Coef Scaling Factor */
-    hanning_window(L, win);
-    scale = cblas_dnrm2(L, win, 1); // Window 2 norm
+    hanning_window(L, &win[0]);
+    scale = cblas_dnrm2(L, &win[0], 1); // Window 2 norm
     scale = fs * scale * scale; // DFT Normalization Factor
 
     // Loop Over Segments
     for (k = 0; k < K; k++) {
 
         // Copy Segment Of Signal X Into Target YFT & Apply Window
-        vdMul(L, x + S * k, win, yft);
+        vdMul(L, x + S * k, &win[0], &yft[0]);
 
         // Transform Windowed Signal Segment Into Squared DFT Coef. Inplace
-        inplace_rfft(L, yft, FFT);
-        vdSqr(L, yft, yft);
+        inplace_rfft(L, &yft[0], FFT);
+        vdSqr(L, &yft[0], &yft[0]);
 
         // Increment Estimate Of PSD
         psd[0] += yft[0]; /* DC component */
@@ -83,10 +86,6 @@ void welch(const size_t N, const MKL_INT L, const MKL_INT R,
 
     // Scale Periodogram By Win, Fs, and Num Segments
     cblas_dscal(P, 1 / (scale * K), psd, 1);
-
-    // Free Allocated Memory
-    free(yft);
-    free(win);
 }
 
 double psd_noise_estimate(const size_t N, const double* x, void* FFT)
@@ -99,19 +98,15 @@ double psd_noise_estimate(const size_t N, const double* x, void* FFT)
     MKL_INT L = 256; // Segment Length
     MKL_INT R = 128; // Segment Overlap
     double fs = 1; // Sampling Freq Of Signal
-    MKL_INT P = floor(L / 2) + 1; // Number of Periodogram Coef
-    /*
-    psd = (double*)malloc(P * sizeof(double));
-    for (int p = 0; p < P; p++) {
-        psd[p] = 0.0;
-    }
-    */
+    MKL_INT P = static_cast<MKL_INT>(floor(L / 2) + 1); // Number of Periodogram Coef
     std::vector<double> psd(P, 0.0);
 
     welch(N, L, R, fs, x, &psd[0], FFT);
 
     /* Average Over High Frequency Components */
-    for (int p = floor(L / 4) + 1; p < floor(L / 2) + 1; p++) {
+    int start = static_cast<int>(floor(L / 4) + 1);
+    int end = static_cast<int>(floor(L / 2) + 1);
+    for (int p = start; p < end; p++) {
         var += psd[p] * 0.5;
     }
     var /= floor(L / 2) - floor(L / 4);

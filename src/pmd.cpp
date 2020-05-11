@@ -1,11 +1,16 @@
 #include <algorithm>
 #include <math.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <mkl.h>
+#pragma GCC diagnostic pop
+
 #include <vector>
 
-#include "../proxtf/line_search.h"
-#include "../proxtv/proxtv.h"
-#include "../utils/welch.h"
+#include "line_search.h"
+#include "../external/proxtv/proxtv.h"
+#include "welch.h"
 #include "decimation.h"
 #include "pmd.h"
 
@@ -24,7 +29,9 @@ PMD_params::PMD_params(
 
     bheight(_bheight)
     , bwidth(_bwidth)
+    , d_sub(_d_sub)
     , t(_t)
+    , t_sub(_t_sub)
     , spatial_thresh(_spatial_thresh)
     , temporal_thresh(_temporal_thresh)
     , max_components(_max_components)
@@ -32,12 +39,10 @@ PMD_params::PMD_params(
     , max_iters_main(_max_iters_main)
     , max_iters_init(_max_iters_init)
     , tol(_tol)
+    , FFT(_FFT)
+    , enable_temporal_denoiser(_enable_temporal_denoiser)
+    , enable_spatial_denoiser(_enable_spatial_denoiser)
 {
-    this->d_sub = _d_sub;
-    this->t_sub = _t_sub;
-    this->FFT = _FFT;
-    this->enable_temporal_denoiser = _enable_temporal_denoiser;
-    this->enable_spatial_denoiser = _enable_spatial_denoiser;
 }
 
 MKL_INT PMD_params::get_bheight() { return this->bheight; }
@@ -102,11 +107,12 @@ void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser)
 double estimate_noise_tv_op(const MKL_INT d1, const MKL_INT d2,
     const double* u_k)
 {
-    int j, j1, j2, n = 0;
-    int num_edges = d1 * (d2 - 1) + d2 * (d1 - 1);
+    int j, j1, j2;
     double std;
-    // double* edge_diffs = (double *) malloc(num_edges * sizeof(double));
-    std::vector<double> edge_diffs(num_edges, 0.0);
+    int n = 0;
+
+    int num_edges = d1 * (d2 - 1) + d2 * (d1 - 1);
+    std::vector<double> edge_diffs(num_edges);
 
     /* All Elements Except Union (Bottom Row, Rightmost Column) */
     for (j2 = 0; j2 < d2 - 1; j2++) {
@@ -140,7 +146,6 @@ double estimate_noise_tv_op(const MKL_INT d1, const MKL_INT d2,
 
     /* Transform & Return */
     std = edge_diffs[num_edges / 2] / .954;
-    // free(edge_diffs);
     return std * std;
 }
 
@@ -149,10 +154,8 @@ double estimate_noise_tv_op(const MKL_INT d1, const MKL_INT d2,
 double estimate_noise_mean_filter(const int rows, const int cols,
     double* image)
 {
-    /* Internal Variables */
     int n = 5;
     double var_hat;
-    // double* mses = (double *) malloc(rows * cols * sizeof(double));
     std::vector<double> mses(rows * cols, 0.0);
 
     /* Visit Each Pixel */
@@ -182,7 +185,6 @@ double estimate_noise_mean_filter(const int rows, const int cols,
     /* Sort Local MSES & Return Median */
     std::sort(mses.begin(), mses.end());
     var_hat = mses[(rows * cols) / 4];
-    // free(mses);
     return var_hat;
 }
 
@@ -193,8 +195,6 @@ double estimate_noise_median_filter(const int rows, const int cols,
 {
     int n = 3;
     double var_hat;
-    // double* mses = (double *) malloc(rows * cols * sizeof(double));
-    // double* pixel_values = (double *) malloc(n*n*sizeof(double));
     std::vector<double> mses(rows * cols, 0.0);
     std::vector<double> pixel_values(n * n, 0.0);
 
@@ -226,22 +226,17 @@ double estimate_noise_median_filter(const int rows, const int cols,
     /* Sort Local MSES & Return Median */
     std::sort(mses.begin(), mses.end());
     var_hat = mses[(rows * cols) / 2];
-    // free(mses);
-    // free(pixel_values);
     return var_hat;
 }
 
-/* Solve Constrained TV With CPS Line Search
- *
- */
-short cps_tv(const int d1, const int d2, double* y, const double delta,
-    double* x, double* lambda_tv, double* info, double tol = 5e-2)
+/* Solve Constrained TV With CPS Line Search */
+int cps_tv(const int d1, const int d2, double* y, const double delta,
+    double* x, double* lambda_tv, double* info, double tol)
 {
     int d = d1 * d2;
     int iters = 0;
     double target = sqrt(d * delta); // target norm of error
     double l2_err, l2_err_prev = 0;
-    // double* resid = (double*)malloc(d * sizeof(double));
     std::vector<double> resid(d, 0.0);
 
     while (iters < 100) {
@@ -254,10 +249,8 @@ short cps_tv(const int d1, const int d2, double* y, const double delta,
 
         /* Check For Convergence */
         if (fabs(target * target - l2_err * l2_err) / (target * target) < tol) {
-            // free(resid);
             return 1; // successfully converged within tolerance
         } else if (fabs(l2_err - l2_err_prev) < 1e-3) {
-            // free(resid);
             return 0; // line search stalled
         }
         l2_err_prev = l2_err;
@@ -269,7 +262,6 @@ short cps_tv(const int d1, const int d2, double* y, const double delta,
         /* Update Iteration Count */
         iters++;
     }
-    // free(resid);
     return 0; // Line Search Didn't Converge
 }
 
@@ -279,10 +271,8 @@ short cps_tv(const int d1, const int d2, double* y, const double delta,
 void constrained_denoise_spatial(const MKL_INT d1, const MKL_INT d2,
     double* u_k, double* lambda_tv)
 {
-    short status;
+    int status;
     double delta;
-    // double* target = (double*)malloc(d1 * d2 * sizeof(double));
-    // double* info = (double*)malloc(3 * sizeof(double));
 
     std::vector<double> target(d1 * d2, 0.0);
     std::vector<double> info(3, 0.0);
@@ -304,9 +294,6 @@ void constrained_denoise_spatial(const MKL_INT d1, const MKL_INT d2,
         /* u_k /= ||u_k|| */
         normalize(d1 * d2, u_k);
     }
-    /* Free Allocated Memory */
-    // free(target);
-    // free(info);
 }
 
 /* Denoises and normalizes the  d1xd2 spatial component u_k using the
@@ -337,7 +324,7 @@ double update_spatial_init(const MKL_INT d, const MKL_INT t, const double* R_k,
     double* u_k, const double* v_k)
 {
     double delta_u;
-    std::vector<double> u__(d, 0.0);
+    std::vector<double> u__(d);
 
     /* u__ <- u_k */
     copy(d, u_k, &u__[0]);
@@ -367,9 +354,8 @@ double update_spatial(const double* R_k, double* u_k, const double* v_k,
     /* Declare & Allocate For Internal Vars */
     MKL_INT d = d1 * d2;
     double delta_u;
-    // double* u__ = (double*)malloc(d * sizeof(double));
 
-    std::vector<double> u__(d, 0.0);
+    std::vector<double> u__(d);
 
     /* u__ <- u_k */
     copy(d, u_k, &u__[0]);
@@ -386,8 +372,6 @@ double update_spatial(const double* R_k, double* u_k, const double* v_k,
     /* delta_u <- ||u_{k+1} - u_{k}||_2 */
     delta_u = distance_inplace(d, u_k, &u__[0]);
 
-    /* Free Allocated Memory */
-    // free(u__);
     return delta_u;
 }
 
@@ -402,15 +386,14 @@ void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
     double* lambda_tf, void* FFT)
 {
     int iters;
-    short status;
+    int status;
     double scale, delta;
-    // double* wi = (double *) malloc(t * sizeof(double));
-    // double *v = (double *) malloc(t * sizeof(double));
-    std::vector<double> wi(t, 1.0);
-    std::vector<double> v(t, 0);
+    std::vector<double> wi(t, 1.0); // init with constant weight for now
+    std::vector<double> v(t);
 
     iters = 0;
-    // initvec(t, &wi[0], 1.0); // Constant Weight For Now
+
+    /* v <- v_k */
     copy(t, v_k, &v[0]); // target for tf
 
     /* Estimate Noise Level Via Welch PSD Estimate & Compute Ideal Step Size */
@@ -429,16 +412,12 @@ void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
     // &iters, 1, 1e-3, 0);
     status = cps_tf(t, &v[0], &wi[0], delta, v_k, z_k, lambda_tf, &iters, 2e-2, 0);
 
-    if (unlikely(status < 1)) {
+    if (status < 1) {
         copy(t, &v[0], v_k);
     }
 
     /* v_k /= ||v_k||_2 */
     normalize(t, &v_k[0]);
-
-    /* Free Allocated Memory */
-    // free(v);
-    // free(wi);
 }
 
 /* Update the (possibly downsampled) temporal component by regression of the
@@ -450,7 +429,7 @@ double update_temporal_init(const MKL_INT d, const MKL_INT t, const double* R_k,
     const double* u_k, double* v_k)
 {
     double delta_v;
-    std::vector<double> v__(t, 0.0);
+    std::vector<double> v__(t);
 
     /* v__ <- v_k */
     copy(t, v_k, &v__[0]);
@@ -641,8 +620,6 @@ int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
         /* Check Convergence */
         if (fmax(delta_u, delta_v) < tol) {
             /* Free Allocated Memory & Test Spatial Component Against Null */
-            // free(z_k);
-            // free(v_tmp);
             regress_temporal(d, t, R_k, u_k, v_k); // debias
 
             if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh)
@@ -657,8 +634,6 @@ int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
             regress_temporal(d, t, R_k, u_k, v_k);
             if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) {
                 /* Free Allocated Memory & Return */
-                // free(v_tmp);
-                // free(z_k);
                 return -1; // Discard Component
             }
             copy(t, &v_tmp[0], v_k);
@@ -666,8 +641,6 @@ int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
     }
 
     /* MAXITER EXCEEDED: Free Memory & Test Spatial Component Against Null */
-    // free(z_k);
-    // free(v_tmp);
 
     regress_temporal(d, t, R_k, u_k, v_k);
 
@@ -706,8 +679,8 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
     double *R_init, *u_init, *v_init;
     if (R_ds && (d_sub > 1 || t_sub > 1)) {
         R_init = R_ds;
-        u_init = (double*)malloc((d / (d_sub * d_sub)) * sizeof(double));
-        v_init = (double*)malloc((t / t_sub) * sizeof(double));
+        u_init = static_cast<double*>(malloc((d / (d_sub * d_sub)) * sizeof(double)));
+        v_init = static_cast<double*>(malloc((t / t_sub) * sizeof(double)));
     } else {
         d_sub = 1;
         t_sub = 1;
@@ -745,7 +718,6 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
                     free(u_init);
                     free(v_init);
                 }
-                // free(keep_flag);
                 return good;
             }
         }
@@ -787,9 +759,7 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
         free(u_init);
         free(v_init);
     }
-    // free(keep_flag);
     return good;
-    //    return k;
 }
 
 /* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable
@@ -805,11 +775,11 @@ void batch_pmd(double** Rp, double** Rp_ds, double** Up, double** Vp, size_t* K,
     status = DftiCreateDescriptor(&FFT, DFTI_DOUBLE, DFTI_REAL, 1, L);
     status = DftiSetValue(FFT, DFTI_PACKED_FORMAT, DFTI_PACK_FORMAT);
     status = DftiCommitDescriptor(FFT);
-    if (unlikely(status != 0))
-        fprintf(stderr, "Error while creating MKL_FFT Handle: %ld\n", status);
+    if (status != 0)
+        std::cerr << "Error while creating MKL_FFT Handle: " << status << std::endl;
 
     // Loop Over All Patches In Parallel
-    pars->set_FFT((void*)&FFT);
+    pars->set_FFT(static_cast<void*>(&FFT));
 #pragma omp parallel for shared(FFT) schedule(guided)
     for (int m = 0; m < b; m++) {
         K[m] = pmd(Rp[m], Rp_ds[m], Up[m], Vp[m], pars);
@@ -817,7 +787,6 @@ void batch_pmd(double** Rp, double** Rp_ds, double** Up, double** Vp, size_t* K,
 
     // Free MKL FFT Handle
     status = DftiFreeDescriptor(&FFT);
-    if (unlikely(status != 0))
-        fprintf(stderr, "Error while deallocating MKL_FFT Handle: %ld\n",
-            status);
+    if (status != 0)
+        std::cerr << "Error while deallocating MKL_FFT Handle: " << status << std::endl;
 }

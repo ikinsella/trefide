@@ -3,12 +3,11 @@
  *                            Utility Functions                               *
  ******************************************************************************/
 
-
 /* Print vector of double type */
-void print_dvec(const int n, const double *x)
+void print_dvec(const int n, const double* x)
 {
-    fprintf(stdout,"\n");
+    std::cout << "\n";
     for (int i = 0; i < n; i++)
-        fprintf(stdout,"%e\n",x[i]);
-    fprintf(stdout,"\n");
+        std::cout << x[i] << std::endl;
+    std::cout << "\n";
 }

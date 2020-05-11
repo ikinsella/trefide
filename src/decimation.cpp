@@ -88,8 +88,10 @@ void downsample_3d(const int d1, const int d2, const int d_sub, const int t,
 void upsample_1d_inplace(const int t, const int ds, double* v)
 {
     /* Declare & Initialize Local Variables */
-    int i, i_ds, t_ds = t / ds;
-    double start, end = v[0];
+    int i, i_ds;
+    int t_ds = t / ds;
+    double start = v[0];
+    double end = v[0];
 
     /* Fill Missing Elements Between Observed Samples*/
     for (i_ds = 0; i_ds < t_ds - 2; i_ds++) {

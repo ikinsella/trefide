@@ -1,11 +1,14 @@
 #ifndef PMD_H
 #define PMD_H
 
-#include "../proxtf/utils.h"
-#include <mkl.h>
-#include <mkl_dfti.h>
+#include "utils.h"
 
-#define FORCEINLINE __attribute__((always_inline)) inline
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#include <mkl.h>
+#pragma GCC diagnostic pop
+
+#include <mkl_dfti.h>
 
 class PMD_params {
 private:
@@ -55,6 +58,19 @@ public:
     void set_enable_spatial_denoiser(bool _enable_spatial_denoiser);
 };
 
+/* Spatial Helper Functions */
+double estimate_noise_tv_op(const MKL_INT d1, const MKL_INT d2,
+    const double* u_k);
+
+double estimate_noise_mean_filter(const int rows, const int cols,
+    double* image);
+
+double estimate_noise_median_filter(const int rows, const int cols,
+    double* image);
+
+int cps_tv(const int d1, const int d2, double* y, const double delta,
+    double* x, double* lambda_tv, double* info, double tol = 5e-2);
+
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic Helper Funcs ---------------------------*
  *----------------------------------------------------------------------------*/
@@ -63,10 +79,9 @@ public:
  * modified inplace for the difference operation prior to taking norm.
  *
  * Optimization Notes:
- *      Could be made inline.
  *      vdSub suboptimal for small (n<40) arrays.
  */
-inline double distance_inplace(const MKL_INT n, const double*__restrict__ x, double* __restrict__ y)
+inline double distance_inplace(const MKL_INT n, const double* x, double* y)
 {
     /* y <- x - y */
     vdSub(n, x, y, y);
@@ -78,15 +93,14 @@ inline double distance_inplace(const MKL_INT n, const double*__restrict__ x, dou
 /* Copy leading n vals of arr source leading n vals of array dest
  *
  * Optimization Notes:
- *      Should be made inline.
  */
-inline void copy(const MKL_INT n, const double* __restrict__ source, double* __restrict__ dest)
+inline void copy(const MKL_INT n, const double* source, double* dest)
 {
     cblas_dcopy(n, source, 1, dest, 1);
 }
 
 /* Normlizes len n array x by ||x||_2 in place */
-inline void normalize(const MKL_INT n, double* __restrict__ x)
+inline void normalize(const MKL_INT n, double* x)
 {
     /* norm <- ||x||_2 */
     double norm = cblas_dnrm2(n, x, 1);
@@ -99,7 +113,7 @@ inline void normalize(const MKL_INT n, double* __restrict__ x)
 }
 
 /* Intializes len n constant vector */
-inline void initvec(MKL_INT n, double* __restrict__ x, const double val)
+inline void initvec(MKL_INT n, double* x, const double val)
 {
     while (n--)
         *x++ = val;
@@ -110,8 +124,8 @@ inline void initvec(MKL_INT n, double* __restrict__ x, const double val)
 /* Updates & normalizes the spatial component u_k in place by regressing
  * the current temporal component v_k against the current residual R_k
  */
-inline void regress_spatial(const MKL_INT d, const MKL_INT t, const double* __restrict__ R_k,
-    double* __restrict__ u_k, const double* __restrict__ v_k)
+inline void regress_spatial(const MKL_INT d, const MKL_INT t, const double* R_k,
+    double* u_k, const double* v_k)
 {
     /* u = Yv */
     cblas_dgemv(CblasColMajor, CblasNoTrans, d, t, 1.0, R_k, d, v_k, 1, 0.0,
@@ -146,9 +160,6 @@ inline void regress_temporal(const MKL_INT d, const MKL_INT t,
 
     /* Skip Normalization */
 }
-
-void regress_temporal(const MKL_INT d, const MKL_INT t, const double* R_k,
-    const double* u_k, double* v_k);
 
 void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
     double* lambda_tf, void* FFT = NULL);

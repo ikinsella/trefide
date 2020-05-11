@@ -1,6 +1,10 @@
 #ifndef DECIMATION_H
 #define DECIMATION_H
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <mkl.h>
+#pragma GCC diagnostic pop
 
 void downsample_1d(const int t, const int ds, const double* v, double* v_ds);
 

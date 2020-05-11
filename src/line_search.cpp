@@ -1,6 +1,6 @@
-#include <vector>
-#include "wpdas.h"
 #include "line_search.h"
+#include "wpdas.h"
+#include <vector>
 
 #define STEP_PARTITION 60;
 
@@ -8,20 +8,20 @@
  ***************************** Constrained Solver *****************************
  ******************************************************************************/
 
-short constrained_wpdas(const int n,             // data length
-                        const double *y,         // observations
-                        const double *wi,        // inverse observation weights
-                        const double delta,      // MSE constraint
-                        double *x,               // primal variable
-                        double *z,               // initial dual variable
-                        double *lambda,          // initial regularization parameter
-                        int *iters,            // pointer to iter # (so we can return it)
-                        const int max_interp,  // number of times to try interpolating
-                        const double tol,   // max num outer loop iterations
-                        const int verbose)
+int constrained_wpdas(const int n, // data length
+    const double* y, // observations
+    const double* wi, // inverse observation weights
+    const double delta, // MSE constraint
+    double* x, // primal variable
+    double* z, // initial dual variable
+    double* lambda, // initial regularization parameter
+    int* iters, // pointer to iter # (so we can return it)
+    const int max_interp, // number of times to try interpolating
+    const double tol, // max num outer loop iterations
+    const int verbose)
 {
     /* Declare & Initialize Local Variables */
-    short status;
+    int status;
     double scale, tau;
 
     /* Compute Step Size wrt Transformed Lambda Space*/
@@ -29,37 +29,36 @@ short constrained_wpdas(const int n,             // data length
     tau = (log(20 + (1 / scale)) - log(3 + (1 / scale))) / 60;
 
     /* If Uninitialized Compute Starting Point For Search */
-    if (*lambda <= 0){
-        *lambda = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
+    if (*lambda <= 0) {
+        *lambda = exp((log(20 + (1 / scale)) - log(3 + (1 / scale))) / 2 + log(3 * scale + 1)) - 1;
     }
 
     /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
     status = line_search(n, y, wi, delta, tau, x, z, lambda,
-                         iters, max_interp, tol, verbose);
+        iters, max_interp, tol, verbose);
 
     return status;
 }
 
-
-short cps_wpdas(const int n,             // data length
-                const double *y,         // observations
-                const double *wi,        // inverse observation weights
-                const double delta,      // MSE constraint
-                double *x,               // primal variable
-                double *z,               // initial dual variable
-                double *lambda,          // initial regularization parameter
-                int *iters,            // pointer to iter # (so we can return it)
-                const double tol,   // max num outer loop iterations
-                const int verbose)
+int cps_wpdas(const int n, // data length
+    const double* y, // observations
+    const double* wi, // inverse observation weights
+    const double delta, // MSE constraint
+    double* x, // primal variable
+    double* z, // initial dual variable
+    double* lambda, // initial regularization parameter
+    int* iters, // pointer to iter # (so we can return it)
+    const double tol, // max num outer loop iterations
+    const int verbose)
 {
     /* Declare & Initialize Local Variables */
-    short status;
+    int status;
     double scale;
 
     /* If Uninitialized Compute Starting Point For Search */
-    if (*lambda <= 0){
+    if (*lambda <= 0) {
         scale = compute_scale(n, y, delta);
-        *lambda = exp((log(20+(1/scale)) - log(3+(1/scale))) / 2 + log(3*scale + 1)) - 1;
+        *lambda = exp((log(20 + (1 / scale)) - log(3 + (1 / scale))) / 2 + log(3 * scale + 1)) - 1;
     }
 
     /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
@@ -68,20 +67,19 @@ short cps_wpdas(const int n,             // data length
     return status;
 }
 
-
-short cps_tf(const int n,           // data length
-             const double *y,       // observations
-             const double *wi,      // inverse observation weights
-             const double delta,    // MSE constraint
-             double *x,             // primal variable
-             double *z,             // initial dual variable
-             double *lambda,        // initial regularization parameter
-             int *iters,            // pointer to iter # (so we can return it)
-             const double tol,      // max num outer loop iterations
-             const int verbose)
+int cps_tf(const int n, // data length
+    const double* y, // observations
+    const double* wi, // inverse observation weights
+    const double delta, // MSE constraint
+    double* x, // primal variable
+    double* z, // initial dual variable
+    double* lambda, // initial regularization parameter
+    int* iters, // pointer to iter # (so we can return it)
+    const double tol, // max num outer loop iterations
+    const int verbose)
 {
-    double target = sqrt(n * delta);  // target norm of error
-    short status;
+    double target = sqrt(n * delta); // target norm of error
+    int status;
     int iter;
     double l2_err;
     double l2_err_prev = 0;
@@ -95,14 +93,13 @@ short cps_tf(const int n,           // data length
     int maxiter = 500;
     int iters_local = *iters;
 
-    while (iters_local < maxiter * 100)
-    {
+    while (iters_local < maxiter * 100) {
         /* Evaluate Solution At Lambda */
         status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m,
-                               delta_s, delta_e, maxiter, verbose);
-        if (unlikely(status < 0)){
+            delta_s, delta_e, maxiter, verbose);
+        if (status < 0) {
             // TODO switch solvers
-            return status;  // error within lagrangian solver
+            return status; // error within lagrangian solver
         }
         iters_local += iter;
 
@@ -111,12 +108,12 @@ short cps_tf(const int n,           // data length
         l2_err = cblas_dnrm2(n, &resid[0], 1);
 
         /* Check For Convergence */
-        if (fabs(target*target - l2_err*l2_err) / (target*target) < tol) {
+        if (fabs(target * target - l2_err * l2_err) / (target * target) < tol) {
             *iters += iters_local;
             return 1; // successfully converged within tolerance
-        } else if(fabs(l2_err - l2_err_prev) < 1e-3) {
+        } else if (fabs(l2_err - l2_err_prev) < 1e-3) {
             *iters += iters_local;
-            return 0;  // line search stalled
+            return 0; // line search stalled
         }
 
         l2_err_prev = l2_err;
@@ -130,24 +127,24 @@ short cps_tf(const int n,           // data length
     return 0; // Line Search Didn't Converge
 }
 
-short line_search(const int n,           // data length
-                  const double *y,       // observations
-                  const double *wi,      // inverse observation weights
-                  const double delta,    // MSE constraint
-                  const double tau,      // step size in transformed space
-                  double *x,             // primal variable
-                  double *z,             // initial dual variable
-                  double *lambda,        // initial regularization parameter
-                  int *iters,            // pointer to iter # (so we can return it)
-                  const int max_interp,  // number of times to try interpolating
-                  const double tol,      // max num outer loop iterations
-                  const int verbose)
+int line_search(const int n, // data length
+    const double* y, // observations
+    const double* wi, // inverse observation weights
+    const double delta, // MSE constraint
+    const double tau, // step size in transformed space
+    double* x, // primal variable
+    double* z, // initial dual variable
+    double* lambda, // initial regularization parameter
+    int* iters, // pointer to iter # (so we can return it)
+    const int max_interp, // number of times to try interpolating
+    const double tol, // max num outer loop iterations
+    const int verbose)
 {
-  /************************** Initialize Variables ***************************/
-    /* Line search internals */
     int iter, interp;
-    short direction, status;
-    double mse, mse_prev, err, tau_interp;
+    int direction, status;
+    double mse;
+    double mse_prev = 0.0;
+    double err, tau_interp;
 
     /* pdas defaults */
     double p = 1;
@@ -160,32 +157,32 @@ short line_search(const int n,           // data length
 
     /* Evaluate Initialed Lambda */
     status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m,
-                           delta_s, delta_e, maxiter, verbose);
-    if (unlikely(status < 0)){
+        delta_s, delta_e, maxiter, verbose);
+    if (status < 0) {
         // TODO switch solvers
-        return status;  // error within lagrangian solver
+        return status; // error within lagrangian solver
     }
     *iters += iter;
     evaluate_search_point(n, y, wi, delta, x, &mse, &err);
-    direction = sign(delta - mse);
+    direction = check_sign(delta - mse);
 
     /************************** Interpolation Phase **************************/
 
     /* Perform K interpolations before transitioning to fixed step */
-    for (interp = 0; interp < max_interp; interp++){
+    for (interp = 0; interp < max_interp; interp++) {
 
         /* Check to see if we landed in tol band */
-        if (err <= tol){
+        if (err <= tol) {
             return 1; // successful solve
         }
 
         /* Take a step towards delta in transformed lambda space */
         *lambda = exp(log(*lambda + 1) + direction * tau) - 1;
         status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m,
-                               delta_s, delta_e, maxiter, verbose);
-        if (unlikely(status < 0)){
+            delta_s, delta_e, maxiter, verbose);
+        if (status < 0) {
             // TODO switch solvers
-            return status;  // error within lagrangian solver
+            return status; // error within lagrangian solver
         }
         *iters += iter;
         mse_prev = mse;
@@ -195,39 +192,37 @@ short line_search(const int n,           // data length
         tau_interp = tau * direction * (delta - mse) / (mse - mse_prev);
         *lambda = exp(log(*lambda + 1) + tau_interp) - 1;
         status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m,
-                               delta_s, delta_e, maxiter, verbose);
+            delta_s, delta_e, maxiter, verbose);
 
-        if (unlikely(status < 0)){
+        if (status < 0) {
             // TODO switch solvers
-            return status;  // error within lagrangian solver
+            return status; // error within lagrangian solver
         }
         *iters += iter;
         evaluate_search_point(n, y, wi, delta, x, &mse, &err);
-        direction = sign(delta - mse);
-
+        direction = check_sign(delta - mse);
     }
 
     /************************** Stepping Phase **************************/
 
     /* Step towards delta until we cross or land in tol band */
-    while ((direction * sign(delta - mse) > 0) && (err > tol)){
+    while ((direction * check_sign(delta - mse) > 0) && (err > tol)) {
 
         /* Take a step towards delta in transformed lambda space */
         *lambda = exp(log(*lambda + 1) + direction * tau) - 1;
         status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m,
-                               delta_s, delta_e, maxiter, verbose);
+            delta_s, delta_e, maxiter, verbose);
 
-        if (unlikely(status < 0)) {
+        if (status < 0) {
             // TODO switch solvers
-            return status;  // error within lagrangian solver
+            return status; // error within lagrangian solver
         }
         *iters += iter;
         mse_prev = mse;
         evaluate_search_point(n, y, wi, delta, x, &mse, &err);
-        if (fabs(mse - mse_prev) < 1e-3){
+        if (fabs(mse - mse_prev) < 1e-3) {
             return 0; // Line search stalled, but wpdas didn't blow up
         }
-
     }
 
     /************************** Refine Estimate **************************/
@@ -237,11 +232,11 @@ short line_search(const int n,           // data length
     tau_interp = tau * direction * (delta - mse) / (mse - mse_prev);
     *lambda = exp(log(*lambda + 1) + tau_interp) - 1;
     status = weighted_pdas(n, y, wi, *lambda, x, z, &iter, p, m,
-                           delta_s, delta_e, maxiter, verbose);
+        delta_s, delta_e, maxiter, verbose);
 
-    if (unlikely(status < 0)){
+    if (status < 0) {
         // TODO switch solvers
-        return status;  // error within lagrangian solver
+        return status; // error within lagrangian solver
     }
     *iters += iter;
     return 1; // Successful Solve

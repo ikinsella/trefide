@@ -13,7 +13,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "../utils.h"
+#include "utils.h"
 #include "blas.h"
 #include "lapack.h"
 
@@ -54,7 +54,7 @@ int l1tf(const int n,
 	 const double lambda,
 	 double *x,
 	 double *z,
-         int *iter,         
+         int *iter,
 	 const double tol,
 	 const int maxiter,
 	 const int verbose)
@@ -230,13 +230,13 @@ int l1tf(const int n,
 	    //free(z);
 	    free(mu1);
 	    free(mu2);
-	    free(f1); 
-	    free(f2); 
-	    free(dz); 
+	    free(f1);
+	    free(f2);
+	    free(dz);
 	    free(dmu1);
 	    free(dmu2);
 	    free(w);
-	    free(rz);  
+	    free(rz);
 	    free(tmp_m1);
 	    free(tmp_m2);
 	    free(IPIV);
@@ -280,7 +280,7 @@ int l1tf(const int n,
             dmu2[i] = -(mu2[i]+((1/t)-dz[i]*mu2[i])/f2[i]);
         }
         norm2_res = sqrt(norm2_res);
-        
+
         /* BACKTRACKING LINESEARCH */
 
         ratio = 2;   /* any number larger than 1/0.99 */
@@ -354,13 +354,13 @@ int l1tf(const int n,
     //free(z);
     free(mu1);
     free(mu2);
-    free(f1); 
-    free(f2); 
-    free(dz); 
+    free(f1);
+    free(f2);
+    free(dz);
     free(dmu1);
     free(dmu2);
     free(w);
-    free(rz);  
+    free(rz);
     free(tmp_m1);
     free(tmp_m2);
     free(IPIV);
@@ -447,7 +447,7 @@ double vecsum(int n, const double *x)
         ret += *x++;
     return ret;
 }
- 
+
 /* Print vector of int type */
 void print_ivec(int n, const int *x)
 {

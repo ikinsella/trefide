@@ -1,10 +1,15 @@
-#include <math.h>
-#include <mkl.h>
-#include <algorithm>
-#include <vector>
-#include <iostream>
-#include "utils.h"
 #include "wpdas.h"
+#include "utils.h"
+#include <algorithm>
+#include <iostream>
+#include <math.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#include <mkl.h>
+#pragma GCC diagnostic pop
+
+#include <vector>
 
 /*******************************************************************************
  *                                   Globals                                   *
@@ -14,24 +19,24 @@
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #define min(x, y) ((x) < (y) ? (x) : (y))
 
-
 /*******************************************************************************
  *                                 Main Solver                                 *
  *******************************************************************************/
 
-short weighted_pdas(const int n,          // data length
-                    const double *y,      // observations
-                    const double *wi,     // inverse observation weights
-                    const double lambda,  // regularization parameter
-                    double *x,            // primal variable
-                    double *z,            // dual variable
-                    int *iter,    // pointer to iter # (so we can return it)
-                    double p,     // proportion of violators to reassign
-                    const int m,  // size of violator hostory queue
-                    const double delta_s,  // proportion by which p is shrunk
-                    const double delta_e,  // proportion by which p is grown
-                    const int maxiter,     // max num outer loop iterations
-                    const int verbose) {
+short weighted_pdas(const int n, // data length
+    const double* y, // observations
+    const double* wi, // inverse observation weights
+    const double lambda, // regularization parameter
+    double* x, // primal variable
+    double* z, // dual variable
+    int* iter, // pointer to iter # (so we can return it)
+    double p, // proportion of violators to reassign
+    const int m, // size of violator hostory queue
+    const double delta_s, // proportion by which p is shrunk
+    const double delta_e, // proportion by which p is grown
+    const int maxiter, // max num outer loop iterations
+    const int verbose)
+{
 
     std::vector<double> diff_x((n - 2));
     std::vector<double> div_zi(n);
@@ -51,15 +56,8 @@ short weighted_pdas(const int n,          // data length
 
     // Prepare Queue Variables
     queue_index = 0;
-    // vio_queue[0] = n;
     min_queue = n;
     min_queue_index = 0;
-    /*
-    int i;
-    for (i = 1; i < m; i++) {
-        vio_queue[i] = n;
-    }
-    */
     max_queue = n;
     max_queue_index = m - 1;
 
@@ -67,7 +65,7 @@ short weighted_pdas(const int n,          // data length
     if (verbose) {
         fprintf(stderr, "____________________________\n");
         fprintf(stderr, "%s%s%s%s\n", "|Iter|", "Violators|", "Active|",
-                "Prop|");
+            "Prop|");
     }
 
     // Opt Routine Main Loop
@@ -77,7 +75,7 @@ short weighted_pdas(const int n,          // data length
         n_active = update_dual(n, y, wi, z, lambda, &div_zi[0], &ab[0], &b[0]);
 
         // Something has gone very wrong (probably Nan input)
-        if (unlikely(n_active < 0)) {
+        if (n_active < 0) {
             // Return Failure Code
             *iter = local_iter;
             return -1;
@@ -91,7 +89,7 @@ short weighted_pdas(const int n,          // data length
 
         // Count, evaluate (fitness), and store violators
         n_vio = locate_violators(n, z, lambda, &diff_x[0], &vio_index[0],
-                                 &vio_fitness[0], &vio_sort[0]);
+            &vio_fitness[0], &vio_sort[0]);
 
         // Update safeguard queue and proportion of violators to be reassigned
         if (n_vio < min_queue) {
@@ -162,7 +160,7 @@ short weighted_pdas(const int n,          // data length
         std::sort(&vio_sort[0], &vio_sort[n_vio], FitnessComparator(&vio_fitness[0]));
 
         // Reassign first p * n_vio violators
-        n_vio = max((int)round(p * (double)n_vio), 1);
+        n_vio = max(static_cast<int>(round(p * n_vio)), 1);
         reassign_violators(n_vio, z, &vio_index[0], &vio_sort[0]);
         *iter = local_iter;
     }
@@ -172,7 +170,6 @@ short weighted_pdas(const int n,          // data length
         fprintf(stderr, "MAXITER Exceeded.\n");
     }
 
-    // std::cerr << "min: " << min_queue << " max: " << max_queue << " n_vio: " << n_vio << std::endl;
     return 0; // Return Failure To Converge Code
 }
 
@@ -185,8 +182,9 @@ short weighted_pdas(const int n,          // data length
    Computation is performed in place and within a single O(n)
    loop that computes div_z_i while updating x_i
 */
-inline void update_primal(const int n, double *x, const double *y, const double *wi,
-                   const double *z, const double lambda) {
+inline void update_primal(const int n, double* x, const double* y, const double* wi,
+    const double* z, const double lambda)
+{
     int i;
     // x[0] = (y[0] + z[0] * lambda) / w[0]
     *x++ = *y + (*z * lambda * *wi);
@@ -195,7 +193,7 @@ inline void update_primal(const int n, double *x, const double *y, const double 
     *x++ = *y + ((*(z + 1) - *z - *z) * lambda * *wi);
     y++;
     wi++;
-    for (i = 2; i < n - 2; i++, y++, wi++, z++) {  // i = 2,...,n-3
+    for (i = 2; i < n - 2; i++, y++, wi++, z++) { // i = 2,...,n-3
         // x[i] = (y[i] + (z[i-2] + z[i] - 2*z[i-1]) * lambda) / w[i]
         *x++ = *y + ((*z - *(z + 1) - *(z + 1) + *(z + 2)) * lambda * *wi);
     }
@@ -212,13 +210,14 @@ inline void update_primal(const int n, double *x, const double *y, const double 
    D[A] * inv(W) * D[A]' z[A] = D[A](y - lambda * inv(W) * D[I]' * z[I]) /
    lambda Quindiagonal matrix solved with LAPACKE's dpbsv interface
    */
-int update_dual(const int n, const double *y, const double *wi, double *z,
-                const double lambda, double *div_zi, double *ab, double *b) {
+int update_dual(const int n, const double* y, const double* wi, double* z,
+    const double lambda, double* div_zi, double* ab, double* b)
+{
     /* Initiliaze Counters */
     int i, ik;
     int previous = -3;
     int two_previous = -3;
-    int k = n - 2;  // start with all dual coordinates active
+    int k = n - 2; // start with all dual coordinates active
 
     /* Compute div_zi = inv(W)*D[I]'*z[I] and count active coordinates */
     div_zi[0] = 0;
@@ -227,7 +226,7 @@ int update_dual(const int n, const double *y, const double *wi, double *z,
     for (i = 0; i < n - 2; i++) {
         div_zi[i + 2] = 0;
         if (z[i] == 1 || z[i] == -1) {
-            k--;  // Remove inactive coordinate from active count
+            k--; // Remove inactive coordinate from active count
             div_zi[i] -= z[i];
             div_zi[i + 1] += 2 * z[i];
             div_zi[i + 2] -= z[i];
@@ -271,8 +270,7 @@ int update_dual(const int n, const double *y, const double *wi, double *z,
             previous = i;
 
             /* Update target content */
-            b[ik] = ((y[i + 1] + y[i + 1] - y[i] - y[i + 2]) / lambda) -
-                    div_zi[i + 1] - div_zi[i + 1] + div_zi[i] + div_zi[i + 2];
+            b[ik] = ((y[i + 1] + y[i + 1] - y[i] - y[i + 2]) / lambda) - div_zi[i + 1] - div_zi[i + 1] + div_zi[i] + div_zi[i + 2];
 
             /* Update active set counter */
             ik++;
@@ -281,10 +279,10 @@ int update_dual(const int n, const double *y, const double *wi, double *z,
 
     // compute matrix solve
     int result = LAPACKE_dpbsv(LAPACK_ROW_MAJOR, 'U', k, 2, 1, ab, k, b, 1);
-    if (unlikely(result != 0)) {
+    if (result != 0) {
         fprintf(stderr, "LAPACKE: %d\n", result);
-        if (unlikely(result < 0)) {
-            return -1;  // Invalid input: abort
+        if (result < 0) {
+            return -1; // Invalid input: abort
         }
     }
 
@@ -300,47 +298,46 @@ int update_dual(const int n, const double *y, const double *wi, double *z,
 }
 
 /* locate, count and eval fitness of violators */
-inline int locate_violators(const int n, const double *z, const double lambda,
-                     const double *diff_x, int *vio_index, double *vio_fitness,
-                     int *vio_sort)
+int locate_violators(const int n, const double* z, const double lambda,
+    const double* diff_x, int* vio_index, double* vio_fitness,
+    int* vio_sort)
 {
-
-    int n_vio = 0;  // number of violations located
+    int n_vio = 0; // number of violations located
 
     for (int i = 0; i < n - 2; i++) {
         switch (int(z[i])) {
-            case 1:
-                if (diff_x[i] < 0) {
-                    vio_index[n_vio] = i;
-                    vio_fitness[n_vio] = max(lambda * fabs(diff_x[i]), 1);
-                    vio_sort[n_vio] = n_vio;
-                    n_vio++;
-                }
-                break;
-            case -1:
-                if (diff_x[i] > 0) {
-                    vio_index[n_vio] = i;
-                    vio_fitness[n_vio] = max(lambda * fabs(diff_x[i]), 1);
-                    vio_sort[n_vio] = n_vio;
-                    n_vio++;
-                }
-                break;
-            default:
-                if (fabs(z[i]) > 1) {
-                    vio_index[n_vio] = i;
-                    vio_fitness[n_vio] = max(lambda * fabs(diff_x[i]), fabs(z[i]));
-                    vio_sort[n_vio] = n_vio;
-                    n_vio++;
-                }
-                break;
+        case 1:
+            if (diff_x[i] < 0) {
+                vio_index[n_vio] = i;
+                vio_fitness[n_vio] = max(lambda * fabs(diff_x[i]), 1);
+                vio_sort[n_vio] = n_vio;
+                n_vio++;
+            }
+            break;
+        case -1:
+            if (diff_x[i] > 0) {
+                vio_index[n_vio] = i;
+                vio_fitness[n_vio] = max(lambda * fabs(diff_x[i]), 1);
+                vio_sort[n_vio] = n_vio;
+                n_vio++;
+            }
+            break;
+        default:
+            if (fabs(z[i]) > 1) {
+                vio_index[n_vio] = i;
+                vio_fitness[n_vio] = max(lambda * fabs(diff_x[i]), fabs(z[i]));
+                vio_sort[n_vio] = n_vio;
+                n_vio++;
+            }
+            break;
         }
     }
     return n_vio;
 }
 
 /* locate, count and eval fitness of violators */
-inline void reassign_violators(const int n_vio, double *z, const int *vio_index,
-                        const int *vio_sort)
+void reassign_violators(const int n_vio, double* z, const int* vio_index,
+    const int* vio_sort)
 {
     for (int i = 0; i < n_vio; i++) {
         if (fabs(z[vio_index[vio_sort[i]]]) == 1) {
