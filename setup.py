@@ -8,35 +8,38 @@ from Cython.Distutils import build_ext
 
 # -------------------- DEPS, COMPILER ARGS, LIBS, & LOCS ---------------------#
 
-# Additional  (Optional) Packages May Be Needed To MAke Videos In Demos
+# Additional (Optional) Packages May Be Needed To MAke Videos In Demos
 DEPENDENCIES = ["numpy", "scipy", "cython", "matplotlib"]
 
 TREFIDE = os.getcwd()
 
 # We compile against intel mkl will need an intel MKL Disto:
-LIBRARIES = ["mkl_core",          # Used for FFT, Vector Math, CBLAS, Lapacke, ect...
-             "mkl_intel_lp64",    # Intel MKL LP64 libs
-             "mkl_intel_thread",  # Intel MKL Threading Runtime
-             "trefide",           # Our cpp sourcecode which we compile to libtrefide.so
-             "proxtv",            # ProxTV's cpp sourcecode which we compile to libproxtv.so
-             "glmgen",            # glmgen's c sourcecode which we compile to libglmgen.so
-             "iomp5",             # Intel mkl OpenMP runtime
-             "m"                  # <math.h>
+LIBRARIES = ["mkl_core",         # Used for FFT, Vector Math, CBLAS, Lapacke, etc.
+             "mkl_intel_lp64",   # Intel MKL LP64 libs
+             "mkl_intel_thread", # Intel MKL Threading Runtime
+             "trefide",          # Our cpp sourcecode which we compile to libtrefide.so
+             "proxtv",           # ProxTV's cpp sourcecode which we compile to libproxtv.so
+             "glmgen",           # glmgen's c sourcecode which we compile to libglmgen.so
+             "iomp5",            # Intel mkl OpenMP runtime
+             "m"                 # <math.h>
             ]
 
 # Compiler Agnostic Args
 CONDA_PREFIX = os.getenv('CONDA_PREFIX', None)
-COMPILE_ARGS = ["-O3",              # Max compiler optimizations
+COMPILE_ARGS = ["-O3",
                 "-I" + os.path.join(CONDA_PREFIX, "include"),
-                "-I" + os.path.join(TREFIDE, "src"),              # Location of trefide.h
-                "-I" + os.path.join(TREFIDE, "src", "proxtv"),    # Location Of proxtv.h
-                "-I" + os.path.join(TREFIDE, "src", "glmgen", "include"), # Location of glmgen.h
-                "-D NOMATLAB=1"]                                  # Ignore ProXTV's attempt to mex
+                "-I" + os.path.join(TREFIDE, "include"), # Location of trefide.h
+                "-I" + os.path.join(TREFIDE, "external", "proxtv"), # Location Of proxtv.h
+                "-I" + os.path.join(TREFIDE, "external", "glmgen", "include"), # Location of glmgen.h
+                "-D NOMATLAB=1"] # Ignore ProXTV's attempt to mex
 
+# Location of libtrefide.so (Add to $LD_LIBRARY_PATH)
+# Location of libproxtv.so  (Add to $LD_LIBRARY_PATH)
+# Location of libglmgen.so (Add to $LD_LIBRARY_PATH)
 LINK_ARGS = ["-L" + os.path.join(CONDA_PREFIX, "lib"),
-             "-L" + os.path.join(TREFIDE, "src"),            # Location of libtrefide.so (Add to $LD_LIBRARY_PATH)
-             "-L" + os.path.join(TREFIDE, "src", "proxtv"),  # Location of libproxtv.so  (Add to $LD_LIBRARY_PATH)
-             "-L"+os.path.join(TREFIDE, "src", "glmgen", "lib")]  # Location of libglmgen.so (Add to $LD_LIBRARY_PATH)
+             "-L" + os.path.join(TREFIDE),
+             "-L" + os.path.join(TREFIDE, "external", "proxtv"),
+             "-L" + os.path.join(TREFIDE, "external", "glmgen", "lib")]
 
 # Defaults To Using Intel icc/icpc Compilers
 os.environ["CC"] = os.getenv("CC", "gcc")
@@ -44,15 +47,15 @@ os.environ["CXX"] = os.getenv("CXX", "g++")
 
 # Compiler Specific Args
 if os.environ["CC"] == "icc":
-    COMPILE_ARGS.append("-mkl=sequential")  # Use if processing blocks in parallel (single core/block)
-    # COMPILE_ARGS.append("-mkl=parallel")  # Use if processing blocks sequentially (multiple cores/block)
-    COMPILE_ARGS.append("-qopenmp")  # Tell icc/icpc to have OpenMP use OMP_NUM_THREADS when it encounters directives
-    LINK_ARGS.append("-mkl=sequential")  # See Above
-    # LINK_ARG.append("-mkl=parallel")    # See Above
-    LINK_ARGS.append("-qopenmp")         # See Above
+    COMPILE_ARGS.append("-mkl=sequential") # Use if processing blocks in parallel (single core/block)
+    # COMPILE_ARGS.append("-mkl=parallel") # Use if processing blocks sequentially (multiple cores/block)
+    COMPILE_ARGS.append("-qopenmp") # Tell icc/icpc to have OpenMP use OMP_NUM_THREADS when it encounters directives
+    LINK_ARGS.append("-mkl=sequential") # See Above
+    # LINK_ARG.append("-mkl=parallel")  # See Above
+    LINK_ARGS.append("-qopenmp")        # See Above
 else:
-    COMPILE_ARGS.append("-fopenmp")  # Tell gcc/g++ to have OpenMP use OMP_NUM_THREADS when it encounters directives
-    LINK_ARGS.append("-fopenmp")         # See Above
+    COMPILE_ARGS.append("-fopenmp") # Tell gcc/g++ to have OpenMP use OMP_NUM_THREADS when it encounters directives
+    LINK_ARGS.append("-fopenmp")    # See Above
 
 
 # ---------------------------- Build Cythonized Modules ---------------------------------#
