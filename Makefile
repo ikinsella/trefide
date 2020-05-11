@@ -23,22 +23,29 @@ ifeq ($(detected_OS),Linux)
 endif
 
 # Project Structure Dependent Variables
-PROXTV = $(shell pwd)/proxtv
+PROXTV = $(shell pwd)/external/proxtv
 LIBPROXTV = $(PROXTV)/libproxtv$(EXT)
 
-GLMGEN = $(shell pwd)/glmgen
+GLMGEN = $(shell pwd)/external/glmgen
 LIBGLMGEN = $(GLMGEN)/lib/libglmgen$(EXT)
 
 LIBTREFIDE = libtrefide$(EXT)
 
 LDLIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
-SRCS = utils/welch.cpp proxtf/wpdas.cpp proxtf/line_search.cpp proxtf/utils.cpp proxtf/l1tf/ipm.cpp proxtf/admm.cpp pmd/pmd.cpp pmd/decimation.cpp
+SRCS = src/welch.cpp src/wpdas.cpp src/line_search.cpp src/utils.cpp src/ipm.cpp src/admm.cpp src/pmd.cpp src/decimation.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
 LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
 INCLUDES = -I$(PROXTV) -I$(GLMGEN)/include
 
-CXXFLAGS = -Wall -Wextra -Weffc++ -pedantic -O3
+WARNINGS := -Wall -Wextra -pedantic -Weffc++ -Wshadow -Wpointer-arith \
+            -Wcast-align -Wwrite-strings -Wmissing-declarations \
+            -Wredundant-decls -Winline -Wno-long-long -Wconversion \
+            -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict \
+            -Wnull-dereference -Wold-style-cast -Wuseless-cast \
+            -Wdouble-promotion -Wformat=2
+
+CXXFLAGS := $(WARNINGS) -O3
 
 # Compiler Dependent Environment Variables
 ifeq ($(CXX),)
@@ -68,6 +75,6 @@ $(LIBGLMGEN):
 
 .PHONY: clean
 clean:
-	rm -f $(LIBTREFIDE) $(OBJS) $(SRCS:.cpp=.d)
+	rm -f $(LIBTREFIDE) $(OBJS)
 	$(MAKE) clean -C $(PROXTV);
 	$(MAKE) clean -C $(GLMGEN);
