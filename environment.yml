@@ -1,7 +1,10 @@
 name: trefide
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - python
   - numpy
   - Cython
+  - scikit-learn
+  - opencv
