@@ -223,6 +223,7 @@ int update_dual(const int n, const double *y, const double *wi, double *z,
     /* Compute div_zi = inv(W)*D[I]'*z[I] and count active coordinates */
     div_zi[0] = 0;
     div_zi[1] = 0;
+
     for (i = 0; i < n - 2; i++) {
         div_zi[i + 2] = 0;
         if (z[i] == 1 || z[i] == -1) {
@@ -233,6 +234,7 @@ int update_dual(const int n, const double *y, const double *wi, double *z,
         }
         div_zi[i] *= wi[i];
     }
+
     div_zi[n - 2] *= wi[n - 2];
     div_zi[n - 1] *= wi[n - 1];
 

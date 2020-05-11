@@ -1,0 +1,7 @@
+name: trefide
+channels:
+  - defaults
+dependencies:
+  - python
+  - numpy
+  - Cython

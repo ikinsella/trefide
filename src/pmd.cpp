@@ -1,6 +1,6 @@
+#include <algorithm>
 #include <math.h>
 #include <mkl.h>
-#include <algorithm>
 #include <vector>
 
 #include "../proxtf/line_search.h"
@@ -22,16 +22,17 @@ PMD_params::PMD_params(
     bool _enable_temporal_denoiser, bool _enable_spatial_denoiser)
     :
 
-      bheight(_bheight),
-      bwidth(_bwidth),
-      t(_t),
-      spatial_thresh(_spatial_thresh),
-      temporal_thresh(_temporal_thresh),
-      max_components(_max_components),
-      consec_failures(_consec_failures),
-      max_iters_main(_max_iters_main),
-      max_iters_init(_max_iters_init),
-      tol(_tol) {
+    bheight(_bheight)
+    , bwidth(_bwidth)
+    , t(_t)
+    , spatial_thresh(_spatial_thresh)
+    , temporal_thresh(_temporal_thresh)
+    , max_components(_max_components)
+    , consec_failures(_consec_failures)
+    , max_iters_main(_max_iters_main)
+    , max_iters_init(_max_iters_init)
+    , tol(_tol)
+{
     this->d_sub = _d_sub;
     this->t_sub = _t_sub;
     this->FFT = _FFT;
@@ -71,19 +72,23 @@ void* PMD_params::get_FFT() { return this->FFT; }
 
 void PMD_params::set_FFT(void* _FFT) { this->FFT = _FFT; }
 
-bool PMD_params::get_enable_temporal_denoiser() {
+bool PMD_params::get_enable_temporal_denoiser()
+{
     return this->enable_temporal_denoiser;
 }
 
-void PMD_params::set_enable_temporal_denoiser(bool _enable_temporal_denoiser) {
+void PMD_params::set_enable_temporal_denoiser(bool _enable_temporal_denoiser)
+{
     this->enable_temporal_denoiser = _enable_temporal_denoiser;
 }
 
-bool PMD_params::get_enable_spatial_denoiser() {
+bool PMD_params::get_enable_spatial_denoiser()
+{
     return this->enable_spatial_denoiser;
 }
 
-void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser) {
+void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser)
+{
     this->enable_spatial_denoiser = _enable_spatial_denoiser;
 }
 
@@ -95,7 +100,7 @@ void PMD_params::set_enable_spatial_denoiser(bool _enable_spatial_denoiser) {
  * test against the null hypothesis that it is gaussian noise.
  */
 double estimate_noise_tv_op(const MKL_INT d1, const MKL_INT d2,
-                            const double* u_k)
+    const double* u_k)
 {
     int j, j1, j2, n = 0;
     int num_edges = d1 * (d2 - 1) + d2 * (d1 - 1);
@@ -142,7 +147,8 @@ double estimate_noise_tv_op(const MKL_INT d1, const MKL_INT d2,
 /* Estimates Image Noise Variance By Taking Median Of Local Noise Var Estimates
  * */
 double estimate_noise_mean_filter(const int rows, const int cols,
-                                  double* image) {
+    double* image)
+{
     /* Internal Variables */
     int n = 5;
     double var_hat;
@@ -183,7 +189,7 @@ double estimate_noise_mean_filter(const int rows, const int cols,
 /* Apply Median Filter To Estimate Noise Level
  */
 double estimate_noise_median_filter(const int rows, const int cols,
-                                    double* image)
+    double* image)
 {
     int n = 3;
     double var_hat;
@@ -192,7 +198,7 @@ double estimate_noise_median_filter(const int rows, const int cols,
     std::vector<double> mses(rows * cols, 0.0);
     std::vector<double> pixel_values(n * n, 0.0);
 
-        /* Visit Each Pixel */
+    /* Visit Each Pixel */
     int r;
     for (r = 0; r < rows; r++) {
         int c;
@@ -229,12 +235,11 @@ double estimate_noise_median_filter(const int rows, const int cols,
  *
  */
 short cps_tv(const int d1, const int d2, double* y, const double delta,
-             double* x, double* lambda_tv, double* info, double tol = 5e-2)
+    double* x, double* lambda_tv, double* info, double tol = 5e-2)
 {
-
     int d = d1 * d2;
     int iters = 0;
-    double target = sqrt(d * delta);  // target norm of error
+    double target = sqrt(d * delta); // target norm of error
     double l2_err, l2_err_prev = 0;
     // double* resid = (double*)malloc(d * sizeof(double));
     std::vector<double> resid(d, 0.0);
@@ -250,10 +255,10 @@ short cps_tv(const int d1, const int d2, double* y, const double delta,
         /* Check For Convergence */
         if (fabs(target * target - l2_err * l2_err) / (target * target) < tol) {
             // free(resid);
-            return 1;  // successfully converged within tolerance
+            return 1; // successfully converged within tolerance
         } else if (fabs(l2_err - l2_err_prev) < 1e-3) {
             // free(resid);
-            return 0;  // line search stalled
+            return 0; // line search stalled
         }
         l2_err_prev = l2_err;
 
@@ -265,14 +270,14 @@ short cps_tv(const int d1, const int d2, double* y, const double delta,
         iters++;
     }
     // free(resid);
-    return 0;  // Line Search Didn't Converge
+    return 0; // Line Search Didn't Converge
 }
 
 /* Denoises and normalizes the  d1xd2 spatial component u_k using the
  * proxTV douglass rachford splitting cpp implementation of TV denoising.
  */
 void constrained_denoise_spatial(const MKL_INT d1, const MKL_INT d2,
-                                 double* u_k, double* lambda_tv)
+    double* u_k, double* lambda_tv)
 {
     short status;
     double delta;
@@ -293,7 +298,7 @@ void constrained_denoise_spatial(const MKL_INT d1, const MKL_INT d2,
         if (status < 1) {
             *lambda_tv = .0025;
             DR2_TV(d1, d2, &target[0], *lambda_tv, *lambda_tv, 1, 1, u_k, 1, 1,
-                   &info[0]);
+                &info[0]);
         }
 
         /* u_k /= ||u_k|| */
@@ -308,7 +313,7 @@ void constrained_denoise_spatial(const MKL_INT d1, const MKL_INT d2,
  * proxTV douglass rachford splitting cpp implementation of TV denoising.
  */
 void denoise_spatial(const MKL_INT d1, const MKL_INT d2, double* u_k,
-                     double* lambda_tv)
+    double* lambda_tv)
 {
     std::vector<double> target(d1 * d2, 0.0);
     std::vector<double> info(3, 0.0);
@@ -316,7 +321,8 @@ void denoise_spatial(const MKL_INT d1, const MKL_INT d2, double* u_k,
     copy(d1 * d2, u_k, &target[0]);
 
     /* u_k <- argmin_u ||u_k - u|| + 2*lambda_tv ||u||TV */
-    DR2_TV(d1, d2, &target[0], *lambda_tv, *lambda_tv, 1, 1, u_k, 1, 1, &info[0]);
+    DR2_TV(d1, d2, &target[0], *lambda_tv, *lambda_tv, 1, 1, u_k, 1, 1,
+        &info[0]);
 
     /* u_k /= ||u_k|| */
     normalize(d1 * d2, u_k);
@@ -328,7 +334,7 @@ void denoise_spatial(const MKL_INT d1, const MKL_INT d2, double* u_k,
  * and the previous iterate (used to monitor convergence).
  */
 double update_spatial_init(const MKL_INT d, const MKL_INT t, const double* R_k,
-                           double* u_k, const double* v_k)
+    double* u_k, const double* v_k)
 {
     double delta_u;
     std::vector<double> u__(d, 0.0);
@@ -351,7 +357,7 @@ double update_spatial_init(const MKL_INT d, const MKL_INT t, const double* R_k,
  * previous iterate (used to monitor convergence).
  */
 double update_spatial(const double* R_k, double* u_k, const double* v_k,
-                      double* lambda_tv, PMD_params* pars)
+    double* lambda_tv, PMD_params* pars)
 {
     MKL_INT d1 = pars->get_bheight();
     MKL_INT d2 = pars->get_bwidth();
@@ -393,7 +399,7 @@ double update_spatial(const double* R_k, double* u_k, const double* v_k,
  * constrained PDAS implementation of 2nd order L1TF denoising.
  */
 void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
-                      double* lambda_tf, void* FFT)
+    double* lambda_tf, void* FFT)
 {
     int iters;
     short status;
@@ -415,9 +421,7 @@ void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
     /* If Uninitialized Compute Starting Point For Search */
     if (*lambda_tf <= 0) {
         scale = compute_scale(t, v_k, delta);
-        *lambda_tf = exp((log(20 + (1 / scale)) - log(3 + (1 / scale))) / 2 +
-                         log(3 * scale + 1)) -
-                     1;
+        *lambda_tf = exp((log(20 + (1 / scale)) - log(3 + (1 / scale))) / 2 + log(3 * scale + 1)) - 1;
     }
 
     /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
@@ -443,7 +447,7 @@ void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
  * and the previous iterate (used to monitor convergence).
  */
 double update_temporal_init(const MKL_INT d, const MKL_INT t, const double* R_k,
-                            const double* u_k, double* v_k)
+    const double* u_k, double* v_k)
 {
     double delta_v;
     std::vector<double> v__(t, 0.0);
@@ -467,8 +471,8 @@ double update_temporal_init(const MKL_INT d, const MKL_INT t, const double* R_k,
  * previous iterate (used to monitor convergence).
  */
 double update_temporal(const MKL_INT d, const double* R_k, const double* u_k,
-                       double* v_k, double* z_k, double* lambda_tf,
-                       PMD_params* pars)
+    double* v_k, double* z_k, double* lambda_tf,
+    PMD_params* pars)
 {
     double delta_v;
     MKL_INT t = pars->get_t();
@@ -501,11 +505,11 @@ double update_temporal(const MKL_INT d, const double* R_k, const double* u_k,
  * test against the null hypothesis that it is gaussian noise.
  */
 double spatial_test_statistic(const MKL_INT d1, const MKL_INT d2,
-                              const double* u_k)
+    const double* u_k)
 {
     int j, j1, j2;
     double norm_tv = 0;
-    double norm_l1 = u_k[d1 * d2 - 1];  // Bottom, Right Corner
+    double norm_l1 = u_k[d1 * d2 - 1]; // Bottom, Right Corner
 
     /* All Elements Except Union (Bottom Row, Rightmost Column) */
     for (j2 = 0; j2 < d2 - 1; j2++) {
@@ -535,17 +539,17 @@ double spatial_test_statistic(const MKL_INT d1, const MKL_INT d2,
     // return norm_tv / (d1 * (d2 - 1) + d2 * (d1- 1));
     /* Return Test Statistic */
     if (norm_tv > 0) {
-        return (norm_tv * (d1 * d2)) /
-               (norm_l1 * (d1 * (d2 - 1) + d2 * (d1 - 1)));
+        return (norm_tv * (d1 * d2)) / (norm_l1 * (d1 * (d2 - 1) + d2 * (d1 - 1)));
     }
 
-    return 100;  // Spatial component constant => garbage
+    return 100; // Spatial component constant => garbage
 }
 
 /* Computes the ratio of the L1 to TV norm for a spatial components in order to
  * test against the null hypothesis that it is gaussian noise.
  */
-double temporal_test_statistic(const MKL_INT t, const double* v_k) {
+double temporal_test_statistic(const MKL_INT t, const double* v_k)
+{
     /* Declare & Initialize Internal Variables */
     int i;
     double norm_tf = 0;
@@ -562,7 +566,7 @@ double temporal_test_statistic(const MKL_INT t, const double* v_k) {
         return norm_tf / norm_l1;
     }
 
-    return 100;  // temporal component constant => garbage
+    return 100; // temporal component constant => garbage
 }
 
 /* Solves:
@@ -573,8 +577,8 @@ double temporal_test_statistic(const MKL_INT t, const double* v_k) {
  *     -1: If we accept the null hypothesis that u_k is noise
  */
 int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
-                           double* u_init, double* v_k, double* v_init,
-                           PMD_params* pars)
+    double* u_init, double* v_k, double* v_init,
+    PMD_params* pars)
 {
     MKL_INT d1 = pars->get_bheight();
     MKL_INT d2 = pars->get_bwidth();
@@ -594,7 +598,7 @@ int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
     MKL_INT d_init = d / (d_sub * d_sub);
     MKL_INT t_init = t / t_sub;
     double delta_u, delta_v;
-    double lambda_tf = 0;     /* Signal To Use Heuristic As First Guess */
+    double lambda_tf = 0; /* Signal To Use Heuristic As First Guess */
     double lambda_tv = .0025; /* First Guess For Constrained Problem */
 
     std::vector<double> z_k(t - 2, 0.0);
@@ -639,25 +643,23 @@ int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
             /* Free Allocated Memory & Test Spatial Component Against Null */
             // free(z_k);
             // free(v_tmp);
-            regress_temporal(d, t, R_k, u_k, v_k);  // debias
+            regress_temporal(d, t, R_k, u_k, v_k); // debias
 
-            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh ||
-                temporal_test_statistic(t, v_k) > temporal_thresh)
-                return -1;  // Discard Component
+            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh)
+                return -1; // Discard Component
 
-            return 1;       // Keep Component
+            return 1; // Keep Component
         }
 
         /* Preemptive Check To See If We're Fitting Noise */
         if (iters == 5) {
             copy(t, v_k, &v_tmp[0]);
             regress_temporal(d, t, R_k, u_k, v_k);
-            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh ||
-                temporal_test_statistic(t, v_k) > temporal_thresh) {
+            if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh) {
                 /* Free Allocated Memory & Return */
                 // free(v_tmp);
                 // free(z_k);
-                return -1;  // Discard Component
+                return -1; // Discard Component
             }
             copy(t, &v_tmp[0], v_k);
         }
@@ -669,11 +671,10 @@ int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
 
     regress_temporal(d, t, R_k, u_k, v_k);
 
-    if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh ||
-        temporal_test_statistic(t, v_k) > temporal_thresh)
-        return -1;  // Discard Component
+    if (spatial_test_statistic(d1, d2, u_k) > spatial_thresh || temporal_test_statistic(t, v_k) > temporal_thresh)
+        return -1; // Discard Component
 
-    return 1;       // Keep Component
+    return 1; // Keep Component
 }
 
 /* Apply TF/TV Penalized Matrix Decomposition (PMD) to factor a (d1*d2)xT
@@ -735,10 +736,9 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
 
         /* Check Component Quality: Terminate if we're fitting noise */
         if (keep_flag[k % consec_failures] < 0) {
-            max_keep_flag = -1;  // current component is a failure
-            for (i = 1; i < consec_failures; i++) {  // check previous
-                max_keep_flag =
-                    max(max_keep_flag, keep_flag[(k + i) % consec_failures]);
+            max_keep_flag = -1; // current component is a failure
+            for (i = 1; i < consec_failures; i++) { // check previous
+                max_keep_flag = max(max_keep_flag, keep_flag[(k + i) % consec_failures]);
             }
             if (max_keep_flag < 0) {
                 if (d_sub > 1 || t_sub > 1) {
@@ -755,7 +755,7 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
 
         /* Update Full Residual: R_k <- R_k - U[:,k] V[k,:] */
         cblas_dger(CblasColMajor, d, t, -1.0, U + good * d, 1, V + good * t, 1,
-                   R, d);
+            R, d);
 
         /* Update Downsampled Residual If Using Decimated Initialization */
         if (d_sub > 1 || t_sub > 1) {
@@ -773,7 +773,7 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
 
             /* Update Downsampled Residual: R_ds <- R_ds - u_ds v_ds' */
             cblas_dger(CblasColMajor, d / (d_sub * d_sub), t / t_sub, -1.0,
-                       u_init, 1, v_init, 1, R_init, d / (d_sub * d_sub));
+                u_init, 1, v_init, 1, R_init, d / (d_sub * d_sub));
         }
 
         /* Make Sure We Overwrite Failed Components */
@@ -796,8 +796,8 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
  * parallel, block-wiseprocessing of large datasets in shared memory.
  */
 void batch_pmd(double** Rp, double** Rp_ds, double** Up, double** Vp, size_t* K,
-               const int b, PMD_params* pars) {
-
+    const int b, PMD_params* pars)
+{
     // Create FFT Handle So It can Be Shared Across Threads
     DFTI_DESCRIPTOR_HANDLE FFT;
     MKL_LONG status;
@@ -819,5 +819,5 @@ void batch_pmd(double** Rp, double** Rp_ds, double** Up, double** Vp, size_t* K,
     status = DftiFreeDescriptor(&FFT);
     if (unlikely(status != 0))
         fprintf(stderr, "Error while deallocating MKL_FFT Handle: %ld\n",
-                status);
+            status);
 }

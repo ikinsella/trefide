@@ -9,12 +9,12 @@
 #define unlikely(x)     __builtin_expect((x),0)
 
 
-FORCEINLINE short sign(double val) {
+inline short sign(double val) {
     return (0 < val) - (val < 0);
 }
 
 /* Computes Scaling Factor For 2nd Order TF Line Search */
-FORCEINLINE double compute_scale(const int t,
+inline double compute_scale(const int t,
                      const double *y,
                      const double delta)
 {
@@ -31,7 +31,7 @@ FORCEINLINE double compute_scale(const int t,
 }
 
 
-FORCEINLINE void evaluate_search_point(const int n,
+inline void evaluate_search_point(const int n,
                            const double *y,
                            const double *wi,
                            const double delta,

@@ -38,31 +38,33 @@ OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
 INCLUDES = -I$(PROXTV) -I$(GLMGEN)/include
 
+CXXFLAGS = -Wall -Wextra -Weffc++ -pedantic -O3
+
 # Compiler Dependent Environment Variables
 ifeq ($(CXX),)
     CXX = g++
 endif
 ifeq ($(CXX), icpc)
-    CXXFLAGS = -pedantic -Wall -Wextra -Weffc++ -mkl=sequential -qopenmp -O3 -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
+    CXXFLAGS += -mkl=sequential -qopenmp -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
 else
-    CXXFLAGS = -pedantic -Wall -Wextra -Weffc++ -fopenmp -O3 -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
+    CXXFLAGS += -fopenmp -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
 endif
 
 # Recipes
 .PHONY: all
-all: clean $(LIBPROXTV) $(LIBGLMGEN) $(LIBTREFIDE)
+all: clean $(LIBTREFIDE)
+
+$(LIBTREFIDE): $(OBJS) $(LIBPROXTV) $(LIBGLMGEN)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
+
+$(SRCS:.cpp=.d):%.d:%.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(LIBPROXTV):
 	$(MAKE) -C $(PROXTV);
 
 $(LIBGLMGEN):
 	$(MAKE) -C $(GLMGEN);
-
-$(LIBTREFIDE): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
-
-$(SRCS:.cpp=.d):%.d:%.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $^
 
 .PHONY: clean
 clean:
