@@ -79,12 +79,12 @@ cdef extern from "trefide.h":
     double l1tf_lambdamax (const int n,
 			   double *y,
 			   const int verbose) nogil
-    
+
     short constrained_tf_admm(const int n,           # data length
                               double* x,             # data locations
                               double *y,             # data observations
                               double *w,             # data observation weights
-                              const double delta,    # MSE constraint (noise var estimate)	
+                              const double delta,    # MSE constraint (noise var estimate)
                               double *beta,          # primal variable
                               double *alpha,
                               double *u,
@@ -103,7 +103,7 @@ cdef extern from "trefide.h":
                               double *u,
                               int *iter_,            # pointer to iter # (so we can return it)
                               const int verbose) nogil
- 
+
 
 # ---------------------------------------------------------------------------- #
 # -------------------- Primal Dual Active Set Wrappers ----------------------- #
@@ -118,10 +118,10 @@ cpdef cpdas(const double[::1] y,        # Observations
             int max_interp=1,           # Number of interps before stepping
             double tol=1e-3,            # Constraint tolerance
             int verbose=0):
-    """ 
-    Shallow wrapper to call libtrefide solver 
     """
-    
+    Shallow wrapper to call libtrefide solver
+    """
+
     # Declare & Intialize Local Variables
     cdef int iters = 0;
     cdef short status;
@@ -137,18 +137,18 @@ cpdef cpdas(const double[::1] y,        # Observations
     # Default to initializing dual var at 0
     if z_hat is None:
         z_hat = np.zeros(t - 2, dtype=np.float64)
- 
+
     # Call Solver
     with nogil:
         status = constrained_wpdas(t, &y[0], &wi[0], delta, &x_hat[0], &z_hat[0],
                                   &lambda_, &iters, max_interp, tol, verbose)
 
-    # Check For Failures 
+    # Check For Failures
     if status < 0:
         raise RuntimeError("WPDAS Failed Within Line Search.")
     elif status == 0:
         warnings.warn("CPDAS line search stalled. Returning best solution found.")
- 
+
     return np.asarray(x_hat), np.asarray(z_hat), lambda_, iters
 
 
@@ -159,10 +159,10 @@ cpdef cps_cpdas(const double[::1] y,        # Observations
                 double lambda_=-1,          # Lagrange multiplier warm start
                 double tol=1e-3,            # Constraint tolerance
                 int verbose=0):
-    """ 
-    Shallow wrapper to call libtrefide solver 
     """
-    
+    Shallow wrapper to call libtrefide solver
+    """
+
     # Declare & Intialize Local Variables
     cdef int iters = 0;
     cdef short status;
@@ -178,33 +178,33 @@ cpdef cps_cpdas(const double[::1] y,        # Observations
     # Default to initializing dual var at 0
     if z_hat is None:
         z_hat = np.zeros(t - 2, dtype=np.float64)
- 
+
     # Call Solver
     with nogil:
         status = cps_wpdas(t, &y[0], &wi[0], delta, &x_hat[0], &z_hat[0],
                            &lambda_, &iters, tol, verbose)
 
-    # Check For Failures 
+    # Check For Failures
     if status < 0:
         raise RuntimeError("WPDAS failed within CPS line search Solver.")
     elif status == 0:
         warnings.warn("CPS line search stalled. Returning best solution found.")
- 
+
     return np.asarray(x_hat), np.asarray(z_hat), lambda_, iters
- 
+
 
 cpdef lpdas(double[::1] y,
             const double lambda_,
 	    double[::1] wi=None,
 	    double[::1] z_hat=None,
-            double p=1,    
+            double p=1,
             int m=5,
             double delta_s=.9,
             double delta_e=1.1,
 	    int maxiter=2000,
 	    int verbose=0):
     """ Handle to weighted pdas solver allowing warm start intialization"""
-   
+
     # Declare & Intialize Local Variables
     cdef int iters
     cdef short status
@@ -216,17 +216,17 @@ cpdef lpdas(double[::1] y,
     # Default to unweighted loss
     if wi is None:
         wi = np.ones(n, dtype=np.float64)
-    
+
     # Default warm start dual variable at 0
     if z_hat is None:
         z_hat = np.zeros(n - 2, dtype=np.float64)
 
-    # Call weighted pdas C routine 
+    # Call weighted pdas C routine
     with nogil:
         status = weighted_pdas(n, &y[0], &wi[0], lambda_,  &x_hat[0], &z_hat[0],
                                &iters, p, m, delta_s, delta_e, maxiter, verbose)
-    
-    # Check For Failures 
+
+    # Check For Failures
     if status < 0:
         raise RuntimeError("LPDAS Solver Failed.")
     elif status == 0:
@@ -250,10 +250,10 @@ cpdef cps_cadmm(double[::1] y,        # Observations
                 double lambda_=-1,          # Lagrange multiplier warm start
                 double tol=5e-2,            # Constraint tolerance
                 int verbose=0):
-    """ 
-    Shallow wrapper to call libtrefide solver 
     """
-    
+    Shallow wrapper to call libtrefide solver
+    """
+
     # Declare & Intialize Local Variables
     cdef int iters = 0;
     cdef short status;
@@ -273,21 +273,21 @@ cpdef cps_cadmm(double[::1] y,        # Observations
         alpha = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
     if u is None:
         u = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
- 
+
     # Call Solver
     with nogil:
         status  = constrained_tf_admm(t, &x[0], &y[0], &w[0], delta, &beta[0],
                                       &alpha[0], &u[0], &lambda_, &iters,
                                       tol, verbose)
 
-    # Check For Failures 
+    # Check For Failures
     if status < 0:
         raise RuntimeError("ADMM Failed Within CPS Line Search.")
     elif status == 0:
         warnings.warn("CPS ADMM line search stalled or exceeded maxiter.")
- 
+
     return np.asarray(beta), np.asarray(alpha), np.asarray(u), lambda_
- 
+
 
 cpdef ladmm(double[::1] y,        # Observations
             const double lambda_,         # MSE constraint
@@ -297,7 +297,7 @@ cpdef ladmm(double[::1] y,        # Observations
             double[::1] u=None,     # Dual variable warm start
             int verbose=0):
     """ Handle to weighted pdas solver allowing warm start intialization"""
-   
+
     # Declare & Intialize Local Variables
     cdef int iter_ = 0;
     cdef short status;
@@ -317,16 +317,16 @@ cpdef ladmm(double[::1] y,        # Observations
         alpha = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
     if u is None:
         u = np.zeros(t , dtype=np.float64)  # Allocate extra buffer
- 
+
     # Call Solver
     with nogil:
         status = langrangian_tf_admm(t, &x[0], &y[0], &w[0], lambda_, &beta[0],
                                      &alpha[0], &u[0], &iter_, verbose)
 
-    # Check For Failures 
+    # Check For Failures
     if status < 0:
         raise RuntimeError("ADMM Failed Within CPS Line Search.")
- 
+
     return np.asarray(beta), np.asarray(alpha), np.asarray(u)
 
 
@@ -343,7 +343,7 @@ def l1tf_lambda_max(double[::1] data_,
     Parameters:
     ----------
     data_:      np.array (L,)
-                data sequence 
+                data sequence
     verbose:    int {0,1}
                 flag
 
@@ -381,7 +381,7 @@ cpdef lipm(double[::1] y,
     Parameters:
     ----------
     data_:      np.array (L,)
-                data sequence 
+                data sequence
     lambda_:    float
                 regularization parameter
     max_lambda: boolean
@@ -396,10 +396,10 @@ cpdef lipm(double[::1] y,
     data_hat :  np.array (L,)
                 data sequence
     """
-    
+
     cdef size_t n = y.shape[0]
     cdef double[::1] x_hat = np.empty(n, dtype=np.float64)
-    cdef double[::1] z_hat = np.empty(n - 2, dtype=np.float64)    
+    cdef double[::1] z_hat = np.empty(n - 2, dtype=np.float64)
     cdef double lambda_max
     cdef int iter_
     cdef int iter_status
@@ -425,5 +425,5 @@ cpdef lipm(double[::1] y,
 
     if iter_status < 0:
         raise RuntimeError("Interior Point Method Failed To Converge In MAXITER iterations.")
-	
+
     return np.asarray(x_hat), np.asarray(z_hat), iter_

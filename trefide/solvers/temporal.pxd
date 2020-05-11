@@ -3,6 +3,7 @@
 # cython: wraparound=False
 # cython: initializedcheck=False
 # cython: nonecheck=False
+# cython: language_level=3
 
 import numpy as np
 cimport numpy as np
@@ -61,12 +62,12 @@ cdef extern from "trefide.h":
     double l1tf_lambdamax (const int n,
 			   double *y,
 			   const int verbose) nogil
- 
+
     short constrained_tf_admm(const int n,           # data length
                               double* x,             # data locations
                               double *y,             # data observations
                               double *w,             # data observation weights
-                              const double delta,    # MSE constraint (noise var estimate)	
+                              const double delta,    # MSE constraint (noise var estimate)
                               double *beta,          # primal variable
                               double *alpha,
                               double *u,
@@ -115,7 +116,7 @@ cdef lpdas(double[::1] y,
             const double lambda_,
             double[::1] wi=?,
             double[::1] z_hat=?,
-            double p=?,    
+            double p=?,
             int m=?,
             double delta_s=?,
             double delta_e=?,
@@ -137,7 +138,7 @@ cpdef cps_cadmm(const double[::1] y,        # Observations
                 double lambda_=?,          # Lagrange multiplier warm start
                 double tol=?,            # Constraint tolerance
                 int verbose=?)
- 
+
 
 cpdef ladmm(const double[::1] y,        # Observations
             const double lambda_,         # MSE constraint
