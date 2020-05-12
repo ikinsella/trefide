@@ -8,3 +8,4 @@ dependencies:
   - Cython
   - scikit-learn
   - opencv
+  - jupyter
