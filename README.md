@@ -29,7 +29,9 @@ extraction of activity from the video data.
 
 #### Docker
 
-Instructions coming soon...
+1. `docker run -it -p 34000:34000 paninski/trefide:1.2`
+
+2. `localhost:34000` (in a browser of your choise)
 
 #### Build from source
 
