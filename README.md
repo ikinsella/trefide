@@ -25,15 +25,13 @@ extraction of activity from the video data.
 
 ## Getting Started
 
-### Installing
-
-#### Docker
+### Docker
 
 1. `docker run -it -p 34000:34000 paninski/trefide:1.2`
 
 2. `localhost:34000` (in a browser of your choise)
 
-#### Build from source
+### Build from source
 
 #### Prerequisites
 
@@ -41,6 +39,9 @@ extraction of activity from the video data.
   [Miniconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/)
 
 - Linux (this package was developed & tested on Ubuntu 18.04)
+
+Note: these instructions will assume that you clone the repo into your home
+directory
 
 1. Clone the repository
 
@@ -91,7 +92,6 @@ can be done by running the following lines
 
 ```Bash
 cd /path/to/install/directory/trefide/src
-make clean
 make all
 ```
 
@@ -108,7 +108,7 @@ running ```pip uninstall trefide```. If you wish to remove the entire project
 
 ```Bash
 pip uninstall trefide
-rm -rf /path/to/install/directory/trefide```.
+rm -rf ~/trefide
 ```
 
 ## References
