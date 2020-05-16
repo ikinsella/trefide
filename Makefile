@@ -5,7 +5,7 @@ else
     detected_OS := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 endif
 
-# Set Windows Specific Environment Variables: TODO
+# TODO: Set Windows Specific Environment Variables
 ifeq ($(detected_OS),Windows)
     echo "Installation on Windows not currently supported."
 endif
@@ -31,12 +31,13 @@ LIBGLMGEN = $(GLMGEN)/lib/libglmgen$(EXT)
 
 LIBTREFIDE = libtrefide$(EXT)
 
-LDLIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
+LDLIBS = -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
+
 SRCS = src/welch.cpp src/wpdas.cpp src/line_search.cpp src/utils.cpp src/ipm.cpp src/admm.cpp src/pmd.cpp src/decimation.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
-INCLUDES = -I$(PROXTV) -I$(GLMGEN)/include
+# LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
+INCLUDES = -I$(GLMGEN)/include -I$(PROXTV)
 
 WARNINGS := -Wall -Wextra -pedantic -Weffc++ -Wshadow -Wpointer-arith \
             -Wcast-align -Wwrite-strings -Wmissing-declarations \
@@ -59,13 +60,13 @@ endif
 
 # Recipes
 .PHONY: all
-all: clean $(LIBTREFIDE)
+all: clean $(LIBTREFIDE) $(LIBGLMGEN) $(LIBPROXTV)
 
-$(LIBTREFIDE): $(OBJS) $(LIBPROXTV) $(LIBGLMGEN)
+$(LIBTREFIDE): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
 
-$(SRCS:.cpp=.d):%.d:%.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $^
+#$(SRCS:.cpp=.d):%.d:%.cpp
+#	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(LIBPROXTV):
 	$(MAKE) -C $(PROXTV);

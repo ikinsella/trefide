@@ -30,8 +30,8 @@ LDLIBS = -lmkl_intel_lp64 -lmkl_core -lm
 SRCS = condat_fast_tv.cpp johnsonRyanTV.cpp TVL1opt_kolmogorov.cpp LPopt.cpp TV2Dopt.cpp TV2DWopt.cpp TVgenopt.cpp TVL1opt.cpp TVL1opt_tautstring.cpp TVL1opt_hybridtautstring.cpp TVL1Wopt.cpp TVL2opt.cpp TVLPopt.cpp TVNDopt.cpp utils.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-INCLUDES = -I $(CONDA_PREFIX)/include
-LDFLAGS += -L $(CONDA_PREFIX)/lib
+# INCLUDES = -I $(CONDA_PREFIX)/include
+# LDFLAGS += -L $(CONDA_PREFIX)/lib
 
 # Compiler Dependent Environment Variables
 
@@ -41,7 +41,7 @@ endif
 ifeq ($(CXX), icpc)
     CXXFLAGS = -mkl=sequential -O3 -fPIC -D NOMATLAB=1
 else
-    CXXFLAGS = -O3 -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
+    CXXFLAGS = -O3 -fPIC -D NOMATLAB=1 # $(INCLUDES) $(LDFLAGS)
 endif
 
 # Recipes
