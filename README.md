@@ -112,6 +112,21 @@ rm -rf ~/trefide
 ```
 
 ## References
-- [preprint](https://www.biorxiv.org/content/early/2018/06/03/334706.article-info)
-- support [slack
-  channel](https://join.slack.com/t/trefide/shared_invite/enQtMzc5NDM4MDk4OTgxLWE0NjNhZGE5N2VlMTcxNGEwODhkMmFlMjcyYmIzYTdkOGVkYThhNjdkMzEyZmM1NzIzYzc0NTZkYmVjMDY5ZTg)
+preprint:
+```
+@article {Buchanan334706,
+    author = {Buchanan, E. Kelly and Kinsella, Ian and Zhou, Ding and Zhu, Rong and Zhou, Pengcheng and Gerhard, Felipe and Ferrante, John and Ma, Ying and Kim, Sharon and Shaik, Mohammed and Liang, Yajie and Lu, Rongwen and Reimer, Jacob and Fahey, Paul and Muhammad, Taliah and Dempsey, Graham and Hillman, Elizabeth and Ji, Na and Tolias, Andreas and Paninski, Liam},
+    title = {Penalized matrix decomposition for denoising, compression, and improved demixing of functional imaging data},
+    elocation-id = {334706},
+    year = {2019},
+    doi = {10.1101/334706},
+    publisher = {Cold Spring Harbor Laboratory},
+    URL = {https://www.biorxiv.org/content/early/2019/01/21/334706},
+    eprint = {https://www.biorxiv.org/content/early/2019/01/21/334706.full.pdf},
+    journal = {bioRxiv}
+}
+```
+
+## Troubleshooting
+
+- [slack channel](https://join.slack.com/t/trefide/shared_invite/enQtMzc5NDM4MDk4OTgxLWE0NjNhZGE5N2VlMTcxNGEwODhkMmFlMjcyYmIzYTdkOGVkYThhNjdkMzEyZmM1NzIzYzc0NTZkYmVjMDY5ZTg)
