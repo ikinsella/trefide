@@ -1,3 +1,6 @@
+"""
+Video writing and watching utilities
+"""
 import glob
 import os
 import subprocess
@@ -8,11 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-
-# --------------------------------------------------------------------------- #
-# ------------------- Video Writing/Watching Utilities ---------------------- #
-# --------------------------------------------------------------------------- #
 
 
 def write_mpl(mov_list, filename, fr=30, horizontal=True, titles=None):
@@ -100,22 +98,22 @@ def write_mpl(mov_list, filename, fr=30, horizontal=True, titles=None):
         os.chdir("../")
 
 
-def play_cv2(movie, gain=3, fr=60, offset=0, magnification=1, repeat=False, **kwargs):
+def play_cv2(movie, **kwargs):
     """Render Video With OpenCV3 Library's Imshow
 
     Parameters
     ----------
     movie :
         movie matrix
-    gain :
+    gain : optional, default: 3
         gain
-    fr :
+    fr : optional, default: 60
         frame rate
-    offset :
+    offset : optional, default: 0
         baseline brightness
-    magnification :
+    magnification : optional, default: 1
         magnification factor
-    repeat :
+    repeat : optional, default: False
         whether to loop or not
     jupyter : optional, default: False
         Whether this will be rendered in a jupyter notebook or not
