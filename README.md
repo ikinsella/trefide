@@ -25,15 +25,13 @@ extraction of activity from the video data.
 
 ## Getting Started
 
-### Installing
-
-#### Docker
+### Docker
 
 1. `docker run -it -p 34000:34000 paninski/trefide:1.2`
 
 2. `localhost:34000` (in a browser of your choise)
 
-#### Build from source
+### Build from source
 
 #### Prerequisites
 
@@ -41,6 +39,9 @@ extraction of activity from the video data.
   [Miniconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/)
 
 - Linux (this package was developed & tested on Ubuntu 18.04)
+
+Note: these instructions will assume that you clone the repo into your home
+directory
 
 1. Clone the repository
 
@@ -91,7 +92,6 @@ can be done by running the following lines
 
 ```Bash
 cd /path/to/install/directory/trefide/src
-make clean
 make all
 ```
 
@@ -108,10 +108,25 @@ running ```pip uninstall trefide```. If you wish to remove the entire project
 
 ```Bash
 pip uninstall trefide
-rm -rf /path/to/install/directory/trefide```.
+rm -rf ~/trefide
 ```
 
 ## References
-- [preprint](https://www.biorxiv.org/content/early/2018/06/03/334706.article-info)
-- support [slack
-  channel](https://join.slack.com/t/trefide/shared_invite/enQtMzc5NDM4MDk4OTgxLWE0NjNhZGE5N2VlMTcxNGEwODhkMmFlMjcyYmIzYTdkOGVkYThhNjdkMzEyZmM1NzIzYzc0NTZkYmVjMDY5ZTg)
+preprint:
+```
+@article {Buchanan334706,
+    author = {Buchanan, E. Kelly and Kinsella, Ian and Zhou, Ding and Zhu, Rong and Zhou, Pengcheng and Gerhard, Felipe and Ferrante, John and Ma, Ying and Kim, Sharon and Shaik, Mohammed and Liang, Yajie and Lu, Rongwen and Reimer, Jacob and Fahey, Paul and Muhammad, Taliah and Dempsey, Graham and Hillman, Elizabeth and Ji, Na and Tolias, Andreas and Paninski, Liam},
+    title = {Penalized matrix decomposition for denoising, compression, and improved demixing of functional imaging data},
+    elocation-id = {334706},
+    year = {2019},
+    doi = {10.1101/334706},
+    publisher = {Cold Spring Harbor Laboratory},
+    URL = {https://www.biorxiv.org/content/early/2019/01/21/334706},
+    eprint = {https://www.biorxiv.org/content/early/2019/01/21/334706.full.pdf},
+    journal = {bioRxiv}
+}
+```
+
+## Troubleshooting
+
+- [slack channel](https://join.slack.com/t/trefide/shared_invite/enQtMzc5NDM4MDk4OTgxLWE0NjNhZGE5N2VlMTcxNGEwODhkMmFlMjcyYmIzYTdkOGVkYThhNjdkMzEyZmM1NzIzYzc0NTZkYmVjMDY5ZTg)

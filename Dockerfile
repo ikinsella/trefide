@@ -6,6 +6,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     ca-certificates \
     gnupg \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Miniconda
@@ -25,7 +28,6 @@ ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TREFIDE/external/glmgen/lib"
 
 RUN git -C ~/ clone https://github.com/ikinsella/trefide.git \
     && cd ~/trefide \
-    && git checkout optimizations \
     && /opt/conda/bin/conda env update -n root -f environment.yml \
     && /opt/conda/bin/conda clean -fya \
     && ./install_mkl.sh
