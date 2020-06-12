@@ -6,13 +6,12 @@
 #include <mkl.h>
 #pragma GCC diagnostic pop
 
-#include <vector>
-
-#include "line_search.h"
-#include "../external/proxtv/proxtv.h"
-#include "welch.h"
+#include <iostream> // cerr and testing only
 #include "decimation.h"
+#include "line_search.h"
 #include "pmd.h"
+#include "proxtv.h"
+#include "welch.h"
 
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic PMD Parameter PKG ----------------------*
@@ -389,7 +388,7 @@ void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
     int status;
     double scale, delta;
     std::vector<double> wi(t, 1.0); // init with constant weight for now
-    std::vector<double> v(t);
+    std::vector<double> v(t, 0.0);
 
     iters = 0;
 
@@ -429,7 +428,7 @@ double update_temporal_init(const MKL_INT d, const MKL_INT t, const double* R_k,
     const double* u_k, double* v_k)
 {
     double delta_v;
-    std::vector<double> v__(t);
+    std::vector<double> v__(t, 0.0);
 
     /* v__ <- v_k */
     copy(t, v_k, &v__[0]);
@@ -660,14 +659,8 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
     MKL_INT d_sub = pars->get_d_sub();
     MKL_INT t = pars->get_t();
     MKL_INT t_sub = pars->get_t_sub();
-    // double spatial_thresh = pars->get_spatial_thresh();
-    // double temporal_thresh = pars->get_temporal_thresh();
     size_t max_components = pars->get_max_components();
     size_t consec_failures = pars->get_consec_failures();
-    // size_t max_iters_main = pars->get_max_iters_main();
-    // size_t max_iters_init = pars->get_max_iters_init();
-    // double tol = pars->get_tol();
-    // void* FFT = pars->get_FFT();
 
     /* Declare & Intialize Internal Vars */
     std::vector<int> keep_flag(consec_failures, 1);
@@ -765,8 +758,9 @@ size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars)
 /* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable
  * parallel, block-wiseprocessing of large datasets in shared memory.
  */
-void batch_pmd(double** Rp, double** Rp_ds, double** Up, double** Vp, size_t* K,
-    const int b, PMD_params* pars)
+void batch_pmd(double** Up, double** Vp, size_t* K, const int num_blocks,
+        PMD_params* pars, double* movie, int height_stride, int width_stride,
+        size_t* indices)
 {
     // Create FFT Handle So It can Be Shared Across Threads
     DFTI_DESCRIPTOR_HANDLE FFT;
@@ -780,9 +774,36 @@ void batch_pmd(double** Rp, double** Rp_ds, double** Up, double** Vp, size_t* K,
 
     // Loop Over All Patches In Parallel
     pars->set_FFT(static_cast<void*>(&FFT));
-#pragma omp parallel for shared(FFT) schedule(guided)
-    for (int m = 0; m < b; m++) {
-        K[m] = pmd(Rp[m], Rp_ds[m], Up[m], Vp[m], pars);
+
+    int bwidth = pars->get_bwidth();
+    int bheight = pars->get_bheight();
+    int num_frames = pars->get_t(); // frames
+    int d_sub = pars->get_d_sub();
+    int t_sub = pars->get_t_sub();
+
+    #pragma omp parallel shared(FFT)
+    {
+        // residual for a block
+        std::vector<double> Rp_block((bheight * bwidth * num_frames));
+
+        // residual downsampled for a block
+        std::vector<double> Rp_ds_block((bheight / d_sub) * (bwidth / d_sub) * (num_frames / t_sub));
+
+        #pragma omp for schedule(guided)
+        for (int block = 0; block < num_blocks; block++) {
+            int block_row = indices[2 * block];
+            int block_col = indices[2 * block + 1];
+            copy_block(movie, height_stride, width_stride, num_frames, bheight,
+                    bwidth, block_row, block_col, Rp_block);
+
+            // Downsample block residual
+            if (d_sub > 1 || t_sub > 1) {
+                downsample_3d(bheight, bwidth, d_sub, num_frames, t_sub,
+                        Rp_block.data(), Rp_ds_block.data());
+            }
+
+            K[block] = pmd(Rp_block.data(), Rp_ds_block.data(), Up[block], Vp[block], pars);
+        }
     }
 
     // Free MKL FFT Handle

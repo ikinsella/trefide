@@ -22,9 +22,32 @@ struct FitnessComparator {
     }
 };
 
-/*******************************************************************************
- *                            Function Declaration                             *
- *******************************************************************************/
+/******************************************************************************
+ *                            Function Declaration                            *
+ ******************************************************************************/
+
+/**
+ * main routine for pdas l1tf solver
+ *
+ * @param n Data length.
+ * @param y Observations.
+ * @param wi Inverse observation weights.
+ * @param lambda Regularization parameter.
+ * @param x Primal variable.
+ * @param z Dual variable.
+ * @param iter Pointer to iter # (so we can return it).
+ * @param p Proportion of violators to reassign.
+ * @param m Size of violator history queue.
+ * @param delta_s Proportion by which `p` is shrunk.
+ * @param delta_e Proportion by which `p` is grown.
+ * @param maxiter Max number of outer loop iterations.
+ * @param verbose Whether to log to stderr.
+ * @return -1 on error, 0 if failed to converge, 1 on success.
+ */
+short weighted_pdas(const int n, const double* y, const double* wi,
+    const double lambda, double* x, double* z, int* iter,
+    double p, const int m, const double delta_s,
+    const double delta_e, const int maxiter, const int verbose);
 
 /* x = y - lambda*D'*z */
 void update_primal(int n, double* x, const double* y, const double* wi,
@@ -43,11 +66,5 @@ int locate_violators(const int n, const double* z, const double lambda,
 
 void reassign_violators(const int n_vio, double* z, const int* vio_index,
     const int* vio_sort);
-
-/* main routine for pdas l1tf solver */
-short weighted_pdas(const int n, const double* y, const double* wi,
-    const double lambda, double* x, double* z, int* iter,
-    double p, const int m, const double delta_s,
-    const double delta_e, const int maxiter, const int verbose);
 
 #endif /* WPDAS_H */

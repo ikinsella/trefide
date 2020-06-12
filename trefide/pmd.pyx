@@ -5,14 +5,13 @@
 # cython: nonecheck=False
 # cython: language_level=3
 import os
-import time
+import sys
 import multiprocessing
 
 import numpy as np
 cimport numpy as np
 
-from cython.parallel import parallel, prange
-from libc.stdlib cimport abort, calloc, malloc, free
+from libc.stdlib cimport malloc, free
 from sklearn.utils.extmath import randomized_svd as svd
 from functools import partial
 import matplotlib.pyplot as plt
@@ -57,14 +56,15 @@ cdef extern from "trefide.h":
             double* V,
             PMD_params *pars) nogil
 
-    void batch_pmd(
-               double** Rpt,
-               double** Rpt_ds,
-               double** Upt,
-               double** Vpt,
-               size_t* Kpt,
-               const int b,
-               PMD_params *pars) nogil
+    void batch_pmd(double** Up,
+                   double** Vp,
+                   size_t* K,
+                   const int num_blocks,
+                   PMD_params* pars,
+                   double* movie,
+                   int fov_height,
+                   int fov_width,
+                   size_t* indices) nogil
 
     void downsample_3d(const int d1,
                        const int d2,
@@ -204,8 +204,8 @@ cpdef size_t decimated_decompose(const int d1,
 
     Returns
     -------
-        result: rank of the compressed video/patch
-
+    result :
+        rank of the compressed video/patch
     """
 
     # Turn Off Gil To Take Advantage Of Multithreaded MKL Libs
@@ -276,7 +276,8 @@ cpdef batch_decompose(const int d1,
     max_iters_init :
         maximum number of iterations refining a component during decimated
         initialization
-    tol : convergence tolerence
+    tol :
+        convergence tolerence
     d_sub :
         spatial downsampling factor
     t_sub :
@@ -312,16 +313,28 @@ cpdef batch_decompose(const int d1,
 
     # Initialize Counters
     # cdef size_t iu, ku
-    cdef int i, j, k, b, bi, bj
-    cdef int nbi = int(d1/bheight)
-    cdef int nbj = int(d2/bwidth)
+    # cdef int h, w, k, b, bi, bj, frame
+    cdef int nbi = d1 // bheight
+    cdef int nbj = d2 // bwidth
     cdef int num_blocks = nbi * nbj
     # cdef int bheight_ds = bheight / d_sub
     # cdef int bwidth_ds = bwidth / d_sub
     # cdef int t_ds = t / t_sub
 
+    # cdef int fov_height = d1
+    # cdef int fov_width = d2
+
     # Compute block-start indices and spatial cutoff
-    indices = np.transpose([np.tile(range(nbi), nbj), np.repeat(range(nbj), nbi)])
+    # TODO: add in function to generalize indices map
+    cdef size_t[:, ::1] indices
+    ind = np.array([np.tile(range(nbi), nbj), np.repeat(range(nbj), nbi)], dtype=np.uint64)
+    ind = np.transpose(ind)
+    indices = np.ascontiguousarray(ind) * np.array([bheight, bwidth], dtype=np.uint64)[None, :]
+
+    strides = np.asarray(Y).strides
+    itemsize = np.asarray(Y).itemsize
+    cdef int height_stride = strides[0] / itemsize
+    cdef int width_stride = strides[1] / itemsize
 
     # Preallocate Space For Outputs
     cdef double[:,::1] U = np.zeros((num_blocks, bheight * bwidth * max_components), dtype=np.float64)
@@ -329,8 +342,8 @@ cpdef batch_decompose(const int d1,
     cdef size_t[::1] K = np.empty((num_blocks,), dtype=np.uint64)
 
     # Allocate Input Pointers
-    cdef double** Rp = <double **> malloc(num_blocks * sizeof(double*))
-    cdef double** Rp_ds = <double **> malloc(num_blocks * sizeof(double*))
+    # cdef double** Rp = <double **> malloc(num_blocks * sizeof(double*))
+    # cdef double** Rp_ds = <double **> malloc(num_blocks * sizeof(double*))
     cdef double** Vp = <double **> malloc(num_blocks * sizeof(double*))
     cdef double** Up = <double **> malloc(num_blocks * sizeof(double*))
 
@@ -339,62 +352,26 @@ cpdef batch_decompose(const int d1,
 
         # Assign Pre-allocated Output Memory To Pointer Array & Allocate Residual Pointers
         for b in range(num_blocks):
-            Rp[b] = <double *> malloc(bheight * bwidth * t * sizeof(double))
-            Up[b] = &U[b,0]
-            Vp[b] = &V[b,0]
+            Up[b] = &U[b, 0]
+            Vp[b] = &V[b, 0]
 
-        # Copy Contents Of Raw Blocks Into Residual Pointers
-        for bj in range(nbj):
-            for bi in range(nbi):
-                for k in range(t):
-                    for j in range(bwidth):
-                        for i in range(bheight):
-                            Rp[bi + (bj * nbi)][i + (j * bheight) + (k * bheight * bwidth)] =\
-                                    Y[(bi * bheight) + i, (bj * bwidth) + j, k]
+        params = new PMD_params(bheight, bwidth, d_sub, t, t_sub,
+                                spatial_thresh, temporal_thresh, max_components,
+                                consec_failures, max_iters_main, max_iters_init,
+                                tol, NULL, enable_temporal_denoiser,
+                                enable_spatial_denoiser)
 
-        # Decimate Raw Blocks
-        if t_sub > 1 or d_sub > 1:
-            for b in range(num_blocks):
-                Rp_ds[b] = <double *> malloc((bheight / d_sub) * (bwidth / d_sub) * (t / t_sub) * sizeof(double))
-            for b in prange(num_blocks, schedule='guided'):
-                downsample_3d(bheight, bwidth, d_sub, t, t_sub, Rp[b], Rp_ds[b])
-        else:
-            for b in range(num_blocks):
-                Rp_ds[b] = NULL
+        batch_pmd(Up, Vp, &K[0], num_blocks, params, &Y[0, 0, 0], height_stride, width_stride, &indices[0, 0])
 
-        # Factor Blocks In Parallel
-        # batch_pmd(bheight, bwidth, d_sub, t, t_sub, num_blocks,
-        #           Rp, Rp_ds, Up, Vp, &K[0],
-        #           spatial_thresh, temporal_thresh,
-        #           max_components, consec_failures,
-        #           max_iters_main, max_iters_init, tol)
+        del params
 
-        parms = new PMD_params(bheight, bwidth, d_sub, t, t_sub,
-                               spatial_thresh, temporal_thresh,
-                               max_components, consec_failures,
-                               max_iters_main, max_iters_init, tol,
-                               NULL,
-                               enable_temporal_denoiser,
-                               enable_spatial_denoiser)
-        batch_pmd(Rp, Rp_ds, Up, Vp, &K[0], num_blocks, parms)
-        del parms
-
-        # Free Allocated Memory
-        for b in range(num_blocks):
-            free(Rp[b])
-        if t_sub > 1 or d_sub > 1:
-            for b in range(num_blocks):
-                free(Rp_ds[b])
-
-        free(Rp)
-        free(Rp_ds)
-        free(Up)
-        free(Vp)
+    free(Up)
+    free(Vp)
 
     # Format Components & Return To Numpy Array
     return (np.asarray(U).reshape((num_blocks, bheight, bwidth, max_components), order='F'),
             np.asarray(V).reshape((num_blocks, max_components, t), order='C'),
-            np.asarray(K), indices.astype(np.uint64))
+            np.asarray(K), np.asarray(ind))
 
 
 cpdef double[:,:,::1] batch_recompose(double[:, :, :, :] U, double[:,:,::1] V,
@@ -483,7 +460,7 @@ cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U, double[:,:,:] V,
     cdef size_t bwidth = U.shape[2]
     cdef size_t t = V.shape[2]
 
-    # Get Mvie Size Infro From Indices
+    # Get Movie Size Info From Indices
     cdef size_t nbi, nbj
     nbi = len(np.unique(indices[:,0]))
     idx_offset = np.min(indices[:,0])
@@ -493,18 +470,17 @@ cpdef double[:,:,::1] weighted_recompose(double[:, :, :, :] U, double[:,:,:] V,
     cdef size_t d2 = nbj * bwidth
 
     # Allocate Space For reconstructed Movies
-    Yd = np.zeros(d1*d2*t, dtype=np.float64).reshape((d1,d2,t))
+    Yd = np.zeros(d1*d2*t, dtype=np.float64).reshape((d1, d2, t))
 
     # Loop Over Blocks
     cdef size_t bdx, idx, jdx #, kdx
     for bdx in range(nbi*nbj):
-        idx = (indices[bdx,0] - idx_offset) * bheight
-        jdx = (indices[bdx,1] - jdx_offset) * bwidth
+        idx = (indices[bdx, 0] - idx_offset) * bheight
+        jdx = (indices[bdx, 1] - jdx_offset) * bwidth
         Yd[idx:idx+bheight, jdx:jdx+bwidth,:] += np.reshape(
-                np.dot(U[bdx,:,:,:K[bdx]],
-                       V[bdx,:K[bdx],:]),
-                (bheight,bwidth,t),
-                order='F') * np.asarray(W[:,:,None])
+                np.dot(U[bdx,:,:,:K[bdx]], V[bdx,:K[bdx],:]),
+                (bheight, bwidth, t),
+                order='F') * np.asarray(W[:, :, None])
     return np.asarray(Yd)
 
 
@@ -846,7 +822,7 @@ cpdef overlapping_batch_recompose(const int d1, const int d2, const int t,
     # cdef int nbcol = d2/bwidth
 
     # Allocate Space For reconstructed Movies
-    Yd = np.zeros((d1,d2,t), dtype=np.float64)
+    Yd = np.zeros((d1, d2, t), dtype=np.float64)
 
     # ---------------- Handle Blocks Overlays One At A Time --------------#
 
@@ -982,8 +958,7 @@ cpdef pca_patch(R, bheight=None, bwidth=None, num_frames=None,
     for k in range(max_components):
         spatial_stat = spatial_test_statistic(Ub[:,k].reshape((bheight,bwidth), order='F'))
         temporal_stat = temporal_test_statistic(Vtb[k,:])
-        if (spatial_stat > spatial_thresh or
-            temporal_stat > temporal_thresh):
+        if (spatial_stat > spatial_thresh or temporal_stat > temporal_thresh):
             fails += 1
             if fails >= consec_failures:
                 break
@@ -1325,10 +1300,10 @@ def determine_thresholds(mov_dims, block_dims, num_components, max_iters_main,
         confidence level to determine threshold for the summary statistics
     plot :
         whether plot
-    enable_temporal_denoiser :
-        whether enable temporal denoiser, True by default
-    enable_spatial_denoiser :
-        whether enable spatial denoiser, True by default
+    enable_temporal_denoiser : optional, default: True
+        whether to enable temporal denoiser
+    enable_spatial_denoiser : optional, default: True
+        whether to enable spatial denoiser
 
     Returns
     -------
@@ -1347,13 +1322,13 @@ def determine_thresholds(mov_dims, block_dims, num_components, max_iters_main,
     temporal_components,\
     block_ranks,\
     _ = batch_decompose(mov_dims[0], mov_dims[1], mov_dims[2],
-                                    noise_mov, block_dims[0], block_dims[1],
-                                    1e3, 1e3,
-                                    num_components, num_components,
-                                    max_iters_main, max_iters_init, tol,
-                                    d_sub, t_sub,
-                                    enable_temporal_denoiser,
-                                    enable_spatial_denoiser)
+                        noise_mov, block_dims[0], block_dims[1],
+                        1e3, 1e3,
+                        num_components, num_components,
+                        max_iters_main, max_iters_init, tol,
+                        d_sub, t_sub,
+                        enable_temporal_denoiser,
+                        enable_spatial_denoiser)
 
     # Gather Test Statistics
     spatial_stat = []
@@ -1369,16 +1344,16 @@ def determine_thresholds(mov_dims, block_dims, num_components, max_iters_main,
     temporal_thresh = np.percentile(temporal_stat, conf)
 
     if plot:
-        _, ax = plt.subplots(2, 2, figsize=(8,8))
-        ax[0,0].scatter(spatial_stat, temporal_stat, marker='x', c='r', alpha = .2)
-        ax[0,0].axvline(spatial_thresh)
-        ax[0,0].axhline(temporal_thresh)
-        ax[0,1].hist(temporal_stat, bins=20, color='r')
-        ax[0,1].axvline(temporal_thresh)
-        ax[0,1].set_title("Temporal Threshold: {}".format(temporal_thresh))
-        ax[1,0].hist(spatial_stat, bins=20, color='r')
-        ax[1,0].axvline(spatial_thresh)
-        ax[1,0].set_title("Spatial Threshold: {}".format(spatial_thresh))
+        _, ax = plt.subplots(2, 2, figsize=(8, 8))
+        ax[0, 0].scatter(spatial_stat, temporal_stat, marker='x', c='r', alpha =.2)
+        ax[0, 0].axvline(spatial_thresh)
+        ax[0, 0].axhline(temporal_thresh)
+        ax[0, 1].hist(temporal_stat, bins=20, color='r')
+        ax[0, 1].axvline(temporal_thresh)
+        ax[0, 1].set_title("Temporal Threshold: {}".format(temporal_thresh))
+        ax[1, 0].hist(spatial_stat, bins=20, color='r')
+        ax[1, 0].axvline(spatial_thresh)
+        ax[1, 0].set_title("Spatial Threshold: {}".format(spatial_thresh))
         plt.show()
 
     return spatial_thresh, temporal_thresh

@@ -2,6 +2,7 @@
 #define PMD_H
 
 #include "utils.h"
+#include <vector>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
@@ -90,10 +91,7 @@ inline double distance_inplace(const MKL_INT n, const double* x, double* y)
     return cblas_dnrm2(n, y, 1);
 }
 
-/* Copy leading n vals of arr source leading n vals of array dest
- *
- * Optimization Notes:
- */
+/* Copy leading n vals of arr source leading n vals of array dest */
 inline void copy(const MKL_INT n, const double* source, double* dest)
 {
     cblas_dcopy(n, source, 1, dest, 1);
@@ -201,7 +199,26 @@ int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
 
 size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars);
 
-void batch_pmd(double** Rp, double** Rp_ds, double** Up, double** Vp, size_t* K,
-    const int b, PMD_params* pars);
+inline void copy_block(double* input_mov, const int height_stride, const int
+        width_stride, const int num_frames, const int bheight, const int
+        bwidth, const int block_row, const int block_col, std::vector<double>&
+        residual)
+{
+    // Fill block in column major order
+    int idx = 0;
+    int index = 0;
+    for (int frame = 0; frame < num_frames; frame++) {
+        for (int j = 0; j < bwidth; j++) {
+            for (int i = 0; i < bheight; i++) {
+                index = (block_row + i) * height_stride + (block_col + j) * width_stride + frame;
+                residual[idx++] = input_mov[index];
+            }
+        }
+    }
+}
+
+void batch_pmd(double** Up, double** Vp, size_t* K, const int num_blocks,
+        PMD_params* pars, double* movie, int height_stride, int width_stride,
+        size_t* indices);
 
 #endif /* PMD_H */

@@ -40,7 +40,7 @@ SRCS += $(wildcard src/utils/*.c)
 SRCS += $(wildcard src/tf/*.c)
 OBJS = $(patsubst %.c,%.o,$(SRCS))
 
-all: $(TARGET)
+all: clean $(TARGET)
 
 .PHONY: clean
 clean:

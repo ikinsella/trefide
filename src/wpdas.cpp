@@ -11,31 +11,22 @@
 
 #include <vector>
 
-/*******************************************************************************
- *                                   Globals                                   *
- *******************************************************************************/
+/******************************************************************************
+ *                                   Globals                                  *
+ ******************************************************************************/
 
 /* Macro Function Definitions */
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #define min(x, y) ((x) < (y) ? (x) : (y))
 
-/*******************************************************************************
- *                                 Main Solver                                 *
- *******************************************************************************/
+/******************************************************************************
+ *                                 Main Solver                                *
+ ******************************************************************************/
 
-short weighted_pdas(const int n, // data length
-    const double* y, // observations
-    const double* wi, // inverse observation weights
-    const double lambda, // regularization parameter
-    double* x, // primal variable
-    double* z, // dual variable
-    int* iter, // pointer to iter # (so we can return it)
-    double p, // proportion of violators to reassign
-    const int m, // size of violator hostory queue
-    const double delta_s, // proportion by which p is shrunk
-    const double delta_e, // proportion by which p is grown
-    const int maxiter, // max num outer loop iterations
-    const int verbose)
+short weighted_pdas(const int n, const double* y, const double* wi, const
+        double lambda, double* x, double* z, int* iter, double p, const int m,
+        const double delta_s, const double delta_e, const int maxiter, const
+        int verbose)
 {
 
     std::vector<double> diff_x((n - 2));
@@ -63,15 +54,14 @@ short weighted_pdas(const int n, // data length
 
     /* prepare to begin optimization */
     if (verbose) {
-        fprintf(stderr, "____________________________\n");
-        fprintf(stderr, "%s%s%s%s\n", "|Iter|", "Violators|", "Active|",
-            "Prop|");
+        std::cerr << "____________________________" << std::endl;
+        std::cerr << "|Iter|Violators|Active|Prop|" << std::endl;
     }
 
     // Opt Routine Main Loop
     for (int local_iter = 0; local_iter < maxiter; local_iter++) {
-        /************************ Subspace Minimization
-         * **************************/
+
+        /* Subspace Minimization */
         n_active = update_dual(n, y, wi, z, lambda, &div_zi[0], &ab[0], &b[0]);
 
         // Something has gone very wrong (probably Nan input)
@@ -149,9 +139,6 @@ short weighted_pdas(const int n, // data length
             if (verbose) {
                 fprintf(stderr, "Solved\n");
             }
-
-            // std::cerr << "min: " << min_queue << " max: " << max_queue << " n_vio: " << n_vio << std::endl;
-
             *iter = local_iter;
             return 1; // Return Success Code
         }

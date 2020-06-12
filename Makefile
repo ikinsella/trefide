@@ -31,13 +31,14 @@ LIBGLMGEN = $(GLMGEN)/lib/libglmgen$(EXT)
 
 LIBTREFIDE = libtrefide$(EXT)
 
-LDLIBS = -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
+LDLIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
 
-SRCS = src/welch.cpp src/wpdas.cpp src/line_search.cpp src/utils.cpp src/ipm.cpp src/admm.cpp src/pmd.cpp src/decimation.cpp
+# SRCS = src/welch.cpp src/wpdas.cpp src/line_search.cpp src/utils.cpp src/ipm.cpp src/admm.cpp src/pmd.cpp src/decimation.cpp
+SRCS = $(wildcard src/*.cpp)
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-# LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
 INCLUDES = -I$(GLMGEN)/include -I$(PROXTV)
+LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
 
 WARNINGS := -Wall -Wextra -pedantic -Weffc++ -Wshadow -Wpointer-arith \
             -Wcast-align -Wwrite-strings -Wmissing-declarations \
@@ -49,9 +50,8 @@ WARNINGS := -Wall -Wextra -pedantic -Weffc++ -Wshadow -Wpointer-arith \
 CXXFLAGS := $(WARNINGS) -O3
 
 # Compiler Dependent Environment Variables
-ifeq ($(CXX),)
-    CXX = g++
-endif
+CXX ?= g++
+
 ifeq ($(CXX), icpc)
     CXXFLAGS += -mkl=sequential -qopenmp -fPIC $(INCLUDES) $(LDFLAGS) -D NOMATLAB=1
 else
@@ -62,11 +62,8 @@ endif
 .PHONY: all
 all: clean $(LIBTREFIDE) $(LIBGLMGEN) $(LIBPROXTV)
 
-$(LIBTREFIDE): $(OBJS)
+$(LIBTREFIDE): $(OBJS) $(LIBGLMGEN) $(LIBPROXTV)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
-
-#$(SRCS:.cpp=.d):%.d:%.cpp
-#	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(LIBPROXTV):
 	$(MAKE) -C $(PROXTV);
