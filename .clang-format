@@ -1,13 +1,13 @@
 ---
 Language:        Cpp
-# BasedOnStyle:  WebKit
-AccessModifierOffset: -4
-AlignAfterOpenBracket: DontAlign
+# BasedOnStyle:  LLVM
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Right
-AlignOperands:   false
-AlignTrailingComments: false
+AlignOperands:   true
+AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
@@ -20,11 +20,11 @@ AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: false
 BinPackArguments: true
 BinPackParameters: true
-BraceWrapping:   
+BraceWrapping:
   AfterClass:      false
   AfterControlStatement: false
   AfterEnum:       false
-  AfterFunction:   true
+  AfterFunction:   false
   AfterNamespace:  false
   AfterObjCDeclaration: false
   AfterStruct:     false
@@ -36,31 +36,31 @@ BraceWrapping:
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
-BreakBeforeBinaryOperators: All
-BreakBeforeBraces: WebKit
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
 BreakBeforeInheritanceComma: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
-BreakConstructorInitializers: BeforeComma
+BreakConstructorInitializers: BeforeColon
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: true
-ColumnLimit:     0
+ColumnLimit:     80
 CommentPragmas:  '^ IWYU pragma:'
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
-Cpp11BracedListStyle: false
+Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
-FixNamespaceComments: false
-ForEachMacros:   
+FixNamespaceComments: true
+ForEachMacros:
   - foreach
   - Q_FOREACH
   - BOOST_FOREACH
 IncludeBlocks:   Preserve
-IncludeCategories: 
+IncludeCategories:
   - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
     Priority:        2
   - Regex:           '^(<|"(gtest|gmock|isl|json)/)'
@@ -78,9 +78,9 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 1
-NamespaceIndentation: Inner
-ObjCBlockIndentWidth: 4
-ObjCSpaceAfterProperty: true
+NamespaceIndentation: None
+ObjCBlockIndentWidth: 2
+ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
 PenaltyBreakAssignment: 2
 PenaltyBreakBeforeFirstCallParameter: 19
@@ -89,8 +89,8 @@ PenaltyBreakFirstLessLess: 120
 PenaltyBreakString: 1000
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
-PointerAlignment: Left
-RawStringFormats: 
+PointerAlignment: Right
+RawStringFormats:
   - Delimiter:       pb
     Language:        TextProto
     BasedOnStyle:    google

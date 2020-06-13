@@ -8,10 +8,9 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-void inplace_rfft(const MKL_LONG L, double* yft, void* FFT = NULL);
+void inplace_rfft(const MKL_LONG L, double *yft, void *FFT = NULL);
 
-inline void hanning_window(const MKL_INT L, double* win)
-{
+inline void hanning_window(const MKL_INT L, double *win) {
     double rad_inc;
 
     // Fill Vector With Window Val
@@ -22,8 +21,8 @@ inline void hanning_window(const MKL_INT L, double* win)
 }
 
 void welch(const size_t N, const MKL_INT L, const MKL_INT R, const double fs,
-    const double* x, double* psd, void* FFT = NULL);
+           const double *x, double *psd, void *FFT = NULL);
 
-double psd_noise_estimate(const size_t N, const double* x, void* FFT = NULL);
+double psd_noise_estimate(const size_t N, const double *x, void *FFT = NULL);
 
 #endif /* WELCH_H */

@@ -2,7 +2,6 @@
 #define PMD_H
 
 #include "utils.h"
-#include <vector>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
@@ -10,9 +9,10 @@
 #pragma GCC diagnostic pop
 
 #include <mkl_dfti.h>
+#include <vector>
 
 class PMD_params {
-private:
+  private:
     const MKL_INT bheight;
     const MKL_INT bwidth;
     MKL_INT d_sub;
@@ -25,17 +25,17 @@ private:
     const size_t max_iters_main;
     const size_t max_iters_init;
     const double tol;
-    void* FFT; /* Handle Provided For Threadsafe FFT */
+    void *FFT; /* Handle Provided For Threadsafe FFT */
     bool enable_temporal_denoiser;
     bool enable_spatial_denoiser;
 
-public:
+  public:
     PMD_params(const MKL_INT _bheight, const MKL_INT _bwidth, MKL_INT _d_sub,
-        const MKL_INT _t, MKL_INT _t_sub, const double _spatial_thresh,
-        const double _temporal_thresh, const size_t _max_components,
-        const size_t _consec_failures, const size_t _max_iters_main,
-        const size_t _max_iters_init, const double _tol, void* _FFT,
-        bool _enable_temporal_denoiser, bool _enable_spatial_denoiser);
+               const MKL_INT _t, MKL_INT _t_sub, const double _spatial_thresh,
+               const double _temporal_thresh, const size_t _max_components,
+               const size_t _consec_failures, const size_t _max_iters_main,
+               const size_t _max_iters_init, const double _tol, void *_FFT,
+               bool _enable_temporal_denoiser, bool _enable_spatial_denoiser);
 
     MKL_INT get_bheight();
     MKL_INT get_bwidth();
@@ -51,8 +51,8 @@ public:
     size_t get_max_iters_main();
     size_t get_max_iters_init();
     double get_tol();
-    void* get_FFT();
-    void set_FFT(void* _FFT);
+    void *get_FFT();
+    void set_FFT(void *_FFT);
     bool get_enable_temporal_denoiser();
     void set_enable_temporal_denoiser(bool _enable_temporal_denoiser);
     bool get_enable_spatial_denoiser();
@@ -61,16 +61,16 @@ public:
 
 /* Spatial Helper Functions */
 double estimate_noise_tv_op(const MKL_INT d1, const MKL_INT d2,
-    const double* u_k);
+                            const double *u_k);
 
 double estimate_noise_mean_filter(const int rows, const int cols,
-    double* image);
+                                  double *image);
 
 double estimate_noise_median_filter(const int rows, const int cols,
-    double* image);
+                                    double *image);
 
-int cps_tv(const int d1, const int d2, double* y, const double delta,
-    double* x, double* lambda_tv, double* info, double tol = 5e-2);
+int cps_tv(const int d1, const int d2, double *y, const double delta, double *x,
+           double *lambda_tv, double *info, double tol = 5e-2);
 
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic Helper Funcs ---------------------------*
@@ -82,8 +82,7 @@ int cps_tv(const int d1, const int d2, double* y, const double delta,
  * Optimization Notes:
  *      vdSub suboptimal for small (n<40) arrays.
  */
-inline double distance_inplace(const MKL_INT n, const double* x, double* y)
-{
+inline double distance_inplace(const MKL_INT n, const double *x, double *y) {
     /* y <- x - y */
     vdSub(n, x, y, y);
 
@@ -92,14 +91,12 @@ inline double distance_inplace(const MKL_INT n, const double* x, double* y)
 }
 
 /* Copy leading n vals of arr source leading n vals of array dest */
-inline void copy(const MKL_INT n, const double* source, double* dest)
-{
+inline void copy(const MKL_INT n, const double *source, double *dest) {
     cblas_dcopy(n, source, 1, dest, 1);
 }
 
 /* Normlizes len n array x by ||x||_2 in place */
-inline void normalize(const MKL_INT n, double* x)
-{
+inline void normalize(const MKL_INT n, double *x) {
     /* norm <- ||x||_2 */
     double norm = cblas_dnrm2(n, x, 1);
 
@@ -111,8 +108,7 @@ inline void normalize(const MKL_INT n, double* x)
 }
 
 /* Intializes len n constant vector */
-inline void initvec(MKL_INT n, double* x, const double val)
-{
+inline void initvec(MKL_INT n, double *x, const double val) {
     while (n--)
         *x++ = val;
 }
@@ -122,62 +118,59 @@ inline void initvec(MKL_INT n, double* x, const double val)
 /* Updates & normalizes the spatial component u_k in place by regressing
  * the current temporal component v_k against the current residual R_k
  */
-inline void regress_spatial(const MKL_INT d, const MKL_INT t, const double* R_k,
-    double* u_k, const double* v_k)
-{
+inline void regress_spatial(const MKL_INT d, const MKL_INT t, const double *R_k,
+                            double *u_k, const double *v_k) {
     /* u = Yv */
     cblas_dgemv(CblasColMajor, CblasNoTrans, d, t, 1.0, R_k, d, v_k, 1, 0.0,
-        u_k, 1);
+                u_k, 1);
 
     /* u /= ||u||_2 */
     normalize(d, u_k); // Temporarily Removed For Constrained TV Testing
 }
 
 void constrained_denoise_spatial(const MKL_INT d1, const MKL_INT d2,
-    double* u_k, double* lambda_tv);
+                                 double *u_k, double *lambda_tv);
 
-void denoise_spatial(const MKL_INT d1, const MKL_INT d2, double* u_k,
-    double* lambda_tv);
+void denoise_spatial(const MKL_INT d1, const MKL_INT d2, double *u_k,
+                     double *lambda_tv);
 
-double update_spatial_init(const MKL_INT d, const MKL_INT t, const double* R_k,
-    double* u_k, const double* v_k);
+double update_spatial_init(const MKL_INT d, const MKL_INT t, const double *R_k,
+                           double *u_k, const double *v_k);
 
-double update_spatial(const double* R_k, double* u_k, const double* v_k,
-    double* lambda_tv, PMD_params* pars);
+double update_spatial(const double *R_k, double *u_k, const double *v_k,
+                      double *lambda_tv, PMD_params *pars);
 
 /* Updates the temporal component v_k in place by regressing the transpose
  * of the current temporal component u_k against the current residual R_k'
  */
 inline void regress_temporal(const MKL_INT d, const MKL_INT t,
-    const double* R_k, const double* u_k,
-    double* v_k)
-{
+                             const double *R_k, const double *u_k,
+                             double *v_k) {
     /* v = R_k'u */
     cblas_dgemv(CblasColMajor, CblasTrans, d, t, 1.0, R_k, d, u_k, 1, 0.0, v_k,
-        1);
+                1);
 
     /* Skip Normalization */
 }
 
-void denoise_temporal(const MKL_INT t, double* v_k, double* z_k,
-    double* lambda_tf, void* FFT = NULL);
+void denoise_temporal(const MKL_INT t, double *v_k, double *z_k,
+                      double *lambda_tf, void *FFT = NULL);
 
-double update_temporal_init(const MKL_INT d, const MKL_INT t, const double* R_k,
-    const double* u_k, double* v_k);
+double update_temporal_init(const MKL_INT d, const MKL_INT t, const double *R_k,
+                            const double *u_k, double *v_k);
 
-double update_temporal(const MKL_INT d, const double* R_k, const double* u_k,
-    double* v_k, double* z_k, double* lambda_tf,
-    PMD_params* pars);
+double update_temporal(const MKL_INT d, const double *R_k, const double *u_k,
+                       double *v_k, double *z_k, double *lambda_tf,
+                       PMD_params *pars);
 
 double spatial_test_statistic(const MKL_INT d1, const MKL_INT d2,
-    const double* u_k);
+                              const double *u_k);
 
-double temporal_test_statistic(const MKL_INT t, const double* v_k);
+double temporal_test_statistic(const MKL_INT t, const double *v_k);
 
 /* Initialize A Partition Of The Dual TF Var From A Primal TF Var
  */
-inline void init_dual_from_primal(const MKL_INT t, const double* v, double* z)
-{
+inline void init_dual_from_primal(const MKL_INT t, const double *v, double *z) {
     /* Compute Second Order Differences */
     Dx(t, v, z);
 
@@ -193,32 +186,33 @@ inline void init_dual_from_primal(const MKL_INT t, const double* v, double* z)
     }
 }
 
-int rank_one_decomposition(const double* R_k, const double* R_init, double* u_k,
-    double* u_init, double* v_k, double* v_init,
-    PMD_params* pars);
+int rank_one_decomposition(const double *R_k, const double *R_init, double *u_k,
+                           double *u_init, double *v_k, double *v_init,
+                           PMD_params *pars);
 
-size_t pmd(double* R, double* R_ds, double* U, double* V, PMD_params* pars);
+size_t pmd(double *R, double *R_ds, double *U, double *V, PMD_params *pars);
 
-inline void copy_block(double* input_mov, const int height_stride, const int
-        width_stride, const int num_frames, const int bheight, const int
-        bwidth, const int block_row, const int block_col, std::vector<double>&
-        residual)
-{
+inline void copy_block(double *input_mov, const int height_stride,
+                       const int width_stride, const int num_frames,
+                       const int bheight, const int bwidth,
+                       const size_t block_row, const size_t block_col,
+                       std::vector<double> &residual) {
     // Fill block in column major order
     int idx = 0;
-    int index = 0;
+    size_t index;
     for (int frame = 0; frame < num_frames; frame++) {
         for (int j = 0; j < bwidth; j++) {
             for (int i = 0; i < bheight; i++) {
-                index = (block_row + i) * height_stride + (block_col + j) * width_stride + frame;
+                index = (block_row + i) * height_stride +
+                        (block_col + j) * width_stride + frame;
                 residual[idx++] = input_mov[index];
             }
         }
     }
 }
 
-void batch_pmd(double** Up, double** Vp, size_t* K, const int num_blocks,
-        PMD_params* pars, double* movie, int height_stride, int width_stride,
-        size_t* indices);
+void batch_pmd(double **Up, double **Vp, size_t *K, const int num_blocks,
+               PMD_params *pars, double *movie, int height_stride,
+               int width_stride, size_t *indices);
 
 #endif /* PMD_H */

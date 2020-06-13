@@ -9,26 +9,18 @@
 #ifndef IPM_H
 #define IPM_H
 
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-
 /* main routine for l1 trend filtering */
-  int l1tf(const int n,
-	   const double *y,
-	   const double lambda,
-	   double *x,
-	   double *z,
-           int *iter,           
-	   const double tol,
-	   const int maxiter,
-	   const int verbose);
+int l1tf(const int n, const double *y, const double lambda, double *x,
+         double *z, int *iter, const double tol, const int maxiter,
+         const int verbose);
 
 /* utilit to compte the maximum value of lambda */
-  double l1tf_lambdamax(const int n, double *y, const int verbose);
+double l1tf_lambdamax(const int n, double *y, const int verbose);
 
-//#ifdef __cplusplus
-//}
-//#endif
+void yainvx(int n, const double a, const double *x, double *y); /* y = a./x */
+void vecset(int n, const double val, double *dst);
+double vecsum(int n, const double *src);
+
+void print_ivec(int n, const int *x); /* for debug */
 
 #endif /* IPM_H */

@@ -23,11 +23,11 @@
  *                                 Main Solver                                *
  ******************************************************************************/
 
-short weighted_pdas(const int n, const double* y, const double* wi, const
-        double lambda, double* x, double* z, int* iter, double p, const int m,
-        const double delta_s, const double delta_e, const int maxiter, const
-        int verbose)
-{
+short weighted_pdas(const int n, const double *y, const double *wi,
+                    const double lambda, double *x, double *z, int *iter,
+                    double p, const int m, const double delta_s,
+                    const double delta_e, const int maxiter,
+                    const int verbose) {
 
     std::vector<double> diff_x((n - 2));
     std::vector<double> div_zi(n);
@@ -79,7 +79,7 @@ short weighted_pdas(const int n, const double* y, const double* wi, const
 
         // Count, evaluate (fitness), and store violators
         n_vio = locate_violators(n, z, lambda, &diff_x[0], &vio_index[0],
-            &vio_fitness[0], &vio_sort[0]);
+                                 &vio_fitness[0], &vio_sort[0]);
 
         // Update safeguard queue and proportion of violators to be reassigned
         if (n_vio < min_queue) {
@@ -144,7 +144,8 @@ short weighted_pdas(const int n, const double* y, const double* wi, const
         }
 
         // Sort violator indices by fitness value
-        std::sort(&vio_sort[0], &vio_sort[n_vio], FitnessComparator(&vio_fitness[0]));
+        std::sort(&vio_sort[0], &vio_sort[n_vio],
+                  FitnessComparator(&vio_fitness[0]));
 
         // Reassign first p * n_vio violators
         n_vio = max(static_cast<int>(round(p * n_vio)), 1);
@@ -169,9 +170,9 @@ short weighted_pdas(const int n, const double* y, const double* wi, const
    Computation is performed in place and within a single O(n)
    loop that computes div_z_i while updating x_i
 */
-inline void update_primal(const int n, double* x, const double* y, const double* wi,
-    const double* z, const double lambda)
-{
+inline void update_primal(const int n, double *x, const double *y,
+                          const double *wi, const double *z,
+                          const double lambda) {
     int i;
     // x[0] = (y[0] + z[0] * lambda) / w[0]
     *x++ = *y + (*z * lambda * *wi);
@@ -197,9 +198,8 @@ inline void update_primal(const int n, double* x, const double* y, const double*
    D[A] * inv(W) * D[A]' z[A] = D[A](y - lambda * inv(W) * D[I]' * z[I]) /
    lambda Quindiagonal matrix solved with LAPACKE's dpbsv interface
    */
-int update_dual(const int n, const double* y, const double* wi, double* z,
-    const double lambda, double* div_zi, double* ab, double* b)
-{
+int update_dual(const int n, const double *y, const double *wi, double *z,
+                const double lambda, double *div_zi, double *ab, double *b) {
     /* Initiliaze Counters */
     int i, ik;
     int previous = -3;
@@ -257,7 +257,8 @@ int update_dual(const int n, const double* y, const double* wi, double* z,
             previous = i;
 
             /* Update target content */
-            b[ik] = ((y[i + 1] + y[i + 1] - y[i] - y[i + 2]) / lambda) - div_zi[i + 1] - div_zi[i + 1] + div_zi[i] + div_zi[i + 2];
+            b[ik] = ((y[i + 1] + y[i + 1] - y[i] - y[i + 2]) / lambda) -
+                    div_zi[i + 1] - div_zi[i + 1] + div_zi[i] + div_zi[i + 2];
 
             /* Update active set counter */
             ik++;
@@ -285,10 +286,9 @@ int update_dual(const int n, const double* y, const double* wi, double* z,
 }
 
 /* locate, count and eval fitness of violators */
-int locate_violators(const int n, const double* z, const double lambda,
-    const double* diff_x, int* vio_index, double* vio_fitness,
-    int* vio_sort)
-{
+int locate_violators(const int n, const double *z, const double lambda,
+                     const double *diff_x, int *vio_index, double *vio_fitness,
+                     int *vio_sort) {
     int n_vio = 0; // number of violations located
 
     for (int i = 0; i < n - 2; i++) {
@@ -323,9 +323,8 @@ int locate_violators(const int n, const double* z, const double lambda,
 }
 
 /* locate, count and eval fitness of violators */
-void reassign_violators(const int n_vio, double* z, const int* vio_index,
-    const int* vio_sort)
-{
+void reassign_violators(const int n_vio, double *z, const int *vio_index,
+                        const int *vio_sort) {
     for (int i = 0; i < n_vio; i++) {
         if (fabs(z[vio_index[vio_sort[i]]]) == 1) {
             z[vio_index[vio_sort[i]]] = 0;

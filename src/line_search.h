@@ -1,23 +1,17 @@
 #ifndef LINE_SEARCH_H
 #define LINE_SEARCH_H
 
-#include <math.h>
+#include <math.h> /* sqrt, fabs */
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <mkl.h>
+#include <mkl.h> /* cblas_dnrm2 */
 #pragma GCC diagnostic pop
 
-inline int check_sign(double val)
-{
-    return (0 < val) - (val < 0);
-}
+inline int check_sign(double val) { return (0 < val) - (val < 0); }
 
 /* Computes Scaling Factor For 2nd Order TF Line Search */
-inline double compute_scale(const int t,
-    const double* y,
-    const double delta)
-{
+inline double compute_scale(const int t, const double *y, const double delta) {
     /* Compute power of signal: under assuming detrended and centered */
     double var_y = cblas_dnrm2(t, y, 1);
     var_y *= var_y;
@@ -30,14 +24,9 @@ inline double compute_scale(const int t,
     return delta / sqrt(var_y - delta);
 }
 
-inline void evaluate_search_point(const int n,
-    const double* y,
-    const double* wi,
-    const double delta,
-    const double* x,
-    double* mse,
-    double* err)
-{
+inline void evaluate_search_point(const int n, const double *y,
+                                  const double *wi, const double delta,
+                                  const double *x, double *mse, double *err) {
     /* Compute weighted mse */
     double _mse = 0.0;
 
@@ -51,51 +40,85 @@ inline void evaluate_search_point(const int n,
     *err = fabs(delta - _mse) / delta;
 }
 
-int line_search(const int n, // data length
-    const double* y, // observations
-    const double* wi, // inverse observation weights
-    const double delta, // MSE constraint
-    const double tau, // step size in transformed space
-    double* x, // primal variable
-    double* z, // initial dual variable
-    double* lambda, // initial regularization parameter
-    int* iters, // pointer to iter # (so we can return it)
-    const int max_interp, // number of times to try interpolating
-    const double tol, // max num outer loop iterations
-    const int verbose);
+/**
+ * ...
+ *
+ * @param n Data length
+ * @param y Observations
+ * @param wi Inverse observation weights
+ * @param delta MSE constraint
+ * @param tau Step size in transformed space
+ * @param x Primal variable
+ * @param z Initial dual variable
+ * @param lambda Initial regularization parameter
+ * @param iters Pointer to iter # (so we can return it)
+ * @param max_interp Number of times to try interpolating
+ * @param tol Max number of outer loop iterations
+ * @param verbose
+ * @return status
+ */
+int line_search(const int n, const double *y, const double *wi,
+                const double delta, const double tau, double *x, double *z,
+                double *lambda, int *iters, const int max_interp,
+                const double tol, const int verbose);
 
-int constrained_wpdas(const int n, // data length
-    const double* y, // observations
-    const double* wi, // inverse observation weights
-    const double delta, // MSE constraint
-    double* x, // primal variable
-    double* z, // initial dual variable
-    double* lambda, // initial regularization parameter
-    int* iters, // pointer to iter # (so we can return it)
-    const int max_interp = 1, // number of times to try interpolating
-    const double tol = 1e-3, // max num outer loop iterations
-    const int verbose = 0);
+/**
+ * ...
+ *
+ * @param n Data length
+ * @param y Observations
+ * @param wi Inverse observation weights
+ * @param delta MSE constraint
+ * @param x Primal variable
+ * @param z Initial dual variable
+ * @param lambda Initial regularization parameter
+ * @param iters Pointer to iter # (so we can return it)
+ * @param max_interp Number of times to try interpolating
+ * @param tol Max number of outer loop iterations
+ * @param verbose
+ * @return status
+ */
+int constrained_wpdas(const int n, const double *y, const double *wi,
+                      const double delta, double *x, double *z, double *lambda,
+                      int *iters, const int max_interp = 1,
+                      const double tol = 1e-3, const int verbose = 0);
 
-int cps_tf(const int n, // data length
-    const double* y, // observations
-    const double* wi, // inverse observation weights
-    const double delta, // MSE constraint
-    double* x, // primal variable
-    double* z, // initial dual variable
-    double* lambda, // initial regularization parameter
-    int* iters, // pointer to iter # (so we can return it)
-    const double tol, // max num outer loop iterations
-    const int verbose);
+/**
+ * ...
+ *
+ * @param n Data length
+ * @param y Observations
+ * @param wi Inverse observation weights
+ * @param delta MSE constraint
+ * @param x Primal variable
+ * @param z Initial dual variable
+ * @param lambda Initial regularization parameter
+ * @param iters Pointer to iter # (so we can return it)
+ * @param tol Max number of outer loop iterations
+ * @param verbose
+ * @return status
+ */
+int cps_tf(const int n, const double *y, const double *wi, const double delta,
+           double *x, double *z, double *lambda, int *iters, const double tol,
+           const int verbose);
 
-int cps_wpdas(const int n, // data length
-    const double* y, // observations
-    const double* wi, // inverse observation weights
-    const double delta, // MSE constraint
-    double* x, // primal variable
-    double* z, // initial dual variable
-    double* lambda, // initial regularization parameter
-    int* iters, // pointer to iter # (so we can return it)
-    const double tol = 1e-3, // max num outer loop iterations
-    const int verbose = 0);
+/**
+ * ...
+ *
+ * @param n Data length
+ * @param y Observations
+ * @param wi Inverse observation weights
+ * @param delta MSE constraint
+ * @param x Primal variable
+ * @param z Initial dual variable
+ * @param lambda Initial regularization parameter
+ * @param iters Pointer to iter # (so we can return it)
+ * @param tol Max number of outer loop iterations
+ * @param verbose
+ * @return status
+ */
+int cps_wpdas(const int n, const double *y, const double *wi,
+              const double delta, double *x, double *z, double *lambda,
+              int *iters, const double tol = 1e-3, const int verbose = 0);
 
 #endif /* LINE_SEARCH_H */

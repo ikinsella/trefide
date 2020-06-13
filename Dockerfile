@@ -36,7 +36,7 @@ RUN git -C ~/ clone https://github.com/ikinsella/trefide.git \
 
 WORKDIR /root/trefide
 
-RUN bash -c ". /opt/intel/bin/compilervars.sh intel64; make all; pip install ."
+RUN bash -c ". /opt/intel/bin/compilervars.sh intel64; make clean; make all -j $(nproc); pip install ."
 
 EXPOSE 34000
 

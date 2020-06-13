@@ -1,20 +1,20 @@
+// TODO: figure out why changing the ordering causes issues
+#include "line_search.h" /* compute_scale */
+#include "glmgen.h"
+#include "admm.h"
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <mkl.h>
 #pragma GCC diagnostic pop
+
 #include <math.h>
-
-// TODO: figure out why changing the ordering causes issues
-#include "line_search.h"
-#include "glmgen.h"
-#include "admm.h"
-
 #include <vector>
 
-short constrained_tf_admm(const int n, double* x, double* y, double* w, const
-        double delta, double* beta, double* alpha, double* u, double* lambda,
-        int* iters, const double tol, const int verbose)
-{
+short constrained_tf_admm(const int n, double *x, double *y, double *w,
+                          const double delta, double *beta, double *alpha,
+                          double *u, double *lambda, int *iters,
+                          const double tol, const int verbose) {
     /* Trend Filtering Constants */
     int DEGREE = 1;
 
@@ -28,21 +28,23 @@ short constrained_tf_admm(const int n, double* x, double* y, double* w, const
     }
 
     /* Declare & Init Sparse Matrix Objects */
-    cs* D = tf_calc_dk(n, DEGREE + 1, x);
-    cs* Dt = cs_transpose(D, 1);
+    cs *D = tf_calc_dk(n, DEGREE + 1, x);
+    cs *Dt = cs_transpose(D, 1);
     diag_times_sparse(Dt, &temp_n[0]); /* Dt = W^{-1/2} Dt */
-    cs* Dk = tf_calc_dktil(n, DEGREE, x);
-    cs* Dkt = cs_transpose(Dk, 1);
-    cs* DktDk = cs_multiply(Dkt, Dk);
-    gqr* Dt_qr = glmgen_qr(Dt);
-    gqr* Dkt_qr = glmgen_qr(Dkt);
+    cs *Dk = tf_calc_dktil(n, DEGREE, x);
+    cs *Dkt = cs_transpose(Dk, 1);
+    cs *DktDk = cs_multiply(Dkt, Dk);
+    gqr *Dt_qr = glmgen_qr(Dt);
+    gqr *Dkt_qr = glmgen_qr(Dkt);
 
     /* If Uninitialized, Compute Starting Points For Search */
     if (*lambda <= 0) {
 
         /* Compute Step Size wrt Transformed Lambda Space*/
         scale = compute_scale(n, y, delta);
-        *lambda = exp((log(20 + (1 / scale)) - log(3 + (1 / scale))) / 2 + log(3 * scale + 1)) - 1;
+        *lambda = exp((log(20 + (1 / scale)) - log(3 + (1 / scale))) / 2 +
+                      log(3 * scale + 1)) -
+                  1;
     }
 
     /* Compute Rho From Data Locations */
@@ -67,7 +69,7 @@ short constrained_tf_admm(const int n, double* x, double* y, double* w, const
 
     /* v_k <- argmin_{v_k} ||v_k||_TF s.t. ||v - v_k||_2^2 <= T * delta */
     status = cps_tf_admm(n, DEGREE, x, y, w, DktDk, delta, beta, alpha, u,
-        lambda, rho, iters, tol, verbose);
+                         lambda, rho, iters, tol, verbose);
 
     /* Free Allocated Memory */
     cs_spfree(D);
@@ -81,11 +83,10 @@ short constrained_tf_admm(const int n, double* x, double* y, double* w, const
     return status;
 }
 
-short cps_tf_admm(const int n, const int degree, double* x, double* y, double*
-        w, cs* DktDk, const double delta, double* beta, double* alpha, double*
-        u, double* lambda, double rho, int* iters, const double tol, const int
-        verbose)
-{
+short cps_tf_admm(const int n, const int degree, double *x, double *y,
+                  double *w, cs *DktDk, const double delta, double *beta,
+                  double *alpha, double *u, double *lambda, double rho,
+                  int *iters, const double tol, const int verbose) {
     /* TF constants */
     int maxiter = 100;
     double obj_tol = 1e-4;
@@ -106,7 +107,7 @@ short cps_tf_admm(const int n, const int degree, double* x, double* y, double*
     while (*iters < maxiter * 100) {
         /* fit admm */
         tf_admm_gauss(x, y, w, n, degree, maxiter, *lambda, &df, beta, alpha, u,
-            &obj[0], &iter, rho * (*lambda), obj_tol, DktDk, verbose);
+                      &obj[0], &iter, rho * (*lambda), obj_tol, DktDk, verbose);
 
         /* If there any NaNs in beta: reset beta, alpha, u */
         if (has_nan(beta, n)) {
@@ -138,10 +139,9 @@ short cps_tf_admm(const int n, const int degree, double* x, double* y, double*
     return 0; // Reached Maxiter before tol reached
 }
 
-short langrangian_tf_admm(const int n, double* x, double* y, double* w, double
-        lambda, double* beta, double* alpha, double* u, int* iter, const int
-        verbose)
-{
+short langrangian_tf_admm(const int n, double *x, double *y, double *w,
+                          double lambda, double *beta, double *alpha, double *u,
+                          int *iter, const int verbose) {
     /* Trend Filtering Constants */
     int DEGREE = 1;
     int maxiter = 100;
@@ -158,14 +158,14 @@ short langrangian_tf_admm(const int n, double* x, double* y, double* w, double
     }
 
     /* Declare & Init Sparse Matrix Objects */
-    cs* D = tf_calc_dk(n, DEGREE + 1, x);
-    cs* Dt = cs_transpose(D, 1);
+    cs *D = tf_calc_dk(n, DEGREE + 1, x);
+    cs *Dt = cs_transpose(D, 1);
     diag_times_sparse(Dt, &temp_n[0]); /* Dt = W^{-1/2} Dt */
-    cs* Dk = tf_calc_dktil(n, DEGREE, x);
-    cs* Dkt = cs_transpose(Dk, 1);
-    cs* DktDk = cs_multiply(Dkt, Dk);
-    gqr* Dt_qr = glmgen_qr(Dt);
-    gqr* Dkt_qr = glmgen_qr(Dkt);
+    cs *Dk = tf_calc_dktil(n, DEGREE, x);
+    cs *Dkt = cs_transpose(Dk, 1);
+    cs *DktDk = cs_multiply(Dkt, Dk);
+    gqr *Dt_qr = glmgen_qr(Dt);
+    gqr *Dkt_qr = glmgen_qr(Dkt);
 
     /* Compute Rho From Data Locations */
     rho *= pow((x[n - 1] - x[0]) / n, static_cast<double>(DEGREE));
@@ -190,7 +190,7 @@ short langrangian_tf_admm(const int n, double* x, double* y, double* w, double
 
     /* fit admm */
     tf_admm_gauss(x, y, w, n, DEGREE, maxiter, lambda, &df, beta, alpha, u,
-        &obj[0], iter, rho * lambda, obj_tol, DktDk, verbose);
+                  &obj[0], iter, rho * lambda, obj_tol, DktDk, verbose);
 
     /* If there any NaNs in beta: solve failed */
     if (has_nan(beta, n)) {

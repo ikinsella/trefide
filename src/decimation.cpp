@@ -5,8 +5,7 @@
  *----------------------------------------------------------------------------*/
 
 /* Compute downsampled signal as average in each (ds, ) neighborhood */
-void downsample_1d(const int t, const int ds, const double* v, double* v_ds)
-{
+void downsample_1d(const int t, const int ds, const double *v, double *v_ds) {
     int t_ds = t / ds;
     int i_ds;
     for (i_ds = 0; i_ds < t_ds; i_ds++) {
@@ -20,9 +19,8 @@ void downsample_1d(const int t, const int ds, const double* v, double* v_ds)
 }
 
 /* Compute downsampled image pixels as average in each (ds,ds) neighborhood*/
-void downsample_2d(const int d1, const int d2, const int ds, const double* u,
-    double* u_ds)
-{
+void downsample_2d(const int d1, const int d2, const int ds, const double *u,
+                   double *u_ds) {
     int d2_ds = d2 / ds;
     int d1_ds = d1 / ds;
     int j_ds;
@@ -34,7 +32,8 @@ void downsample_2d(const int d1, const int d2, const int ds, const double* u,
             for (j = 0; j < ds; j++) {
                 int i;
                 for (i = 0; i < ds; i++) {
-                    u_ds[i_ds + d1_ds * j_ds] += u[(i_ds * ds + i) + d1 * (j_ds * ds + j)];
+                    u_ds[i_ds + d1_ds * j_ds] +=
+                        u[(i_ds * ds + i) + d1 * (j_ds * ds + j)];
                 }
             }
             u_ds[i_ds + d1_ds * j_ds] /= ds * ds;
@@ -45,8 +44,7 @@ void downsample_2d(const int d1, const int d2, const int ds, const double* u,
 /* Downsample (d1xd2xt) movie in row-major order
  */
 void downsample_3d(const int d1, const int d2, const int d_sub, const int t,
-    const int t_sub, const double* Y, double* Y_ds)
-{
+                   const int t_sub, const double *Y, double *Y_ds) {
     /* Declare & Initialize Local Variables */
     int d = d1 * d2;
     int d1_ds = d1 / d_sub;
@@ -73,7 +71,8 @@ void downsample_3d(const int d1, const int d2, const int d_sub, const int t,
         for (j = 0; j < d2; j++) {
             int i;
             for (i = 0; i < d1; i++) {
-                Y_ds[(i / d_sub) + (j / d_sub) * d1_ds + (k / t_sub) * d_ds] += Y[i + d1 * j + d * k] / elems_per_block;
+                Y_ds[(i / d_sub) + (j / d_sub) * d1_ds + (k / t_sub) * d_ds] +=
+                    Y[i + d1 * j + d * k] / elems_per_block;
             }
         }
     }
@@ -85,8 +84,7 @@ void downsample_3d(const int d1, const int d2, const int d_sub, const int t,
 
 /* Linearly Interpolate Between Missing Values In 1D Upsampled Array
  */
-void upsample_1d_inplace(const int t, const int ds, double* v)
-{
+void upsample_1d_inplace(const int t, const int ds, double *v) {
     /* Declare & Initialize Local Variables */
     int i, i_ds;
     int t_ds = t / ds;
@@ -110,8 +108,7 @@ void upsample_1d_inplace(const int t, const int ds, double* v)
 
 /* Fill Upsampled 1D Array From Downsampled 1D Array Via Linear Interpolation
  */
-void upsample_1d(const int t, const int ds, double* v, const double* v_ds)
-{
+void upsample_1d(const int t, const int ds, double *v, const double *v_ds) {
     /* Declare & Initialize Local Variables */
     int t_ds = t / ds;
 
@@ -124,9 +121,8 @@ void upsample_1d(const int t, const int ds, double* v, const double* v_ds)
 
 /* Fill Upsampled 2D Array From Downsampled 2D Array Via Bilinear Interpolation
  */
-void upsample_2d(const int d1, const int d2, const int ds, double* u,
-    double* u_ds)
-{
+void upsample_2d(const int d1, const int d2, const int ds, double *u,
+                 double *u_ds) {
     /* Declare & Initialize Local Variables */
     int d2_ds = d2 / ds;
     int d1_ds = d1 / ds;
