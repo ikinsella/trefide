@@ -23,7 +23,6 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 RUN git -C ~/ clone https://github.com/ikinsella/trefide.git \
     && cd ~/trefide \
-    && git checkout conda \ 
     && /opt/conda/bin/conda env update -n root -f environment.yml \
     && /opt/conda/bin/conda clean -fya
 
