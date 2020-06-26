@@ -5,9 +5,11 @@ channels:
 dependencies:
   - python
   - numpy
+  - mkl-devel
   - Cython
   - scikit-learn
   - jupyter
+  - matplotlib
   - h5py
   - pip
   - pip:

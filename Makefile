@@ -24,21 +24,20 @@ endif
 
 # Project Structure Dependent Variables
 PROXTV = $(shell pwd)/external/proxtv
-LIBPROXTV = $(PROXTV)/libproxtv$(EXT)
+LIBPROXTV = $(CONDA_PREFIX)/lib/libproxtv$(EXT)
 
 GLMGEN = $(shell pwd)/external/glmgen
-LIBGLMGEN = $(GLMGEN)/lib/libglmgen$(EXT)
+LIBGLMGEN = $(CONDA_PREFIX)/lib/libglmgen$(EXT)
 
-LIBTREFIDE = libtrefide$(EXT)
+LIBTREFIDE = $(CONDA_PREFIX)/lib/libtrefide$(EXT)
 
 LDLIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
 
-# SRCS = src/welch.cpp src/wpdas.cpp src/line_search.cpp src/utils.cpp src/ipm.cpp src/admm.cpp src/pmd.cpp src/decimation.cpp
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-INCLUDES = -I$(GLMGEN)/include -I$(PROXTV)
-LDFLAGS += -L$(PROXTV) -L$(GLMGEN)/lib
+INCLUDES = -I$(GLMGEN)/include -I$(PROXTV) -I$(CONDA_PREFIX)/include
+LDFLAGS += -L$(CONDA_PREFIX)/lib
 
 WARNINGS := -Wall -Wextra -pedantic -Weffc++ -Wshadow -Wpointer-arith \
             -Wcast-align -Wwrite-strings -Wmissing-declarations \

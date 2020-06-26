@@ -33,13 +33,7 @@ COMPILE_ARGS = ["-O3",
                 "-I" + os.path.join(TREFIDE, "external", "glmgen", "include"), # Location of glmgen.h
                 "-D NOMATLAB=1"] # Ignore ProXTV's attempt to mex
 
-# Location of libtrefide.so (Add to $LD_LIBRARY_PATH)
-# Location of libproxtv.so  (Add to $LD_LIBRARY_PATH)
-# Location of libglmgen.so (Add to $LD_LIBRARY_PATH)
-LINK_ARGS = ["-L" + os.path.join(CONDA_PREFIX, "lib"),
-             "-L" + os.path.join(TREFIDE),
-             "-L" + os.path.join(TREFIDE, "external", "proxtv"),
-             "-L" + os.path.join(TREFIDE, "external", "glmgen", "lib")]
+LINK_ARGS = ["-L" + os.path.join(CONDA_PREFIX, "lib")]
 
 # Defaults To Using Intel icc/icpc Compilers
 os.environ["CC"] = os.getenv("CC", "gcc")

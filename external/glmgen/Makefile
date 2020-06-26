@@ -23,9 +23,8 @@ ifeq ($(detected_OS),Linux)
 endif
 
 # Project Structure Dependent Variables
-# OBJ = obj/*.o
 IDIR = include
-TARGET = lib/libglmgen${EXT}
+TARGET = $(CONDA_PREFIX)/lib/libglmgen${EXT}
 
 # Compiler Dependent Environment Variables
 ifneq ($(CC),)
@@ -44,8 +43,7 @@ all: clean $(TARGET)
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(TARGET); rm -rf lib
+	rm -f $(OBJS) $(TARGET)
 
 $(TARGET): $(OBJS)
-	mkdir -p lib
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)

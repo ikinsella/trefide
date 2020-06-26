@@ -21,22 +21,15 @@ ENV PATH /opt/conda/bin:$PATH
 ENV CONDA_PREFIX=/opt/conda
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-ENV TREFIDE="/root/trefide"
-ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TREFIDE"
-ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TREFIDE/external/proxtv"
-ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TREFIDE/external/glmgen/lib"
-
 RUN git -C ~/ clone https://github.com/ikinsella/trefide.git \
     && cd ~/trefide \
+    && git checkout conda \ 
     && /opt/conda/bin/conda env update -n root -f environment.yml \
-    && /opt/conda/bin/conda clean -fya \
-    && ./install_mkl.sh
-
-# ENV MKLROOT /opt/intel/compilers_and_libraries_2020.0.166/linux/mkl
+    && /opt/conda/bin/conda clean -fya
 
 WORKDIR /root/trefide
 
-RUN bash -c ". /opt/intel/bin/compilervars.sh intel64; make clean; make all -j $(nproc); pip install ."
+RUN bash -c "make clean; make all -j $(nproc); pip install ."
 
 EXPOSE 34000
 
