@@ -110,14 +110,14 @@ cdef extern from "trefide.h":
 # ---------------------------------------------------------------------------- #
 
 
-cpdef cpdas(const double[::1] y,        # Observations
-            const double delta,         # MSE constraint
-            double[::1] wi=None,        # Observation weights
-            double[::1] z_hat=None,     # Dual variable warm start
-            double lambda_=-1,          # Lagrange multiplier warm start
-            int max_interp=1,           # Number of interps before stepping
-            double tol=1e-3,            # Constraint tolerance
-            int verbose=0):
+cdef cpdas(const double[::1] y,        # Observations
+           const double delta,         # MSE constraint
+           double[::1] wi=None,        # Observation weights
+           double[::1] z_hat=None,     # Dual variable warm start
+           double lambda_=-1,          # Lagrange multiplier warm start
+           int max_interp=1,           # Number of interps before stepping
+           double tol=1e-3,            # Constraint tolerance
+           int verbose=0):
     """
     Shallow wrapper to call libtrefide solver
     """
@@ -152,13 +152,13 @@ cpdef cpdas(const double[::1] y,        # Observations
     return np.asarray(x_hat), np.asarray(z_hat), lambda_, iters
 
 
-cpdef cps_cpdas(const double[::1] y,        # Observations
-                const double delta,         # MSE constraint
-                double[::1] wi=None,        # Observation weights
-                double[::1] z_hat=None,     # Dual variable warm start
-                double lambda_=-1,          # Lagrange multiplier warm start
-                double tol=1e-3,            # Constraint tolerance
-                int verbose=0):
+cdef cps_cpdas(const double[::1] y,        # Observations
+               const double delta,         # MSE constraint
+               double[::1] wi=None,        # Observation weights
+               double[::1] z_hat=None,     # Dual variable warm start
+               double lambda_=-1,          # Lagrange multiplier warm start
+               double tol=1e-3,            # Constraint tolerance
+               int verbose=0):
     """
     Shallow wrapper to call libtrefide solver
     """
@@ -193,16 +193,16 @@ cpdef cps_cpdas(const double[::1] y,        # Observations
     return np.asarray(x_hat), np.asarray(z_hat), lambda_, iters
 
 
-cpdef lpdas(double[::1] y,
-            const double lambda_,
-	    double[::1] wi=None,
-	    double[::1] z_hat=None,
-            double p=1,
-            int m=5,
-            double delta_s=.9,
-            double delta_e=1.1,
-	    int maxiter=2000,
-	    int verbose=0):
+cdef lpdas(double[::1] y,
+           const double lambda_,
+	   double[::1] wi=None,
+	   double[::1] z_hat=None,
+           double p=1,
+           int m=5,
+           double delta_s=.9,
+           double delta_e=1.1,
+	   int maxiter=2000,
+	   int verbose=0):
     """ Handle to weighted pdas solver allowing warm start intialization"""
 
     # Declare & Intialize Local Variables
@@ -241,15 +241,15 @@ cpdef lpdas(double[::1] y,
 # ---------------------------------------------------------------------------- #
 
 
-cpdef cps_cadmm(double[::1] y,        # Observations
-                const double delta,         # MSE constraint
-                double[::1] w=None,         # Observation weights
-                double[::1] beta=None,      # Primal Warm Start
-                double[::1] alpha=None,     # Dual variable warm start
-                double[::1] u=None,     # Dual variable warm start
-                double lambda_=-1,          # Lagrange multiplier warm start
-                double tol=5e-2,            # Constraint tolerance
-                int verbose=0):
+cdef cps_cadmm(double[::1] y,        # Observations
+               const double delta,         # MSE constraint
+               double[::1] w=None,         # Observation weights
+               double[::1] beta=None,      # Primal Warm Start
+               double[::1] alpha=None,     # Dual variable warm start
+               double[::1] u=None,     # Dual variable warm start
+               double lambda_=-1,          # Lagrange multiplier warm start
+               double tol=5e-2,            # Constraint tolerance
+               int verbose=0):
     """
     Shallow wrapper to call libtrefide solver
     """
@@ -289,13 +289,13 @@ cpdef cps_cadmm(double[::1] y,        # Observations
     return np.asarray(beta), np.asarray(alpha), np.asarray(u), lambda_
 
 
-cpdef ladmm(double[::1] y,        # Observations
-            const double lambda_,         # MSE constraint
-            double[::1] w=None,        # Observation weights
-            double[::1] beta=None,
-            double[::1] alpha=None,     # Dual variable warm start
-            double[::1] u=None,     # Dual variable warm start
-            int verbose=0):
+cdef ladmm(double[::1] y,        # Observations
+           const double lambda_,         # MSE constraint
+           double[::1] w=None,        # Observation weights
+           double[::1] beta=None,
+           double[::1] alpha=None,     # Dual variable warm start
+           double[::1] u=None,     # Dual variable warm start
+           int verbose=0):
     """ Handle to weighted pdas solver allowing warm start intialization"""
 
     # Declare & Intialize Local Variables
@@ -366,12 +366,12 @@ def l1tf_lambda_max(double[::1] data_,
     return lambda_max
 
 
-cpdef lipm(double[::1] y,
-           double lambda_,
-           bool max_lambda=False,
-           double tol=1e-4,
-	   int maxiter=200,
-           int verbose=0):
+cdef lipm(double[::1] y,
+          double lambda_,
+          bool max_lambda=False,
+          double tol=1e-4,
+	  int maxiter=200,
+          int verbose=0):
     """
     Solve L1 trend filter via primal-dual interior point method
 
