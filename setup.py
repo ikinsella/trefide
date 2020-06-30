@@ -9,7 +9,7 @@ from Cython.Distutils import build_ext
 # -------------------- DEPS, COMPILER ARGS, LIBS, & LOCS ---------------------#
 
 # Additional (Optional) Packages May Be Needed To MAke Videos In Demos
-DEPENDENCIES = ["numpy", "scipy", "cython", "matplotlib"]
+DEPENDENCIES = [] #["numpy", "scipy", "cython", "matplotlib"]
 
 TREFIDE = os.getcwd()
 

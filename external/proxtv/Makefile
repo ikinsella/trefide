@@ -22,16 +22,19 @@ ifeq ($(detected_OS),Linux)
     LDFLAGS = -shared
 endif
 
+# If undefined (ie. not using conda-build), set PREFIX to active env
+PREFIX ?= $(CONDA_PREFIX)
+
 # Project Structure Dependent Variables
 
 # OS Agnostic Environment Variables
-TARGET = $(CONDA_PREFIX)/lib/libproxtv$(EXT)
+TARGET = $(PREFIX)/lib/libproxtv$(EXT)
 LDLIBS = -lmkl_intel_lp64 -lmkl_core -lm
 SRCS = condat_fast_tv.cpp johnsonRyanTV.cpp TVL1opt_kolmogorov.cpp LPopt.cpp TV2Dopt.cpp TV2DWopt.cpp TVgenopt.cpp TVL1opt.cpp TVL1opt_tautstring.cpp TVL1opt_hybridtautstring.cpp TVL1Wopt.cpp TVL2opt.cpp TVLPopt.cpp TVNDopt.cpp utils.cpp
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-INCLUDES = -I $(CONDA_PREFIX)/include
-LDFLAGS += -L $(CONDA_PREFIX)/lib
+INCLUDES = -I $(PREFIX)/include
+LDFLAGS += -L $(PREFIX)/lib
 
 # Compiler Dependent Environment Variables
 

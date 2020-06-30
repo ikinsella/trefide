@@ -22,22 +22,25 @@ ifeq ($(detected_OS),Linux)
     LDFLAGS = -shared
 endif
 
+# If undefined (ie. not using conda-build), set PREFIX to active env
+PREFIX ?= $(CONDA_PREFIX)
+
 # Project Structure Dependent Variables
 PROXTV = $(shell pwd)/external/proxtv
-LIBPROXTV = $(CONDA_PREFIX)/lib/libproxtv$(EXT)
+LIBPROXTV = $(PREFIX)/lib/libproxtv$(EXT)
 
 GLMGEN = $(shell pwd)/external/glmgen
-LIBGLMGEN = $(CONDA_PREFIX)/lib/libglmgen$(EXT)
+LIBGLMGEN = $(PREFIX)/lib/libglmgen$(EXT)
 
-LIBTREFIDE = $(CONDA_PREFIX)/lib/libtrefide$(EXT)
+LIBTREFIDE = $(PREFIX)/lib/libtrefide$(EXT)
 
 LDLIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
 
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-INCLUDES = -I$(GLMGEN)/include -I$(PROXTV) -I$(CONDA_PREFIX)/include
-LDFLAGS += -L$(CONDA_PREFIX)/lib
+INCLUDES = -I$(GLMGEN)/include -I$(PROXTV) -I$(PREFIX)/include
+LDFLAGS += -L$(PREFIX)/lib
 
 WARNINGS := -Wall -Wextra -pedantic -Weffc++ -Wshadow -Wpointer-arith \
             -Wcast-align -Wwrite-strings -Wmissing-declarations \
