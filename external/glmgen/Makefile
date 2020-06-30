@@ -22,9 +22,12 @@ ifeq ($(detected_OS),Linux)
     LDFLAGS = -shared
 endif
 
+# If undefin. not using conda-build), set PREFIX to active env
+PREFIX ?= $(CONDA_PREFIX)
+
 # Project Structure Dependent Variables
 IDIR = include
-TARGET = $(CONDA_PREFIX)/lib/libglmgen${EXT}
+TARGET = $(PREFIX)/lib/libglmgen${EXT}
 
 # Compiler Dependent Environment Variables
 ifneq ($(CC),)
