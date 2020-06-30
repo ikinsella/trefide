@@ -1,0 +1,9 @@
+name: trefide_build
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - mkl-devel
+  - cython
