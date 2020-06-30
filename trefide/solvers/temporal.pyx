@@ -3,7 +3,7 @@
 # cython: wraparound=False
 # cython: initializedcheck=False
 # cython: nonecheck=False
-
+# cython: language_level=3
 import warnings
 cimport cython
 
