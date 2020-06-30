@@ -65,7 +65,7 @@ endif
 all: clean $(LIBTREFIDE) $(LIBGLMGEN) $(LIBPROXTV)
 
 $(LIBTREFIDE): $(OBJS) $(LIBGLMGEN) $(LIBPROXTV)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 $(LIBPROXTV):
 	$(MAKE) -C $(PROXTV);
