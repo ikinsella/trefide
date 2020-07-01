@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Build Shared Objects Directly Into $CONDA_PREFIX/lib
-make clean; make all -j"${CPU_COUNT}"
+make clean; make all # -j"${CPU_COUNT}"
 
 # Remove Previous Cython Extensions
 rm -rf build
