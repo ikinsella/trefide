@@ -49,22 +49,23 @@ void welch(const size_t N, const MKL_INT L, const MKL_INT R, const double fs,
     MKL_INT K, S, P;
     double scale;
 
+    MKL_INT temp = std::min(static_cast<MKL_INT>(N), L);
     S = L - R;                                        // Segment Increment
-    K = static_cast<MKL_INT>(floor((N - L) / S) + 1); // Number Of Segments
+    K = static_cast<MKL_INT>(std::max(floor((static_cast<MKL_INT>(N) - L) / S), 0.0) + 1); // Number Of Segments
     P = static_cast<MKL_INT>(floor(L / 2) + 1); // Number of Periodogram Coef
-    std::vector<double> win(L);                 // Window
-    std::vector<double> yft(L); // Windowed Signal Segment & DFT Coef
+    std::vector<double> win(L, 0.0);            // Window
+    std::vector<double> yft(L, 0.0); // Windowed Signal Segment & DFT Coef
 
     /* Construct Window & Compute DFT Coef Scaling Factor */
-    hanning_window(L, &win[0]);
-    scale = cblas_dnrm2(L, &win[0], 1); // Window 2 norm
+    hanning_window(temp, &win[0]);
+    scale = cblas_dnrm2(temp, &win[0], 1); // Window 2 norm
     scale = fs * scale * scale;         // DFT Normalization Factor
 
     // Loop Over Segments
     for (k = 0; k < K; k++) {
 
         // Copy Segment Of Signal X Into Target YFT & Apply Window
-        vdMul(L, x + S * k, &win[0], &yft[0]);
+        vdMul(temp, x + S * k, &win[0], &yft[0]);
 
         // Transform Windowed Signal Segment Into Squared DFT Coef. Inplace
         inplace_rfft(L, &yft[0], FFT);
