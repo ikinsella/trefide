@@ -1,7 +1,7 @@
 name: trefide_devel
 channels:
   - defaults
-  - conda-forge
+  - intel
 dependencies:
   - python
   - numpy
