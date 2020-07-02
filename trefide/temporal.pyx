@@ -3,10 +3,10 @@
 # cython: wraparound=False
 # cython: initializedcheck=False
 # cython: nonecheck=False
-
+# cython: language_level=3
 cimport numpy as np
 import numpy as np
-from trefide.solvers.temporal import cps_cpdas, lpdas
+from trefide.solvers.temporal cimport cps_cpdas, lpdas
 from trefide.utils import psd_noise_estimate
 
 
@@ -40,6 +40,7 @@ cdef class TrendFilter:
                                                             wi=self.weights,
                                                             z_hat=self.warm_start, 
                                                             lambda_=self.lambda_,
+                                                            tol=1e-3,
                                                             verbose=self.verbose)
         self.notfit = 0
         return x_hat
@@ -53,6 +54,10 @@ cdef class TrendFilter:
                                     self.lambda_, 
                                     wi=self.weights, 
                                     z_hat=self.warm_start,  
+                                    p=1,
+                                    m=5,
+                                    delta_s=.9,
+                                    delta_e=1.1,
                                     maxiter=self.maxiter, 
                                     verbose=self.verbose)
             return x_hat 

@@ -1,14 +1,9 @@
 FROM ubuntu:18.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     git \
     wget \
     ca-certificates \
-    gnupg \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Miniconda
@@ -23,14 +18,11 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 RUN git -C ~/ clone https://github.com/ikinsella/trefide.git \
     && cd ~/trefide \
-    && /opt/conda/bin/conda env update -n root -f environments/devel.yml \
+    && /opt/conda/bin/conda env update -n root -f environments/deploy.yml \
     && /opt/conda/bin/conda clean -fya
 
-WORKDIR /root/trefide
+WORKDIR /root/trefide/conda-build
 
-RUN bash -c "make clean; make all -j $(nproc); pip install ."
-
-EXPOSE 34000
-
-# Run Jupyter Notebook
-ENTRYPOINT ["jupyter", "notebook", "--ip=0.0.0.0", "--port=34000", "--allow-root", "--no-browser"]
+# TODO: possible to securely configure anaconda-client to automate login?
+# Build Conda Environments
+ENTRYPOINT ["bash", "-c", "~/trefide/conda-build/conda-build.sh"]

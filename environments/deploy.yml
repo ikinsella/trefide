@@ -1,0 +1,8 @@
+name: trefide_deploy
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - conda-build
+  - anaconda-client
+  - conda-verify

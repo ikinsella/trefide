@@ -1,0 +1,16 @@
+name: trefide_devel
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - mkl-devel
+  - cython
+  - scikit-learn
+  - jupyter
+  - matplotlib
+  - h5py
+  - pip
+  - pip:
+      - opencv-python

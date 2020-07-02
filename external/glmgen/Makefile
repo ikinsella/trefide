@@ -30,9 +30,10 @@ IDIR = include
 TARGET = $(PREFIX)/lib/libglmgen${EXT}
 
 # Compiler Dependent Environment Variables
-ifneq ($(CC),)
-    CC = gcc
-endif
+CC ?= gcc
+#ifneq ($(CC),)
+#    CC = gcc
+#endif
 
 INCLUDES = -I$(IDIR)
 CFLAGS = -O3 -Wall -Wextra -ansi -std=c89 -pedantic -fPIC $(INCLUDES)

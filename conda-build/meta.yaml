@@ -1,0 +1,60 @@
+{% set name = "trefide" %}
+{% set version = "0.1" %}
+
+package:
+    name: {{ name|lower }}
+    version: {{ version }}
+
+source:
+    path: ../
+
+build:
+    string: py{{ python|replace(".","") }}_mkl{{ mkl|replace(".","") }}_npy{{ numpy|replace(".","") }}
+
+requirements:
+    build:
+        - {{ compiler('cxx') }}
+        - make
+
+    host:
+        - python {{ python }}
+        - setuptools
+        - cython
+        - mkl {{ mkl }}
+        - mkl-devel {{ mkl }}
+        - numpy {{ numpy }}
+
+    run:
+        - {{ pin_compatible('python', min_pin='x.x', max_pin='x.x') }}
+        - pip
+        - jupyter
+        - {{ pin_compatible('mkl', min_pin='x.x', max_pin='x.x') }}
+        - {{ pin_compatible('numpy', max_pin='x.x') }}
+        - matplotlib
+        - scikit-learn
+
+test:
+    imports:
+        - trefide
+        - trefide.pmd
+        - trefide.decimation
+        - trefide.utils
+        - trefide.temporal
+        - trefide.solvers
+        - trefide.solvers.temporal
+        - trefide.solvers.space
+        - trefide.solvers.space.lagrangian
+
+about:
+    home: https://github.com/ikinsella/trefide/
+    license: GPL-3.0-or-later
+    license_family: GPL
+    license_file: LICENSE
+    summary: 'TreFiDe is the software package accompanying the research publication Penalized matrix decomposition for denoising, compression, and improved demixing of functional imaging data.'
+    description: 'TreFiDe is an improved appproach to compressing and denoising functional image data. The method is based on a spatially-localized penalized matrix decomposition (PMD) of the data to separate (low-dimensional) signal from (temporally-uncorrelated) noise.'
+    doc_url: https://github.com/ikinsella/trefide/tree/master/doc
+    dev_url: https://github.com/ikinsella/trefide/
+
+extra:
+    recipe-maintainers:
+        - ian kinsella
