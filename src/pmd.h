@@ -192,27 +192,17 @@ int rank_one_decomposition(const double *R_k, const double *R_init, double *u_k,
 
 size_t pmd(double *R, double *R_ds, double *U, double *V, PMD_params *pars);
 
-inline void copy_block(double *input_mov, const int height_stride,
-                       const int width_stride, const int num_frames,
-                       const int bheight, const int bwidth,
-                       const size_t block_row, const size_t block_col,
-                       std::vector<double> &residual) {
-    // Fill block in column major order
-    int idx = 0;
-    size_t index;
-    for (int frame = 0; frame < num_frames; frame++) {
-        for (int j = 0; j < bwidth; j++) {
-            for (int i = 0; i < bheight; i++) {
-                index = (block_row + i) * height_stride +
-                        (block_col + j) * width_stride + frame;
-                residual[idx++] = input_mov[index];
-            }
-        }
-    }
-}
+int get_block(int row_start, int row_end, int col_start, int col_end,
+              int frame_start, int frame_end, void *requester, double *buffer,
+              size_t n);
 
+void batch_pmd(double **Up, double **Vp, size_t *K, const int num_blocks,
+               PMD_params *pars, size_t *indices);
+
+/*
 void batch_pmd(double **Up, double **Vp, size_t *K, const int num_blocks,
                PMD_params *pars, double *movie, int height_stride,
                int width_stride, size_t *indices);
+*/
 
 #endif /* PMD_H */

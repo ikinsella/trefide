@@ -34,7 +34,7 @@ LIBGLMGEN = $(PREFIX)/lib/libglmgen$(EXT)
 
 LIBTREFIDE = $(PREFIX)/lib/libtrefide$(EXT)
 
-LDLIBS = -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
+LDLIBS = -lzmq -lproxtv -lglmgen -lmkl_intel_lp64 -lmkl_core -lm -lmkl_intel_thread -liomp5
 
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))

@@ -5,6 +5,7 @@ Binds REP socket to icp://trefide.ipc
 Expects 6 block coordinates from client, sends blocks to server
 """
 import os
+import sys
 import time
 import threading
 import zmq
@@ -13,7 +14,7 @@ import numpy as np
 
 
 def worker(worker_url, context, mov):
-    """Worker routine"""
+    """Thread worker routine to recv requests and send chunks of a movie"""
 
     # Socket to talk to dispatcher
     socket = context.socket(zmq.REP)
@@ -25,12 +26,15 @@ def worker(worker_url, context, mov):
         r_start, r_end, c_start, c_end, f_start, f_end = positions
         # print("Received request for: {} {} {} {} {} {}".format(r_start, r_end, c_start, c_end, f_start, f_end))
 
+        if r_start == -1 or r_end == -1 or c_start == -1 or f_start == -1 or f_end == -1:
+            return
+
         chunk = mov[r_start:r_end, c_start:c_end, f_start:f_end]
         # print("Sending data chunk:\n {}\n".format(chunk))
         socket.send(chunk.tobytes(order='F'))
 
 
-def main():
+def start_server(filepath):
     """Server routine"""
     url_worker = "inproc://workers"
     url_client = "ipc://trefide.ipc"
@@ -46,8 +50,7 @@ def main():
     workers = context.socket(zmq.DEALER)
     workers.bind(url_worker)
 
-    file_name = "/home/sy2685/trefide/testing/large_dummy_movie.npy" # "/home/sy2685/trefide/data/demoMovie.npy"
-    mov = np.load(file_name, mmap_mode='r')
+    mov = np.load(filepath, mmap_mode='r')
 
     # Launch pool of worker threads
     threads = [threading.Thread(target=worker, args=(url_worker, context, mov)) for _ in range(os.cpu_count())]
@@ -64,6 +67,15 @@ def main():
     clients.close()
     workers.close()
     context.term()
+
+
+def main():
+    """Starts the server when running this module"""
+    filepath = sys.argv[1]
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError("{} is not a file".format(filepath))
+
+    start_server(filepath)
 
 
 if __name__ == "__main__":

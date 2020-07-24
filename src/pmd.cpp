@@ -1,20 +1,20 @@
 #include "pmd.h"
 
-#include "decimation.h"
-#include "line_search.h"
-#include "welch.h"
-
-#include "proxtv.h"
-
+#include <math.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <mkl.h>
 #pragma GCC diagnostic pop
 #include <omp.h>
+#include <zmq.h>
 
 #include <algorithm> /* sort, max */
 #include <iostream>  /* cerr */
-#include <math.h>
+
+#include "decimation.h"
+#include "line_search.h"
+#include "proxtv.h"
+#include "welch.h"
 
 /*----------------------------------------------------------------------------*
  *--------------------------- Generic PMD Parameter PKG ----------------------*
@@ -737,12 +737,39 @@ size_t pmd(double *R, double *R_ds, double *U, double *V, PMD_params *pars) {
     return good;
 }
 
+int get_block(int row_start, int row_end, int col_start, int col_end,
+              int frame_start, int frame_end, void *requester, double *buffer,
+              size_t n) {
+
+    int res;
+    int i = 0;
+    int positions[6];
+    positions[i++] = row_start;
+    positions[i++] = row_end;
+    positions[i++] = col_start;
+    positions[i++] = col_end;
+    positions[i++] = frame_start;
+    positions[i] = frame_end;
+
+    res = zmq_send(requester, positions, sizeof(positions), 0);
+    if (res != sizeof(positions)) {
+        perror("zmq_send() failed");
+        exit(1);
+    }
+    res = zmq_recv(requester, buffer, n * sizeof(double), 0);
+    if (res == -1) {
+        perror("zmq_recv() failed");
+        exit(1);
+    }
+
+    return 1;
+}
+
 /* Wrap TV/TF Penalized Matrix Decomposition with OMP directives to enable
  * parallel, block-wiseprocessing of large datasets in shared memory.
  */
 void batch_pmd(double **Up, double **Vp, size_t *K, const int num_blocks,
-               PMD_params *pars, double *movie, int height_stride,
-               int width_stride, size_t *indices) {
+               PMD_params *pars, size_t *indices) {
     // Create FFT Handle So It can Be Shared Across Threads
     DFTI_DESCRIPTOR_HANDLE FFT;
     MKL_LONG status;
@@ -763,6 +790,16 @@ void batch_pmd(double **Up, double **Vp, size_t *K, const int num_blocks,
     int d_sub = pars->get_d_sub();
     int t_sub = pars->get_t_sub();
 
+    void *context = zmq_ctx_new();
+    /*
+    int io_threads = NUM_THREADS;
+    zmq_ctx_set(context, ZMQ_IO_THREADS, io_threads);
+    if (zmq_ctx_get(context, ZMQ_IO_THREADS) != io_threads) {
+        fprintf(stderr, "io_threads not set properly");
+        exit(1);
+    }
+    */
+
 #pragma omp parallel shared(FFT)
     {
         // residual for a block
@@ -772,12 +809,27 @@ void batch_pmd(double **Up, double **Vp, size_t *K, const int num_blocks,
         std::vector<double> Rp_ds_block((bheight / d_sub) * (bwidth / d_sub) *
                                         (num_frames / t_sub));
 
+        void *requester = zmq_socket(context, ZMQ_REQ);
+        int rc = zmq_connect(requester, "ipc://trefide.ipc");
+        if (rc != 0) {
+            perror("zmq_connect() failed");
+            exit(1);
+        }
+
 #pragma omp for schedule(guided)
         for (int block = 0; block < num_blocks; block++) {
             size_t block_row = indices[2 * block];
             size_t block_col = indices[2 * block + 1];
-            copy_block(movie, height_stride, width_stride, num_frames, bheight,
-                       bwidth, block_row, block_col, Rp_block);
+
+            int row_start = block_row;
+            int row_end = row_start + bheight;
+            int col_start = block_col;
+            int col_end = col_start + bwidth;
+            int frame_start = 0;
+            int frame_end = num_frames;
+            get_block(row_start, row_end, col_start, col_end, frame_start,
+                      frame_end, requester, &Rp_block[0],
+                      (bheight * bwidth * num_frames));
 
             // Downsample block residual
             if (d_sub > 1 || t_sub > 1) {
@@ -788,11 +840,16 @@ void batch_pmd(double **Up, double **Vp, size_t *K, const int num_blocks,
             K[block] = pmd(Rp_block.data(), Rp_ds_block.data(), Up[block],
                            Vp[block], pars);
         }
+
+        zmq_close(requester);
     }
+
+    zmq_ctx_destroy(context);
 
     // Free MKL FFT Handle
     status = DftiFreeDescriptor(&FFT);
-    if (status != 0)
+    if (status != 0) {
         std::cerr << "Error while deallocating MKL_FFT Handle: " << status
                   << std::endl;
+    }
 }
