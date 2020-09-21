@@ -38,10 +38,10 @@ extraction of activity from the video data.
 - [Anaconda](https://docs.anaconda.com/anaconda/install/) or
   [Miniconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/)
 
-- Linux (this package was developed & tested on Ubuntu 18.04)
+- Linux (this package was developed & tested on Ubuntu 18.04, Ubuntu 20.04, and Manjaro)
 
-Note: these instructions will assume that you clone the repo into your home
-directory
+*Note: these instructions will assume that you clone the repo into your home
+directory*
 
 1. Clone the repository
 
@@ -49,70 +49,58 @@ directory
 git clone git@github.com:ikinsella/trefide.git
 ```
 
-2. Add the location of the C++ libraries to your shared library path by
-appending the lines to your ```.bashrc``` file.
+2. Navigate into the trefide repo you just cloned:
+```Bash
+cd ~/trefide
+```
+
+3. Create the conda environment using the provided config:
+```Bash
+conda env create -f environments/devel.yml
+```
+
+4. Compile the underlying source code (written in C++) by running
 
 ```Bash
-export TREFIDE="${HOME}/trefide"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TREFIDE"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TREFIDE/external/proxtv"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TREFIDE/external/glmgen/lib"
+make all -j $(nproc)
 ```
 
-3. Make sure to source your `.bashrc`
+5. Compile the Cython extensions and install the trefide library:
+```Bash
+pip install .
+```
+
+### Try it out!
+
+1. Execute PMD demo code using a sample dataset:
 
 ```Bash
-source ~/.bashrc
+cd ~/trefide
+jupyter notebook demos/Matrix_Decomposition/Demo_PMD_Compression_Denoising.ipynb --no-browser --port=34000
 ```
 
-4. Compile the C++ source code by running
-
-```Bash
-cd /path/to/install/directory/trefide/src
-make all
-```
-
-5. Build the Cython wrappers and use pip to create an "editable" installation
-   in your active python environment by running
-```
-cd /path/to/install/directory/trefide
-LDSHARED="icc -shared" CC=icc CXX=icpc pip install -e /path/to/trefide
-```
-
-6. Execute PMD demo code using the sample data
-   [here](https://drive.google.com/file/d/1v8E61-mKwyGNVPQFrLabsLsjA-l6D21E/view?usp=sharing)
-   to ensure that the installation worked correctly.
+The aforementioned notebook automatically downloads the sample dataset on your
+behalf. If you wish to manually download the sample dataset, it is available
+[here](https://drive.google.com/file/d/1v8E61-mKwyGNVPQFrLabsLsjA-l6D21E/view?usp=sharing).
 
 ### Rebuilding & Modification
-If you modify or pull updates to any C++ &/or Cython code, the C++ &/or Cython
-code (respectively) will need to be rebuilt for changes to take effect. This
-can be done by running the following lines
-
-- C++
+If you modify or pull updates this package will need to be rebuilt for the
+changes to take effect. This can be done as follows:
 
 ```Bash
-cd /path/to/install/directory/trefide/src
-make all
-```
-
-- Cython:
-```Bash
-cd /path/to/install/directory/trefide
-LDSHARED="icpc -shared" CXX=icpc CC=icc python setup.py build_ext --inplace
+make clean && make all -j $(nproc) && pip uninstall trefide -y && pip install .
 ```
 
 ### Uninstalling
-The project can be uninstalled from an active python environment at any time by
-running ```pip uninstall trefide```. If you wish to remove the entire project
-(all of the files you cloned) from your system, you should also run:
+If you wish to remove the entire project from your machine, you can run:
 
 ```Bash
-pip uninstall trefide
+conda deactivate trefide_devel
+conda remove --name trefide_devel --all
 rm -rf ~/trefide
 ```
 
 ## References
-preprint:
 ```
 @article {Buchanan334706,
     author = {Buchanan, E. Kelly and Kinsella, Ian and Zhou, Ding and Zhu, Rong and Zhou, Pengcheng and Gerhard, Felipe and Ferrante, John and Ma, Ying and Kim, Sharon and Shaik, Mohammed and Liang, Yajie and Lu, Rongwen and Reimer, Jacob and Fahey, Paul and Muhammad, Taliah and Dempsey, Graham and Hillman, Elizabeth and Ji, Na and Tolias, Andreas and Paninski, Liam},
