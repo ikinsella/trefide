@@ -29,7 +29,7 @@ requirements:
         - pip
         - jupyter
         - {{ pin_compatible('mkl', min_pin='x.x', max_pin='x.x') }}
-        - {{ pin_compatible('numpy', max_pin='x.x') }}
+        - {{ pin_compatible('numpy', min_pin='x.x') }}
         - matplotlib
         - scikit-learn
 
