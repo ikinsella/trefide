@@ -59,13 +59,17 @@ cd ~/trefide
 conda env create -f environments/devel.yml
 ```
 
-4. Compile the underlying source code (written in C++) by running
+4. Activate the conda environment:
+```Bash
+conda activate trefide_devel
+```
 
+5. Compile the underlying source code (written in C++) by running
 ```Bash
 make all -j $(nproc)
 ```
 
-5. Compile the Cython extensions and install the trefide library:
+6. Compile the Cython extensions and install the trefide library:
 ```Bash
 pip install .
 ```
@@ -73,7 +77,6 @@ pip install .
 ### Try it out!
 
 1. Execute PMD demo code using a sample dataset:
-
 ```Bash
 cd ~/trefide
 jupyter notebook demos/Matrix_Decomposition/Demo_PMD_Compression_Denoising.ipynb --no-browser --port=34000
