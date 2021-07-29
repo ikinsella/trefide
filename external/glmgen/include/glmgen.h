@@ -29,6 +29,9 @@
 #ifndef GLMGEN_H
 #define GLMGEN_H
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -66,4 +69,7 @@ void do_lattice(double *y, double *w, int n, int m, int p, int max_iter,
 #ifdef  __cplusplus
 }
 #endif
+
+#pragma GCC diagnostic pop
+
 #endif

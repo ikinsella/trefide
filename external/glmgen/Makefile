@@ -36,7 +36,7 @@ CC ?= gcc
 #endif
 
 INCLUDES = -I$(IDIR)
-CFLAGS = -O3 -Wall -Wextra -ansi -std=c89 -pedantic -fPIC $(INCLUDES)
+CFLAGS = -w -O3 -ansi -std=c89 -pedantic -fPIC $(INCLUDES)
 
 SRCS = $(wildcard src/csparse/*.c)
 SRCS += $(wildcard src/utils/*.c)

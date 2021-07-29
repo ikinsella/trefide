@@ -44,6 +44,8 @@ const int iseven = 7;
  *              l1tf : main routine for l1 trend filtering                  *
  *                                                                          *
  ****************************************************************************/
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 int l1tf(const int n, const double *y, const double lambda, double *x,
          double *z, int *iter, const double tol, const int maxiter,
          const int verbose) {
@@ -377,7 +379,10 @@ int l1tf(const int n, const double *y, const double lambda, double *x,
     free(IPIV);
     return (-1);
 }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 double l1tf_lambdamax(const int n, double *y, const int verbose) {
     int i, m, info;
     double maxval;
@@ -434,6 +439,7 @@ double l1tf_lambdamax(const int n, double *y, const int verbose) {
     free(piv);
     return maxval;
 }
+#pragma GCC diagnostic pop
 
 /* Computes y = a./x, where x has length n */
 void yainvx(int n, const double a, const double *x, double *y) {
