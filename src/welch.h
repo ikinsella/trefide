@@ -1,28 +1,33 @@
 #ifndef WELCH_H
 #define WELCH_H
 
+#include <iostream>
 #include <math.h>
-#include <mkl_dfti.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#include <mkl.h>
+#pragma GCC diagnostic pop
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-void inplace_rfft(const MKL_LONG L, double *yft, void *FFT = NULL);
+// Inline Wrapper Functions Neccessary To Convert To Templated Code
+template <typename T> inline void cblas_scal(const MKL_INT n, const T a, T *x, const MKL_INT incx);
+template <typename T> inline T cblas_nrm2(const MKL_INT n, const T *x, const MKL_INT incx);
+template <typename T> inline void vMul(const MKL_INT n, const T *a, const T *b, T *y);
+template <typename T> inline void vSqr(const MKL_INT n, const T *a, T *y);
+template <typename T> inline DFTI_CONFIG_VALUE dfti_precision();
 
-inline void hanning_window(const MKL_INT L, double *win) {
-    double rad_inc;
+// Welch-Specific Functions 
 
-    // Fill Vector With Window Val
-    rad_inc = 2 * M_PI / (L - 1);
-    for (int l = 0; l < L; l++) {
-        win[l] = .5 * (1 - cos(rad_inc * l));
-    }
-}
+template <typename T> inline void hanning_window(const MKL_INT L, T* win);
 
-void welch(const size_t N, const MKL_INT L, const MKL_INT R, const double fs,
-           const double *x, double *psd, void *FFT = NULL);
+template <typename T> void inplace_rfft(const MKL_LONG L, T* yft, void* FFT); 
 
-double psd_noise_estimate(const size_t N, const double *x, void *FFT = NULL);
+template <typename T> void welch(const size_t N, const MKL_INT L, const MKL_INT R, 
+    const T fs, const T *x, T *psd, void *FFT = NULL);
+
+template <typename T> T psd_noise_estimate(const size_t N, const T *x, void *FFT = NULL);
 
 #endif /* WELCH_H */

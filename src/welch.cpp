@@ -1,15 +1,73 @@
 #include "welch.h"
 
-#include <iostream>
-#include <mkl_dfti.h>
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#include <mkl.h>
-#pragma GCC diagnostic pop
 
-void inplace_rfft(const MKL_LONG L, double *yft, void *FFT) {
+// Explicit Template Specialization To Map dtype -> Config Enums
+
+template<> inline DFTI_CONFIG_VALUE dfti_precision<float>(){ return DFTI_SINGLE; }
+
+template<> inline DFTI_CONFIG_VALUE dfti_precision<double>(){ return DFTI_DOUBLE; }
+
+
+// Explicit Template Specialization To Generalize MKL Functions 
+
+template<> inline 
+void cblas_scal<float>(const MKL_INT n, const float a, float *x, const MKL_INT incx){
+    cblas_sscal(n, a, x, incx);
+}
+
+template<> inline 
+void cblas_scal<double>(const MKL_INT n, const double a, double *x, const MKL_INT incx){
+    cblas_dscal(n, a, x, incx);
+}
+
+template <> inline 
+float cblas_nrm2<float>(const MKL_INT n, const float *x, const MKL_INT incx){
+    return cblas_snrm2(n, x, incx); 
+}
+
+template <> inline 
+double cblas_nrm2<double>(const MKL_INT n, const double *x, const MKL_INT incx){
+    return cblas_dnrm2(n, x, incx); 
+}
+
+template <> inline
+void vMul<float>(const MKL_INT n, const float *a, const float *b, float *y){
+    vsMul(n, a, b, y);
+}
+
+template <> inline
+void vMul<double>(const MKL_INT n, const double *a, const double *b, double *y){
+    vdMul(n, a, b, y);
+}
+
+template <> inline 
+void vSqr<float>(const MKL_INT n, const float *a, float *y){
+    vsSqr(n, a, y);
+}
+
+template <> inline 
+void vSqr<double>(const MKL_INT n, const double *a, double *y){
+    vdSqr(n, a, y);
+}
+
+
+// Welch-Specific Functions
+template <typename T>
+inline void hanning_window(const MKL_INT L, T* win) {
+    T rad_inc;
+
+    // Fill Vector With Window Val
+    rad_inc = 2 * M_PI / (L - 1);
+    for (int l = 0; l < L; l++) {
+        win[l] = .5 * (1 - cos(rad_inc * l));
+    }
+}
+
+
+template <typename T>
+void inplace_rfft(const MKL_LONG L, T *yft, void *FFT) {
     // Declare Local Variables
     MKL_LONG status;
     DFTI_DESCRIPTOR_HANDLE *fft_pt;
@@ -22,7 +80,7 @@ void inplace_rfft(const MKL_LONG L, double *yft, void *FFT) {
         fft_pt = static_cast<DFTI_DESCRIPTOR_HANDLE *>(FFT);
         fft = *fft_pt;
     } else {
-        status = DftiCreateDescriptor(&fft, DFTI_DOUBLE, DFTI_REAL, 1, L);
+        status = DftiCreateDescriptor(&fft, dfti_precision<T>(), DFTI_REAL, 1, L);
         if (status != 0)
             fprintf(stderr, "Error Creating FFT Handle: %ld\n", status);
         destroy_handle = true;
@@ -43,33 +101,35 @@ void inplace_rfft(const MKL_LONG L, double *yft, void *FFT) {
     }
 }
 
-void welch(const size_t N, const MKL_INT L, const MKL_INT R, const double fs,
-           const double *x, double *psd, void *FFT) {
+
+template <typename T>
+void welch(const size_t N, const MKL_INT L, const MKL_INT R, const T fs,
+           const T *x, T *psd, void *FFT) {
     int k, l;
     MKL_INT K, S, P;
-    double scale;
+    T scale;
 
     MKL_INT temp = std::min(static_cast<MKL_INT>(N), L);
     S = L - R;                                        // Segment Increment
     K = static_cast<MKL_INT>(std::max(floor((static_cast<MKL_INT>(N) - L) / S), 0.0) + 1); // Number Of Segments
     P = static_cast<MKL_INT>(floor(L / 2) + 1); // Number of Periodogram Coef
-    std::vector<double> win(L, 0.0);            // Window
-    std::vector<double> yft(L, 0.0); // Windowed Signal Segment & DFT Coef
+    std::vector<T> win(L, 0.0);            // Window
+    std::vector<T> yft(L, 0.0); // Windowed Signal Segment & DFT Coef
 
     /* Construct Window & Compute DFT Coef Scaling Factor */
-    hanning_window(temp, &win[0]);
-    scale = cblas_dnrm2(temp, &win[0], 1); // Window 2 norm
+    hanning_window<T>(temp, &win[0]);
+    scale = cblas_nrm2<T>(temp, &win[0], 1); // Window 2 norm
     scale = fs * scale * scale;         // DFT Normalization Factor
 
     // Loop Over Segments
     for (k = 0; k < K; k++) {
 
         // Copy Segment Of Signal X Into Target YFT & Apply Window
-        vdMul(temp, x + S * k, &win[0], &yft[0]);
+        vMul<T>(temp, x + S * k, &win[0], &yft[0]);
 
         // Transform Windowed Signal Segment Into Squared DFT Coef. Inplace
-        inplace_rfft(L, &yft[0], FFT);
-        vdSqr(L, &yft[0], &yft[0]);
+        inplace_rfft<T>(L, &yft[0], FFT);
+        vSqr<T>(L, &yft[0], &yft[0]);
 
         // Increment Estimate Of PSD
         psd[0] += yft[0];                 /* DC component */
@@ -80,24 +140,25 @@ void welch(const size_t N, const MKL_INT L, const MKL_INT R, const double fs,
     }
 
     // Scale Non-offset and Nyquist Terms By 2
-    cblas_dscal(P - 2, 2, psd + 1, 1);
+    cblas_scal<T>(P - 2, 2, psd + 1, 1);
 
     // Scale Periodogram By Win, Fs, and Num Segments
-    cblas_dscal(P, 1 / (scale * K), psd, 1);
+    cblas_scal<T>(P, 1 / (scale * K), psd, 1);
 }
 
-double psd_noise_estimate(const size_t N, const double *x, void *FFT) {
-    double var = 0;
+
+template <typename T>
+T psd_noise_estimate(const size_t N, const T *x, void *FFT) {
+    T var = 0;
 
     /* Call Pwelch PSD Estimator with  Reasonable Defaults */
     MKL_INT L = 256; // Segment Length
     MKL_INT R = 128; // Segment Overlap
-    double fs = 1;   // Sampling Freq Of Signal
-    MKL_INT P =
-        static_cast<MKL_INT>(floor(L / 2) + 1); // Number of Periodogram Coef
-    std::vector<double> psd(P, 0.0);
+    T fs = 1;   // Sampling Freq Of Signal
+    MKL_INT P = static_cast<MKL_INT>(floor(L / 2) + 1); // Num Periodogram Coef
+    std::vector<T> psd(P, 0.0);
 
-    welch(N, L, R, fs, x, &psd[0], FFT);
+    welch<T>(N, L, R, fs, x, &psd[0], FFT);
 
     /* Average Over High Frequency Components */
     int start = static_cast<int>(floor(L / 4) + 1);
@@ -109,3 +170,10 @@ double psd_noise_estimate(const size_t N, const double *x, void *FFT) {
 
     return var;
 }
+
+
+// Tell Compiler To Instantiate Templates For Each Supported Input Type 
+template void inplace_rfft(const MKL_LONG L, float *yft, void *FFT); 
+template void inplace_rfft(const MKL_LONG L, double *yft, void *FFT); 
+template double psd_noise_estimate(const size_t N, const double *x, void *FFT);
+template void welch(const size_t N, const MKL_INT L, const MKL_INT R, const double fs, const double *x, double *psd, void *FFT);
