@@ -1,59 +1,13 @@
 #include "welch.h"
-
 #include <vector>
 
+/* TODO: literal real numbers in mathematical statements
+ * are interpretted by default double precision leading to 
+ * conversion warnings in functions templated to be single 
+ * precision. Same for literal ints.
+ */
 
-// Explicit Template Specialization To Map dtype -> Config Enums
-
-template<> inline DFTI_CONFIG_VALUE dfti_precision<float>(){ return DFTI_SINGLE; }
-
-template<> inline DFTI_CONFIG_VALUE dfti_precision<double>(){ return DFTI_DOUBLE; }
-
-
-// Explicit Template Specialization To Generalize MKL Functions 
-
-template<> inline 
-void cblas_scal<float>(const MKL_INT n, const float a, float *x, const MKL_INT incx){
-    cblas_sscal(n, a, x, incx);
-}
-
-template<> inline 
-void cblas_scal<double>(const MKL_INT n, const double a, double *x, const MKL_INT incx){
-    cblas_dscal(n, a, x, incx);
-}
-
-template <> inline 
-float cblas_nrm2<float>(const MKL_INT n, const float *x, const MKL_INT incx){
-    return cblas_snrm2(n, x, incx); 
-}
-
-template <> inline 
-double cblas_nrm2<double>(const MKL_INT n, const double *x, const MKL_INT incx){
-    return cblas_dnrm2(n, x, incx); 
-}
-
-template <> inline
-void vMul<float>(const MKL_INT n, const float *a, const float *b, float *y){
-    vsMul(n, a, b, y);
-}
-
-template <> inline
-void vMul<double>(const MKL_INT n, const double *a, const double *b, double *y){
-    vdMul(n, a, b, y);
-}
-
-template <> inline 
-void vSqr<float>(const MKL_INT n, const float *a, float *y){
-    vsSqr(n, a, y);
-}
-
-template <> inline 
-void vSqr<double>(const MKL_INT n, const double *a, double *y){
-    vdSqr(n, a, y);
-}
-
-
-// Welch-Specific Functions
+/* Utility Function To Weights For Overlapping Windows */
 template <typename T>
 inline void hanning_window(const MKL_INT L, T* win) {
     T rad_inc;
@@ -66,6 +20,7 @@ inline void hanning_window(const MKL_INT L, T* win) {
 }
 
 
+/* Helper Function To Manage MKL DFT Interface */
 template <typename T>
 void inplace_rfft(const MKL_LONG L, T *yft, void *FFT) {
     // Declare Local Variables
@@ -102,6 +57,7 @@ void inplace_rfft(const MKL_LONG L, T *yft, void *FFT) {
 }
 
 
+/* Entrypoint For Estimating PSD Using Welch's Method */
 template <typename T>
 void welch(const size_t N, const MKL_INT L, const MKL_INT R, const T fs,
            const T *x, T *psd, void *FFT) {
@@ -147,6 +103,7 @@ void welch(const size_t N, const MKL_INT L, const MKL_INT R, const T fs,
 }
 
 
+/* Entrypoint For Estimationg Noise Level In Signal */
 template <typename T>
 T psd_noise_estimate(const size_t N, const T *x, void *FFT) {
     T var = 0;
@@ -172,8 +129,61 @@ T psd_noise_estimate(const size_t N, const T *x, void *FFT) {
 }
 
 
-// Tell Compiler To Instantiate Templates For Each Supported Input Type 
+// Explicit Template Specialization For Supported Data Types 
+
+// Single Precision
+template<> inline DFTI_CONFIG_VALUE dfti_precision<float>(){
+    return DFTI_SINGLE;
+}
+template<> inline 
+void cblas_scal(const MKL_INT n, const float a, float *x, const MKL_INT incx){
+    cblas_sscal(n, a, x, incx);
+}
+template<> inline 
+float cblas_nrm2(const MKL_INT n, const float *x, const MKL_INT incx){
+    return cblas_snrm2(n, x, incx); 
+}
+template<> inline
+void vMul(const MKL_INT n, const float *a, const float *b, float *y){
+    vsMul(n, a, b, y);
+}
+template<> inline 
+void vSqr(const MKL_INT n, const float *a, float *y){
+    vsSqr(n, a, y);
+}
+
+// Double Precision
+template<> inline DFTI_CONFIG_VALUE dfti_precision<double>(){
+    return DFTI_DOUBLE;
+}
+template<> inline 
+void cblas_scal(const MKL_INT n, const double a, double *x, const MKL_INT incx){
+    cblas_dscal(n, a, x, incx);
+}
+template<> inline 
+double cblas_nrm2(const MKL_INT n, const double *x, const MKL_INT incx){
+    return cblas_dnrm2(n, x, incx); 
+}
+template<> inline
+void vMul(const MKL_INT n, const double *a, const double *b, double *y){
+    vdMul(n, a, b, y);
+}
+template<> inline 
+void vSqr(const MKL_INT n, const double *a, double *y){
+    vdSqr(n, a, y);
+}
+
+
+// Template Instantiation For Supported Data Types 
+
+// Single Precision
 template void inplace_rfft(const MKL_LONG L, float *yft, void *FFT); 
+template float psd_noise_estimate(const size_t N, const float *x, void *FFT);
+template void welch(const size_t N, const MKL_INT L, const MKL_INT R,
+        const float fs, const float *x, float *psd, void *FFT);
+
+// Double Precision 
 template void inplace_rfft(const MKL_LONG L, double *yft, void *FFT); 
 template double psd_noise_estimate(const size_t N, const double *x, void *FFT);
-template void welch(const size_t N, const MKL_INT L, const MKL_INT R, const double fs, const double *x, double *psd, void *FFT);
+template void welch(const size_t N, const MKL_INT L, const MKL_INT R,
+        const double fs, const double *x, double *psd, void *FFT);
