@@ -51,7 +51,7 @@ about:
     license_family: GPL
     license_file: LICENSE
     summary: 'TreFiDe is the software package accompanying the research publication Penalized matrix decomposition for denoising, compression, and improved demixing of functional imaging data.'
-    description: 'TreFiDe is an improved appproach to compressing and denoising functional image data. The method is based on a spatially-localized penalized matrix decomposition (PMD) of the data to separate (low-dimensional) signal from (temporally-uncorrelated) noise.'
+    description: 'TreFiDe provides a method of compressing and denoising functional image data. The method is based on a spatially-localized penalized matrix decomposition (PMD) that separates (low-dimensional) signal from (temporally-uncorrelated) noise.'
     doc_url: https://github.com/ikinsella/trefide/tree/master/doc
     dev_url: https://github.com/ikinsella/trefide/
 

@@ -1,18 +1,18 @@
 # Pin python verison zipped to matching min-required numpy version so
 # meta.yaml pinning will require: numpy >=x.x.x,<2.0 for the run environment.
-# Determined by scipy: https://docs.scipy.org/doc/scipy/reference/toolchain.html
+# Determined by scipy: https://docs.scipy.org/doc/scipy/reference/dev/toolchain.html
 # following NEP 29: https://numpy.org/neps/nep-0029-deprecation_policy.html
 # according to discussion: https://github.com/numpy/numpy/issues/5888.
 # Python & numpy versions should be updated (following linked resources)
 # as time progresses and support for older versions are dropped.
 python:
+    - 3.9
     - 3.8
     - 3.7
-    - 3.6
 numpy:
+    - 1.19.2
     - 1.17.3
-    - 1.14.5 
-    - 1.14.5 
+    - 1.16.5 
 zip_keys:
     - python
     - numpy 
@@ -20,9 +20,10 @@ zip_keys:
 # Need to add new mkl releases as time progresses, phase out old releases as 
 # numpy versions are dropped.
 mkl:
+    - 2021.3
+    - 2021.2
+    - 2021.1
+    - 2020.4
+    - 2020.3
+    - 2020.2
     - 2020.1
-    - 2020.0
-    - 2019.4
-    - 2019.3
-    - 2019.1
-    - 2019.0
