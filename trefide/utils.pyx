@@ -10,27 +10,31 @@ import numpy as np
 # -------------------- Temporal Signal Noise Estimation --------------------- #
 # --------------------------------------------------------------------------- #
 
+ctypedef fused real:
+    float
+    double
+
 cdef extern from "math.h":
     double floor(double) nogil
 
 cdef extern from "trefide.h":
-    double _psd_noise_estimate "psd_noise_estimate" (const size_t N, 
-                                                     const double *x, 
-                                                     void* FFT) nogil
+    T _psd_noise_estimate "psd_noise_estimate"[T] (const size_t N, 
+                                                   const T *x, 
+                                                   void* FFT) nogil
 
-    void welch(const size_t N, 
-               const int L, 
-               const int R, 
-               const double fs, 
-               const double* x, 
-               double* psd,
-               void* FFT) nogil
+    void welch[T](const size_t N, 
+                  const int L, 
+                  const int R, 
+                  const T fs, 
+                  const T* x, 
+                  T* psd,
+                  void* FFT) nogil
 
 
-cpdef double[:, ::1] welch_psd_estimate(double[:, ::1] signal, 
-                                        int nsamp_seg=256, 
-                                        int nsamp_overlap=128,
-                                        double fs=1):
+cpdef real[:, ::1] welch_psd_estimate(real[:, ::1] signal, 
+                                      int nsamp_seg=256, 
+                                      int nsamp_overlap=128,
+                                      real fs=1):
     """
     Estimates the Power Spectral Density (PSD) using Welch's method of
     controlling variance by averaging over lower resolution PSD estimates 
@@ -59,17 +63,17 @@ cpdef double[:, ::1] welch_psd_estimate(double[:, ::1] signal,
     cdef size_t ncoef = <size_t> floor(nsamp / 2) + 1
 
     # Allocate & Init PSD Coefs (IMPORTANT: Pxx must be init'd to 0)
-    cdef double[:, ::1] pxx = np.zeros((nchan, ncoef), dtype=np.float64)
+    cdef real[:, ::1] pxx = np.zeros((nchan, ncoef),
+                                     dtype=np.asarray(signal).dtype)
 
     # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
-    # TODO: modify cpp implementation for more efficient multichannel estimation
     with nogil:
         for c in range(nchan):
             welch(nsamp, nsamp, nsamp, fs, &signal[c,0], &pxx[c,0], NULL) 
     return pxx
 
 
-cpdef double[::1] psd_noise_estimate(double [:,::1] signal):
+cpdef real[::1] psd_noise_estimate(real [:,::1] signal):
     """
     Estimates the variance of the (assumed to be gaussian) noise
     contaminating an input signal by averaging over the high frequency 
@@ -94,10 +98,9 @@ cpdef double[::1] psd_noise_estimate(double [:,::1] signal):
     cdef size_t nsamp = signal.shape[1]
 
     # Allocate Space For Output Variances
-    cdef double[::1] var_hat = np.empty(nchan, dtype=np.float64)
+    cdef real[::1] var_hat = np.empty(nchan, dtype=np.asarray(signal).dtype)
 
     # Compute & Return Estimates 
-    # TODO: modify cpp implementation for more efficient multichannel estimation
     with nogil:
         for c in range(nchan):
             var_hat[c] = _psd_noise_estimate(nsamp, &signal[c,0], NULL)
