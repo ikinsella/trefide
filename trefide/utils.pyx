@@ -5,6 +5,7 @@
 # cython: nonecheck=False
 # cython: language_level=3
 import numpy as np
+from cython.parallel import prange
 
 # --------------------------------------------------------------------------- #
 # -------------------- Temporal Signal Noise Estimation --------------------- #
@@ -67,9 +68,9 @@ cpdef real[:, ::1] welch_psd_estimate(real[:, ::1] signal,
                                      dtype=np.asarray(signal).dtype)
 
     # Compute & Return Welch's PSD Estimate (Pxx modified inplace)
-    with nogil:
-        for c in range(nchan):
-            welch(nsamp, nsamp, nsamp, fs, &signal[c,0], &pxx[c,0], NULL) 
+    for c in prange(nchan, nogil=True):
+        welch(nsamp, nsamp, nsamp, fs, &signal[c,0], &pxx[c,0], NULL) 
+
     return pxx
 
 
@@ -101,7 +102,7 @@ cpdef real[::1] psd_noise_estimate(real [:,::1] signal):
     cdef real[::1] var_hat = np.empty(nchan, dtype=np.asarray(signal).dtype)
 
     # Compute & Return Estimates 
-    with nogil:
-        for c in range(nchan):
-            var_hat[c] = _psd_noise_estimate(nsamp, &signal[c,0], NULL)
+    for c in prange(nchan, nogil=True):
+        var_hat[c] = _psd_noise_estimate(nsamp, &signal[c,0], NULL)
+
     return var_hat 
